@@ -147,7 +147,7 @@ git push
 - 不伪造 T0：搜索结果转述的官方数据 → source_type="行业媒体聚合官方发布"，confidence="T3"
 - 每个 benchmarks.* 条目必须带 source_url
 - meta.collected_at = "YYYY-MM-DD"（今天），meta.verification_status = "待验证"
-- 文件 = 单行压缩 JSON，schema 1.1，所有 8-9 个顶层键必须出现（schema_version/model_id/basic_info/architecture/benchmarks/pricing/modality/access/meta），禁止删键
+- 文件 = 单行压缩 JSON，schema 1.1，**8 个顶层键**（schema_version/model_id/basic_info/architecture/benchmarks/pricing/modality/meta），禁止删键，**禁止把 access 提为顶层键**（access 嵌套在 basic_info.access 内，见样板）
 - 禁止改动 model_data_v2.jsonl 主库（合并由主 agent 统一执行）
 - 禁止改动 batch_claim_ledger.jsonl 认领表
 
@@ -191,7 +191,7 @@ python <REPO>/scripts/validate_model_data.py <REPO>/incoming/models/<你的文�
 - [ ] 文件确实落盘到 `incoming/models/<batch_id>__*.jsonl`（先查磁盘，再信 subagent 报告）
 - [ ] 单文件门禁 ERROR=0（用 `validate_model_data.py` 跑过）
 - [ ] JSON 是单行压缩、UTF-8 无 BOM、行尾有 `\n`
-- [ ] 8/9 个顶层键齐全（schema_version / model_id / basic_info / architecture / benchmarks / pricing / modality / access / meta）
+- [ ] **8 个顶层键齐全**（schema_version / model_id / basic_info / architecture / benchmarks / pricing / modality / meta）；**access 必须嵌在 basic_info.access 内，不是顶层键**
 - [ ] model_id 三段式保留（含 `:`），文件名 sanitize 后用 `__`
 - [ ] meta.collected_at 是今天的日期
 - [ ] 至少 1 条 self_reported（除非该模型确实无公开跑分——如已下线/学术模型——此时空数组合规，但需在 meta.notes 注明原因）
@@ -231,7 +231,7 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 4. **跑分 score 一律 0-1 小数**（百分制 ÷100 并在 notes 注明"原值 X 分，÷100 转小数"）；非百分制跑分（如 Elo / Perplexity）按红线置 score=null，原始值保留在 notes
 5. **开源权重模型 pricing 全 null**（Gemma / Llama / Qwen / Mistral 等开源权重模型，官方不公布 API 调用价，pricing 六价格键全 null + currency=null + notes 注明"开源权重模型，可经 HuggingFace/ModelScope 自托管或经云厂商托管调用"）；access.open_weights=true / api=true（云托管）/ local_deployment=true
 6. **positioning 受控词表**：`["旗舰", "中端", "轻量", "推理增强", "多模态", "工具调用增强"]`，越界标签会被门禁拒
-7. **文件 = 单行压缩 JSON**，schema 1.1，所有 8-9 个顶层键必须出现，禁止删键，禁止嵌套顶层键
+7. **文件 = 单行压缩 JSON**，schema 1.1，**8 个顶层键**（schema_version / model_id / basic_info / architecture / benchmarks / pricing / modality / meta），禁止删键，**禁止把 access 提为顶层键**（access 嵌套在 basic_info.access 内，与主库一致；如果 subagent 把 access 提到顶层，主 agent 修复时把它移回 basic_info.access）
 8. **文件名 sanitize**：model_id 中 `:` → `__`，JSON 内容里 model_id 保持三段式原样
 9. **meta.collected_at = "YYYY-MM-DD"**（今天的日期），meta.verification_status = "待验证"
 10. **禁止改动主库 `model_data_v2.jsonl`**（合并由合并 agent 统一执行）
@@ -279,7 +279,6 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 3. **Windows GBK 控制台崩溃**：所有 Python 命令必须加 `$env:PYTHONUTF8='1'` 前缀，否则合并工具的 emoji 输出会让 GBK 控制台崩。Linux/macOS 无此问题。
 4. **Task 结果丢失率约 40%**：subagent 返回"toolcall_result is missing"或空，但文件实际可能已写盘。**先查磁盘再决定是否重派**。
 5. **subagent 落盘前先读样板**：给 subagent 一个已完成样板文件路径（如 `incoming/models/_samples/sample_google_gemini-3-5-flash-minimal.jsonl`），让它照抄顶层键顺序和骨架，能省 80% 的格式问题。
-
 ### 8.2 数据采集
 
 6. **arxiv ID 经常错**：任务书给的 arxiv ID 约有 5-10% 是错的（如 2408.01847 实为天文学论文，2503.19711 实为写作论文）。subagent 必须经 WebFetch 直验后再采用，并在 meta.notes 标注纠错。
