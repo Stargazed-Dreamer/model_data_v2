@@ -1,5 +1,7 @@
 # DEPLOY.md — model_data v2 多平台并发采集部署说明
 
+仓库地址：https://github.com/Stargazed-Dreamer/model_data_v2
+
 > **用途**：把 model_data v2 仓库部署到一台新电脑，让多个 agent 平台并发采集大模型数据。
 >
 > **谁读这份文档**：
