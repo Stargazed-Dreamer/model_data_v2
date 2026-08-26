@@ -1,0 +1,7 @@
+# 强制 LF 行尾，避免 Windows CRLF 污染单行 JSONL
+*.jsonl text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.bat text eol=crlf
+*.sh text eol=lf

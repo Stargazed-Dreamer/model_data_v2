@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+validate_model_data.py —— 记录级校验器（P5 修复，执行细则 #11 十一项自查的机械化）
+
+对 JSONL 数据集逐条跑合规检查，输出违规清单（Markdown 报告 + stdout 摘要）。
+阶段 0（基线）与阶段 3（质检门禁）共用。
+
+检查分级：
+  ERROR  —— 结构性/语义性违规，必须修复（缺必备键、pricing 四必采字段缺失、
+            positioning 非数组或越界、confidence 与 source_type 不自洽、
+            score 越界、日期格式错误、model_id 非三段式、source_urls 内嵌换行）
+  WARN   —— 执行细则要求但历史数据普遍未满足的项（未披露参数量的 notes 声明、
+            上下文标称/有效标注、降级采集声明），供增量采集时避免、合并前评估
+
+用法：
+  python validate_model_data.py <file.jsonl> [--report <out.md>]
+退出码：0 = 无 ERROR（可能有 WARN），1 = 存在 ERROR，2 = 文件读取失败
+"""
+
+import argparse
+import json
+import re
+import sys
+
+SCHEMA_VERSION = "1.1"
+
+TOP_KEYS = ["schema_version", "model_id", "basic_info", "architecture",
+            "benchmarks", "pricing", "modality", "meta"]
+PRICING_MUST_KEYS = ["cached_input", "cache_write", "batch_input", "batch_output"]
+POSITIONING_ENUM = {"旗舰", "中端", "轻量", "推理增强", "多模态", "工具调用增强"}
+CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"}
+DATE_MD_RE = re.compile(r"^\d{4}-\d{2}$")
+DATE_FULL_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+RELAY_MARK = "转述"
+
+MODALITY_BOOL_SECTIONS = {
+    "input": ["text", "image", "audio", "video", "pdf", "code", "web", "notes"],
+    "output": ["text", "code", "image", "audio", "speech", "notes"],
+    "native_multimodal": ["input_image", "input_audio", "input_video",
+                          "output_image", "output_audio", "notes"],
+}
+
+
+def check_record(rec):
+    """返回 (errors, warns)，均为字符串列表。"""
+    errors, warns = [], []
+
+    mid = rec.get("model_id", "<无 model_id>")
+
+    # 0. 顶层结构
+    for k in TOP_KEYS:
+        if k not in rec:
+            errors.append(f"缺顶层必备键 `{k}`")
+    if rec.get("schema_version") != SCHEMA_VERSION:
+        warns.append(f"schema_version={rec.get('schema_version')!r}，当前规范为 {SCHEMA_VERSION}")
+    parts = str(mid).split(":")
+    if len(parts) != 3 or not all(parts):
+        errors.append(f"model_id 非三段式 `vendor:family:variant`：{mid!r}")
+
+    # 1. 参数量未披露 → null + notes 声明
+    arch = rec.get("architecture") or {}
+    tp, ap = arch.get("total_params_b"), arch.get("active_params_b")
+    anotes = arch.get("notes") or ""
+    if tp is None and ap is None and "未披露" not in anotes and "待补" not in anotes:
+        warns.append("参数量全空但 architecture.notes 未声明「官方未披露」或「待补」")
+
+    # 2. 上下文标称 / 有效
+    cw, cwe = arch.get("context_window_tokens"), arch.get("context_window_effective_tokens")
+    if cw is not None and cwe is None and "标称" not in anotes and "待测" not in anotes:
+        warns.append("有标称上下文但有效上下文为空且 notes 未标「标称值，有效上下文待测」")
+    if cwe is not None and "测试" not in anotes and "T1" not in anotes:
+        warns.append("填了有效上下文但 notes 未注明独立测试方法与来源")
+
+    # 3. 多模态三态：值必须是 true / false / null（类型检查）
+    mod = rec.get("modality") or {}
+    for sec, keys in MODALITY_BOOL_SECTIONS.items():
+        block = mod.get(sec)
+        if not isinstance(block, dict):
+            errors.append(f"modality.{sec} 缺失或非对象")
+            continue
+        for k in keys:
+            if k == "notes":
+                continue
+            if k not in block:
+                errors.append(f"modality.{sec}.{k} 键缺失")
+            elif block[k] not in (True, False, None):
+                errors.append(f"modality.{sec}.{k} 必须是 true/false/null，实际 {block[k]!r}")
+
+    # 4. 定价四必采字段存在性 + 币种单位
+    pricing = rec.get("pricing") or {}
+    for k in PRICING_MUST_KEYS:
+        if k not in pricing:
+            errors.append(f"pricing.{k} 必采字段缺失（即使无值也必须显式为 null）")
+    if pricing.get("input") is not None or pricing.get("output") is not None:
+        if pricing.get("currency") != "USD":
+            errors.append(f"pricing.currency 必须为 USD，实际 {pricing.get('currency')!r}")
+        if pricing.get("unit") != "per_million_tokens":
+            errors.append(f"pricing.unit 必须为 per_million_tokens，实际 {pricing.get('unit')!r}")
+        if not pricing.get("effective_date"):
+            warns.append("有定价但缺 pricing.effective_date（定价必须精确到日）")
+        if not pricing.get("source_url"):
+            warns.append("有定价但缺 pricing.source_url")
+
+    # 5. positioning：数组 + 枚举
+    pos = (rec.get("basic_info") or {}).get("positioning")
+    if pos is None:
+        warns.append("basic_info.positioning 缺失（应为数组，可空）")
+    elif not isinstance(pos, list):
+        errors.append(f"basic_info.positioning 必须是数组，实际 {type(pos).__name__}")
+    else:
+        for p in pos:
+            if p not in POSITIONING_ENUM:
+                errors.append(f"positioning 标签越界：{p!r}（枚举：{sorted(POSITIONING_ENUM)}）")
+
+    # 6. 跑分检查：score 范围、来源三要素、confidence 自洽
+    bench = rec.get("benchmarks") or {}
+    for section in ("self_reported", "independent"):
+        for i, item in enumerate(bench.get(section) or []):
+            tag = f"benchmarks.{section}[{i}]({item.get('benchmark', '?')})"
+            score = item.get("score")
+            if score is not None and not (0 <= score <= 1):
+                errors.append(f"{tag} score={score} 越界，应为 0–1 小数（百分制须除以 100）")
+            if not item.get("source_url"):
+                errors.append(f"{tag} 缺 source_url（采集即记录，来源不允许为空）")
+            conf = item.get("confidence")
+            if conf is not None and conf not in CONFIDENCE_ENUM:
+                errors.append(f"{tag} confidence={conf!r} 不在枚举内")
+            stype = item.get("source_type") or ""
+            if conf in ("T0", "T0-自报") and RELAY_MARK in stype:
+                errors.append(f"{tag} confidence={conf} 与 source_type「{stype}」不自洽：转述来源不得配 T0/T0-自报")
+            if section == "self_reported" and conf in ("T0", "T0-自报", "T0-自报-转述") and "自报" not in (stype or ""):
+                warns.append(f"{tag} 自报分 source_type={stype!r} 建议体现「自报」属性")
+    for i, item in enumerate(bench.get("arena_elo") or []):
+        tag = f"benchmarks.arena_elo[{i}]({item.get('sub_benchmark', '?')})"
+        if item.get("score") is None:
+            errors.append(f"{tag} 缺 score")
+        if not item.get("date"):
+            errors.append(f"{tag} 缺快照 date")
+
+    # 7. 日期格式
+    rd = (rec.get("basic_info") or {}).get("release_date")
+    if rd is not None and not (DATE_MD_RE.match(rd) or DATE_FULL_RE.match(rd)):
+        errors.append(f"basic_info.release_date={rd!r} 非 ISO 8601（YYYY-MM 或 YYYY-MM-DD）")
+    meta = rec.get("meta") or {}
+    for fld in ("collected_at", "verified_at"):
+        v = meta.get(fld)
+        if v is not None and not DATE_FULL_RE.match(str(v)):
+            errors.append(f"meta.{fld}={v!r} 应精确到日（YYYY-MM-DD）")
+    ed = pricing.get("effective_date")
+    # 历史定价常仅知生效月份，放宽到接受 YYYY-MM（执行细则 #10：月级须注明周期）
+    if ed is not None and not (DATE_FULL_RE.match(str(ed)) or DATE_MD_RE.match(str(ed))):
+        errors.append(f"pricing.effective_date={ed!r} 应精确到日或月（YYYY-MM-DD / YYYY-MM）")
+
+    # 8. source_urls 无内嵌换行、非空字符串
+    urls = meta.get("source_urls")
+    if isinstance(urls, list):
+        for u in urls:
+            if not isinstance(u, str) or not u.strip():
+                errors.append(f"meta.source_urls 含非法项：{u!r}")
+            elif "\n" in u or "\r" in u:
+                errors.append(f"meta.source_urls 项内嵌换行：{u[:60]!r}…")
+    elif urls is not None:
+        errors.append("meta.source_urls 必须是数组")
+
+    # 9. 降级采集声明抽查（仅当所有定价/自报来源均为非官方时提示）
+    mnotes = meta.get("notes") or ""
+    vs = meta.get("verification_status")
+    if vs not in (None, "已验证", "待验证", "存疑", "已过期"):
+        errors.append(f"meta.verification_status={vs!r} 不在枚举内（已验证/待验证/存疑/已过期）")
+
+    return errors, warns
+
+
+def main():
+    ap = argparse.ArgumentParser(description="模型数据集记录级校验器")
+    ap.add_argument("file", help="待校验的 JSONL 文件")
+    ap.add_argument("--report", default=None, help="输出 Markdown 报告路径（默认打印摘要）")
+    args = ap.parse_args()
+
+    try:
+        with open(args.file, encoding="utf-8-sig") as f:
+            recs = [json.loads(l) for l in f if l.strip() and not l.strip().startswith("//")]
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"❌ 读取失败：{e}", file=sys.stderr)
+        return 2
+
+    total_e = total_w = 0
+    rec_errors = 0
+    lines = [f"# 校验报告：{args.file}", "", f"记录数：{len(recs)}", ""]
+    for rec in recs:
+        errs, warns = check_record(rec)
+        if errs or warns:
+            lines.append(f"## `{rec.get('model_id', '?')}`")
+            for e in errs:
+                lines.append(f"- **ERROR** {e}")
+            for w in warns:
+                lines.append(f"- WARN {w}")
+            lines.append("")
+        total_e += len(errs)
+        total_w += len(warns)
+        rec_errors += 1 if errs else 0
+
+    summary = (f"校验完成：{len(recs)} 条，ERROR {total_e} 项（涉及 {rec_errors} 条记录），"
+               f"WARN {total_w} 项")
+    lines[:0] = [f"> {summary}", ""]
+
+    text = "\n".join(lines)
+    if args.report:
+        with open(args.report, "w", encoding="utf-8") as f:
+            f.write(text + "\n")
+        print(summary)
+        print(f"报告已写入 {args.report}")
+    else:
+        print(text[:4000])
+        print(summary)
+    return 1 if total_e else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

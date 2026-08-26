@@ -1,0 +1,31 @@
+# ===== 大体积 / 与采集无关目录（一律不进仓库）=====
+/backups/
+/raw_pages/
+/external_sources/
+/viz/
+/temp/
+/incoming/_merged_archive/
+/incoming/agent_*.jsonl
+
+# ===== 主库备份文件（历史快照，本地保留即可）=====
+model_data_v2.jsonl.bak*
+model_data_v2.jsonl.pre_*
+model_data_v2.jsonl.batch4_*
+model_data_v2.jsonl.*_bak
+
+# ===== 平台 / 编辑器杂项 =====
+/启动可视化.bat
+*.log
+*.tmp
+*.swp
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+Thumbs.db
+
+# ===== 不追踪平台本地实验文件（仅 _samples/ 与 _m_context.md 入库）=====
+# 平台 submit 时用 git add -f 强加自己的输出文件
+/incoming/models/*.jsonl
+!/incoming/models/_samples/
+!/incoming/models/_m_context.md

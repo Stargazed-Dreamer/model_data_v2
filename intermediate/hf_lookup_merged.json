@@ -1,0 +1,2482 @@
+[
+ {
+  "model_id": "360-security-technology:360zhinao-7b:base",
+  "query": "360Zhinao-7B",
+  "hf_repo": "qihoo360/360Zhinao-7B-Base",
+  "license_tag": "license:apache-2.0",
+  "downloads": 34,
+  "likes": 5,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-09T08:17:34.000Z",
+  "match_score": 0.285
+ },
+ {
+  "model_id": "360-security-technology:360zhinao2-7b:base",
+  "query": "360Zhinao2-7B",
+  "hf_repo": "qihoo360/360Zhinao2-7B-Base",
+  "license_tag": "license:apache-2.0",
+  "downloads": 39,
+  "likes": 2,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-11-14T07:29:59.000Z",
+  "match_score": 0.284
+ },
+ {
+  "model_id": "abacus-ai:smaug-34b:base",
+  "query": "Smaug-34B",
+  "hf_repo": "abacusai/Smaug-34B-v0.1",
+  "license_tag": "license:apache-2.0",
+  "downloads": 8301,
+  "likes": 64,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-01-25T17:14:17.000Z",
+  "match_score": 0.289
+ },
+ {
+  "model_id": "abacus-ai:smaug-72b:base",
+  "query": "Smaug-72B",
+  "hf_repo": "abacusai/Smaug-72B-v0.1",
+  "license_tag": "license:other",
+  "downloads": 8587,
+  "likes": 468,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-02-02T17:22:43.000Z",
+  "match_score": 0.289
+ },
+ {
+  "model_id": "ai21:jamba-1-6-mini:base",
+  "query": "Jamba 1.6 Mini",
+  "match_score": 0
+ },
+ {
+  "model_id": "ai21:jamba:base",
+  "query": "Jamba",
+  "hf_repo": "ai21labs/Jamba-v0.1",
+  "license_tag": "license:apache-2.0",
+  "downloads": 12235,
+  "likes": 1194,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-03-28T12:32:22.000Z",
+  "match_score": 0.292
+ },
+ {
+  "model_id": "alibaba:agentfounder-30b:base",
+  "query": "AgentFounder-30B",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:marco-o1:base",
+  "query": "Marco-o1",
+  "hf_repo": "ATH-MaaS/Marco-o1",
+  "license_tag": "license:apache-2.0",
+  "downloads": 733,
+  "likes": 713,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-11-13T02:37:28.000Z",
+  "match_score": 0.093
+ },
+ {
+  "model_id": "alibaba:qwen-14b:base",
+  "query": "Qwen-14B",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen1-5-110b:base",
+  "query": "Qwen1.5-110B",
+  "hf_repo": "Qwen/Qwen1.5-110B",
+  "license_tag": "license:other",
+  "downloads": 457,
+  "likes": 104,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-25T07:30:56.000Z",
+  "match_score": 0.39
+ },
+ {
+  "model_id": "alibaba:qwen1-5-32b:base",
+  "query": "Qwen1.5-32B",
+  "hf_repo": "Qwen/Qwen1.5-32B",
+  "license_tag": "license:other",
+  "downloads": 10203,
+  "likes": 85,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-01T06:19:21.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "alibaba:qwen1-5-72b:base",
+  "query": "Qwen1.5-72B",
+  "hf_repo": "Qwen/Qwen1.5-72B",
+  "license_tag": "license:other",
+  "downloads": 10146,
+  "likes": 59,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-01-23T15:06:37.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "alibaba:qwen2-0-5b:base",
+  "query": "Qwen2-0.5B",
+  "hf_repo": "Qwen/Qwen2-0.5B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 861877,
+  "likes": 170,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-05-31T08:38:11.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen2-1-5b:base",
+  "query": "Qwen2-1.5B",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen2-5-1-5b:base",
+  "query": "Qwen2.5-1.5B",
+  "hf_repo": "Qwen/Qwen2.5-1.5B-Instruct",
+  "license_tag": "license:apache-2.0",
+  "downloads": 8859994,
+  "likes": 806,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-09-17T14:10:29.000Z",
+  "match_score": 0.283
+ },
+ {
+  "model_id": "alibaba:qwen2-5-14b:base",
+  "query": "Qwen2.5-14B",
+  "hf_repo": "Qwen/Qwen2.5-14B-Instruct",
+  "license_tag": "license:apache-2.0",
+  "downloads": 2823382,
+  "likes": 362,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-09-16T11:56:10.000Z",
+  "match_score": 0.283
+ },
+ {
+  "model_id": "alibaba:qwen2-5-32b:base",
+  "query": "Qwen2.5-32B",
+  "hf_repo": "Qwen/Qwen2.5-32B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 67283,
+  "likes": 181,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-09-15T12:18:33.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "alibaba:qwen2-5-3b:base",
+  "query": "Qwen2.5-3B",
+  "hf_repo": "Qwen/Qwen2.5-3B",
+  "license_tag": "license:other",
+  "downloads": 265750,
+  "likes": 202,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-09-15T12:17:03.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen2-5-72b:base",
+  "query": "Qwen2.5-72B",
+  "hf_repo": "Qwen/Qwen2.5-72B",
+  "license_tag": "license:other",
+  "downloads": 20129,
+  "likes": 102,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-09-15T12:18:46.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "alibaba:qwen2-5-7b:base",
+  "query": "Qwen2.5-7B",
+  "hf_repo": "Qwen/Qwen2.5-7B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 585685,
+  "likes": 306,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-09-15T12:17:40.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen2-5-coder:base",
+  "query": "Qwen2.5-Coder (32B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen2-5-math-1-5b:base",
+  "query": "Qwen2.5-Math-1.5B",
+  "hf_repo": "Qwen/Qwen2.5-Math-1.5B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 827441,
+  "likes": 111,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-09-16T11:57:43.000Z",
+  "match_score": 0.387
+ },
+ {
+  "model_id": "alibaba:qwen2-5-math-7b-base:base",
+  "query": "Qwen2.5-Math-7B-Base",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen2-57b-a14b:base",
+  "query": "Qwen2-57B-A14B",
+  "hf_repo": "Qwen/Qwen2-57B-A14B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 10659,
+  "likes": 58,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-05-22T18:08:21.000Z",
+  "match_score": 0.388
+ },
+ {
+  "model_id": "alibaba:qwen2-72b:base",
+  "query": "Qwen2-72B",
+  "hf_repo": "Qwen/Qwen2-72B",
+  "license_tag": "license:other",
+  "downloads": 11787,
+  "likes": 199,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-05-22T15:28:10.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen2-7b:base",
+  "query": "Qwen2-7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen2-math-1-5b:base",
+  "query": "Qwen2-Math-1.5B",
+  "hf_repo": "Qwen/Qwen2-Math-1.5B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 1305,
+  "likes": 14,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-08T04:29:39.000Z",
+  "match_score": 0.388
+ },
+ {
+  "model_id": "alibaba:qwen2-math-72b:base",
+  "query": "Qwen2-Math-72B",
+  "hf_repo": "Qwen/Qwen2-Math-72B",
+  "license_tag": "license:other",
+  "downloads": 124,
+  "likes": 30,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-08T04:28:35.000Z",
+  "match_score": 0.388
+ },
+ {
+  "model_id": "alibaba:qwen2-math-7b:base",
+  "query": "Qwen2-Math-7B",
+  "hf_repo": "Qwen/Qwen2-Math-7B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 433,
+  "likes": 14,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-08T04:29:12.000Z",
+  "match_score": 0.389
+ },
+ {
+  "model_id": "alibaba:qwen3-0-6b:base",
+  "query": "Qwen3-0.6B",
+  "hf_repo": "Qwen/Qwen3-0.6B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 24307256,
+  "likes": 1535,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-27T03:40:08.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen3-1-7b:base",
+  "query": "Qwen3-1.7B",
+  "hf_repo": "Qwen/Qwen3-1.7B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 4708670,
+  "likes": 523,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-27T03:41:05.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen3-14b:base",
+  "query": "Qwen3-14B",
+  "hf_repo": "Qwen/Qwen3-14B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 2000175,
+  "likes": 447,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-27T03:42:45.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen3-235b-a22b-thinking:base",
+  "query": "Qwen3-235B-A22B-Thinking (Jul 2025)",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen3-30b-a3b:base",
+  "query": "Qwen3-30B-A3B",
+  "hf_repo": "Qwen/Qwen3-30B-A3B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 2587390,
+  "likes": 926,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-27T03:43:05.000Z",
+  "match_score": 0.389
+ },
+ {
+  "model_id": "alibaba:qwen3-32b:base",
+  "query": "Qwen3-32B",
+  "hf_repo": "Qwen/Qwen3-32B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 3624151,
+  "likes": 738,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-27T03:52:59.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen3-4b:base",
+  "query": "Qwen3-4B",
+  "hf_repo": "Qwen/Qwen3-4B-Instruct-2507",
+  "license_tag": "license:apache-2.0",
+  "downloads": 3413160,
+  "likes": 931,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-08-05T10:58:03.000Z",
+  "match_score": 0.281,
+  "audit_note": "注意：匹配到 Instruct-2507 变体（HF 无裸 Qwen3-4B 官方仓时最近似官方）"
+ },
+ {
+  "model_id": "alibaba:qwen3-5-0-8b:base",
+  "query": "Qwen3.5-0.8B",
+  "hf_repo": "Qwen/Qwen3.5-0.8B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 2723384,
+  "likes": 675,
+  "pipeline_tag": "image-text-to-text",
+  "created_at": "2026-02-28T23:57:01.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "alibaba:qwen3-5-122b-a10b:base",
+  "query": "Qwen3.5-122B-A10B",
+  "hf_repo": "Qwen/Qwen3.5-122B-A10B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 1525247,
+  "likes": 610,
+  "pipeline_tag": "image-text-to-text",
+  "created_at": "2026-02-24T09:43:37.000Z",
+  "match_score": 0.386
+ },
+ {
+  "model_id": "alibaba:qwen3-5-27b:base",
+  "query": "Qwen3.5-27B",
+  "hf_repo": "Qwen/Qwen3.5-27B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 2702296,
+  "likes": 1033,
+  "pipeline_tag": "image-text-to-text",
+  "created_at": "2026-02-24T09:41:56.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "alibaba:qwen3-5-2b:base",
+  "query": "Qwen3.5-2B",
+  "hf_repo": "Qwen/Qwen3.5-2B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 3093583,
+  "likes": 372,
+  "pipeline_tag": "image-text-to-text",
+  "created_at": "2026-02-28T23:56:16.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen3-5-4b:base",
+  "query": "Qwen3.5-4B",
+  "hf_repo": "Qwen/Qwen3.5-4B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 7695410,
+  "likes": 843,
+  "pipeline_tag": "image-text-to-text",
+  "created_at": "2026-02-27T14:45:03.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen3-5-9b:base",
+  "query": "Qwen3.5-9B",
+  "hf_repo": "Qwen/Qwen3.5-9B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 13620332,
+  "likes": 1854,
+  "pipeline_tag": "image-text-to-text",
+  "created_at": "2026-02-27T12:58:26.000Z",
+  "match_score": 0.392
+ },
+ {
+  "model_id": "alibaba:qwen3-8b:base",
+  "query": "Qwen3-8B",
+  "hf_repo": "Qwen/Qwen3-8B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 14667733,
+  "likes": 1319,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-27T03:42:21.000Z",
+  "match_score": 0.393
+ },
+ {
+  "model_id": "alibaba:qwen3-coder-480b-a35b:base",
+  "query": "Qwen3-Coder-480B-A35B",
+  "hf_repo": "Qwen/Qwen3-Coder-480B-A35B-Instruct",
+  "license_tag": "license:apache-2.0",
+  "downloads": 36128,
+  "likes": 1365,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-07-22T14:52:38.000Z",
+  "match_score": 0.274
+ },
+ {
+  "model_id": "alibaba:qwen3-coder-next:base",
+  "query": "Qwen3-Coder-Next",
+  "hf_repo": "Qwen/Qwen3-Coder-Next",
+  "license_tag": "license:apache-2.0",
+  "downloads": 507586,
+  "likes": 1614,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-01-30T15:08:18.000Z",
+  "match_score": 0.386
+ },
+ {
+  "model_id": "alibaba:qwen3-embedding:base",
+  "query": "Qwen3 Embedding",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen3-next-80b-a3b:base",
+  "query": "Qwen3-Next-80B-A3B",
+  "hf_repo": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+  "license_tag": "license:apache-2.0",
+  "downloads": 272026,
+  "likes": 1047,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-09T15:40:56.000Z",
+  "match_score": 0.277
+ },
+ {
+  "model_id": "alibaba:qwen3-reranker:base",
+  "query": "Qwen3 Reranker",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwq-32b:base",
+  "query": "QwQ-32B",
+  "hf_repo": "Qwen/QwQ-32B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 75604,
+  "likes": 2963,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-03-05T14:16:59.000Z",
+  "match_score": 0.394
+ },
+ {
+  "model_id": "alibaba:tongyi-deepresearch:base",
+  "query": "Tongyi DeepResearch",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek:deepseek-llm-7b:base",
+  "query": "DeepSeek LLM 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek:deepseek-prover-v1-5:base",
+  "query": "DeepSeek-Prover-V1.5",
+  "hf_repo": "deepseek-ai/DeepSeek-Prover-V1.5-RL",
+  "license_tag": "license:other",
+  "downloads": 1041,
+  "likes": 65,
+  "pipeline_tag": null,
+  "created_at": "2024-08-15T14:37:11.000Z",
+  "match_score": 0.281
+ },
+ {
+  "model_id": "deepseek:deepseek-prover-v2-671b:base",
+  "query": "DeepSeek-Prover-V2-671B",
+  "hf_repo": "deepseek-ai/DeepSeek-Prover-V2-671B",
+  "license_tag": null,
+  "downloads": 673,
+  "likes": 831,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-30T06:14:35.000Z",
+  "match_score": 0.38
+ },
+ {
+  "model_id": "deepseek:deepseek-prover-v2-7b:base",
+  "query": "DeepSeek-Prover-V2-7B",
+  "hf_repo": "deepseek-ai/DeepSeek-Prover-V2-7B",
+  "license_tag": null,
+  "downloads": 172801,
+  "likes": 147,
+  "pipeline_tag": null,
+  "created_at": "2025-04-30T06:32:28.000Z",
+  "match_score": 0.382
+ },
+ {
+  "model_id": "deepseek:deepseek-r1-distill-llama-70b:base",
+  "query": "DeepSeek-R1-Distill-Llama-70B",
+  "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+  "license_tag": "license:mit",
+  "downloads": 108068,
+  "likes": 798,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-20T09:13:33.000Z",
+  "match_score": 0.375
+ },
+ {
+  "model_id": "deepseek:deepseek-r1-distill-llama-8b:base",
+  "query": "DeepSeek-R1-Distill-Llama-8B",
+  "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+  "license_tag": "license:mit",
+  "downloads": 461099,
+  "likes": 874,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-20T09:09:42.000Z",
+  "match_score": 0.376
+ },
+ {
+  "model_id": "deepseek:deepseek-r1-distill-qwen-1-5b:base",
+  "query": "DeepSeek-R1-Distill-Qwen-1.5B",
+  "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+  "license_tag": "license:mit",
+  "downloads": 586721,
+  "likes": 1565,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-20T09:04:18.000Z",
+  "match_score": 0.376
+ },
+ {
+  "model_id": "deepseek:deepseek-r1-distill-qwen-14b:base",
+  "query": "DeepSeek-R1-Distill-Qwen-14B",
+  "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+  "license_tag": "license:mit",
+  "downloads": 649935,
+  "likes": 673,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-20T09:18:27.000Z",
+  "match_score": 0.376
+ },
+ {
+  "model_id": "deepseek:deepseek-r1-distill-qwen-32b:base",
+  "query": "DeepSeek-R1-Distill-Qwen-32B",
+  "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+  "license_tag": "license:mit",
+  "downloads": 631417,
+  "likes": 1599,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-20T09:19:00.000Z",
+  "match_score": 0.376
+ },
+ {
+  "model_id": "deepseek:deepseek-r1-distill-qwen-7b:base",
+  "query": "DeepSeek-R1-Distill-Qwen-7B",
+  "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+  "license_tag": "license:mit",
+  "downloads": 364346,
+  "likes": 877,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-20T09:16:14.000Z",
+  "match_score": 0.377
+ },
+ {
+  "model_id": "deepseek:deepseek-r1-zero:base",
+  "query": "DeepSeek-R1-Zero",
+  "hf_repo": "deepseek-ai/DeepSeek-R1-Zero",
+  "license_tag": "license:mit",
+  "downloads": 6915,
+  "likes": 961,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-20T03:35:48.000Z",
+  "match_score": 0.386
+ },
+ {
+  "model_id": "deepseek:deepseek-r1:base",
+  "query": "DeepSeek-R1 (May 2025)",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek:deepseek-v2:base",
+  "query": "DeepSeek-V2 (MoE-236B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek:deepseek-v3-1-terminus:base",
+  "query": "DeepSeek-V3.1-Terminus",
+  "hf_repo": "deepseek-ai/DeepSeek-V3.1-Terminus",
+  "license_tag": "license:mit",
+  "downloads": 17397,
+  "likes": 365,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-22T04:56:04.000Z",
+  "match_score": 0.381
+ },
+ {
+  "model_id": "deepseek:deepseek-v3-2:base",
+  "query": "DeepSeek-V3.2",
+  "hf_repo": "deepseek-ai/DeepSeek-V3.2",
+  "license_tag": "license:mit",
+  "downloads": 1176106,
+  "likes": 1469,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-12-01T02:34:49.000Z",
+  "match_score": 0.389
+ },
+ {
+  "model_id": "deepseek:deepseek-v3:base",
+  "query": "DeepSeek-V3 (Mar 2025)",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek:deepseekmath-v2:base",
+  "query": "DeepSeekMath-V2",
+  "hf_repo": "deepseek-ai/DeepSeek-Math-V2",
+  "license_tag": "license:apache-2.0",
+  "downloads": 547,
+  "likes": 706,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-11-27T09:54:23.000Z",
+  "match_score": 0.386
+ },
+ {
+  "model_id": "deepseek:deepseekmoe-16b:base",
+  "query": "DeepSeekMoE-16B",
+  "hf_repo": "deepseek-ai/deepseek-moe-16b-base",
+  "license_tag": "license:other",
+  "downloads": 19847,
+  "likes": 154,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-01-08T09:45:58.000Z",
+  "match_score": 0.282
+ },
+ {
+  "model_id": "eleutherai-laion:gpt-j-6b:base",
+  "query": "GPT-J-6B",
+  "hf_repo": "EleutherAI/gpt-j-6b",
+  "license_tag": "license:apache-2.0",
+  "downloads": 269364,
+  "likes": 1526,
+  "pipeline_tag": "text-generation",
+  "created_at": "2022-03-02T23:29:04.000Z",
+  "match_score": 0.094
+ },
+ {
+  "model_id": "equall-ai:saullm-large:base",
+  "query": "SaulLM-large",
+  "match_score": 0
+ },
+ {
+  "model_id": "eth-zurich-ecole-polytechnique-f-ed-erale-de-lausanne-epfl-swiss-national-supercomputing-centre-cscs-swisscom:apertus-70b:base",
+  "query": "Apertus 70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "eth-zurich-ecole-polytechnique-f-ed-erale-de-lausanne-epfl-swiss-national-supercomputing-centre-cscs-swisscom:apertus-8b:base",
+  "query": "Apertus 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "facebook-ai-research:multi-token-prediction-7b:base",
+  "query": "Multi-Token Prediction 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "facebook-ai:xlm-roberta:base",
+  "query": "XLM-RoBERTa",
+  "hf_repo": "FacebookAI/xlm-roberta-base",
+  "license_tag": "license:mit",
+  "downloads": 18722400,
+  "likes": 885,
+  "pipeline_tag": "fill-mask",
+  "created_at": "2022-03-02T23:29:04.000Z",
+  "match_score": -0.014
+ },
+ {
+  "model_id": "facebook-university-of-washington:roberta-large:base",
+  "query": "RoBERTa Large",
+  "match_score": 0
+ },
+ {
+  "model_id": "g42-inception-g42:jais-70b:base",
+  "query": "Jais-70B",
+  "hf_repo": "fne/Jais-70b-Preview",
+  "license_tag": null,
+  "downloads": 10,
+  "likes": 0,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-06-05T18:52:54.000Z",
+  "match_score": -0.014
+ },
+ {
+  "model_id": "google-google-research:mt5-xxl:base",
+  "query": "mT5-XXL",
+  "hf_repo": "google/mt5-xxl",
+  "license_tag": "license:apache-2.0",
+  "downloads": 573,
+  "likes": 72,
+  "pipeline_tag": null,
+  "created_at": "2022-03-02T23:29:05.000Z",
+  "match_score": 0.094
+ },
+ {
+  "model_id": "google:datagemma:base",
+  "query": "DataGemma",
+  "hf_repo": "google/datagemma-rag-27b-it",
+  "license_tag": "license:gemma",
+  "downloads": 131,
+  "likes": 192,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-26T23:10:03.000Z",
+  "match_score": 0.283
+ },
+ {
+  "model_id": "google:embeddinggemma:base",
+  "query": "EmbeddingGemma",
+  "hf_repo": "google/embeddinggemma-300m",
+  "license_tag": "license:gemma",
+  "downloads": 2568746,
+  "likes": 1854,
+  "pipeline_tag": "sentence-similarity",
+  "created_at": "2025-07-17T19:53:55.000Z",
+  "match_score": 0.282,
+  "audit_note": "300m 为参数量后缀"
+ },
+ {
+  "model_id": "google:gemma-2-27b:base",
+  "query": "Gemma 2 27B",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-2-2b:base",
+  "query": "Gemma 2 2B",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-2-9b:base",
+  "query": "Gemma 2 9B",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-2b:base",
+  "query": "Gemma 2B",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-3-1b:base",
+  "query": "Gemma 3 1B",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-3-270m:base",
+  "query": "Gemma 3 270M",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-4-26b-a4b:base",
+  "query": "Gemma 4 26B A4B",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-4-31b-it:base",
+  "query": "Gemma 4 31B IT",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:gemma-7b:base",
+  "query": "Gemma 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "google:switch:base",
+  "query": "Switch",
+  "hf_repo": null,
+  "license_tag": null,
+  "downloads": 13,
+  "likes": 0,
+  "pipeline_tag": "text-generation",
+  "created_at": "2022-03-02T23:29:05.000Z",
+  "match_score": -0.011,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "google:t5-11b:base",
+  "query": "T5-11B",
+  "hf_repo": "google/t5-11b-ssm-nq",
+  "license_tag": "license:apache-2.0",
+  "downloads": 150,
+  "likes": 0,
+  "pipeline_tag": "text-generation",
+  "created_at": "2022-03-02T23:29:05.000Z",
+  "match_score": 0.29
+ },
+ {
+  "model_id": "google:t5-3b:base",
+  "query": "T5-3B",
+  "hf_repo": "google-t5/t5-3b",
+  "license_tag": "license:apache-2.0",
+  "downloads": 449819,
+  "likes": 52,
+  "pipeline_tag": "translation",
+  "created_at": "2022-03-02T23:29:04.000Z",
+  "match_score": 0.096
+ },
+ {
+  "model_id": "google:t5gemma:base",
+  "query": "T5Gemma (Gemma 9B-9B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "huawei:pangu-pro-moe:base",
+  "query": "Pangu Pro MoE",
+  "match_score": 0
+ },
+ {
+  "model_id": "hugging-face-servicenow-nvidia-bigcode:starcoder-2-15b:base",
+  "query": "StarCoder 2 15B",
+  "match_score": 0
+ },
+ {
+  "model_id": "hugging-face-servicenow-nvidia-bigcode:starcoder-2-3b:base",
+  "query": "StarCoder 2 3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "hugging-face-servicenow-nvidia-bigcode:starcoder-2-7b:base",
+  "query": "StarCoder 2 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "ibm-research:granite-20b:base",
+  "query": "Granite 20B",
+  "match_score": 0
+ },
+ {
+  "model_id": "ibm:granite-3-0-2b:base",
+  "query": "Granite 3.0 2B",
+  "match_score": 0
+ },
+ {
+  "model_id": "ibm:granite-3-0-8b:base",
+  "query": "Granite 3.0 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "ibm:granite-4-0-h-micro:base",
+  "query": "Granite-4.0-H-Micro",
+  "hf_repo": "ibm-granite/granite-4.0-h-micro",
+  "license_tag": "license:apache-2.0",
+  "downloads": 37596,
+  "likes": 148,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-16T19:46:14.000Z",
+  "match_score": 0.385
+ },
+ {
+  "model_id": "ibm:granite-4-0-h-small:base",
+  "query": "Granite-4.0-H-Small",
+  "hf_repo": "ibm-granite/granite-4.0-h-small",
+  "license_tag": "license:apache-2.0",
+  "downloads": 27069,
+  "likes": 309,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-16T19:50:49.000Z",
+  "match_score": 0.385
+ },
+ {
+  "model_id": "ibm:granite-4-0-h-tiny:base",
+  "query": "Granite-4.0-H-Tiny",
+  "hf_repo": "ibm-granite/granite-4.0-h-tiny",
+  "license_tag": "license:apache-2.0",
+  "downloads": 160243,
+  "likes": 208,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-16T19:51:16.000Z",
+  "match_score": 0.386
+ },
+ {
+  "model_id": "ibm:granite-guardian-3-2:base",
+  "query": "Granite Guardian 3.2",
+  "match_score": 0
+ },
+ {
+  "model_id": "intelligent-internet:ii-medical-8b:base",
+  "query": "II-Medical-8B",
+  "hf_repo": "Intelligent-Internet/II-Medical-8B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 1337,
+  "likes": 213,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-05-12T16:03:13.000Z",
+  "match_score": 0.089
+ },
+ {
+  "model_id": "kunlun-inc:mindlink-72b:base",
+  "query": "MindLink-72B",
+  "hf_repo": null,
+  "license_tag": "license:apache-2.0",
+  "downloads": 24,
+  "likes": 33,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-08-01T12:52:49.000Z",
+  "match_score": -0.015,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "kunlun-inc:skywork-or1-32b:base",
+  "query": "Skywork-OR1-32B",
+  "hf_repo": "Skywork/Skywork-OR1-32B",
+  "license_tag": null,
+  "downloads": 43,
+  "likes": 22,
+  "pipeline_tag": null,
+  "created_at": "2025-05-13T07:33:38.000Z",
+  "match_score": 0.087
+ },
+ {
+  "model_id": "lg-ai-research:exaone-3-0:base",
+  "query": "EXAONE 3.0",
+  "match_score": 0
+ },
+ {
+  "model_id": "lg-ai-research:exaone-3-5-2-4b:base",
+  "query": "EXAONE 3.5 2.4B",
+  "match_score": 0
+ },
+ {
+  "model_id": "lg-ai-research:exaone-3-5-32b:base",
+  "query": "EXAONE 3.5 32B",
+  "match_score": 0
+ },
+ {
+  "model_id": "lg-ai-research:exaone-3-5-7-8b:base",
+  "query": "EXAONE 3.5 7.8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "lg-ai-research:exaone-4-0:base",
+  "query": "EXAONE 4.0 (32B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "lg-ai-research:exaone-deep-2-4b:base",
+  "query": "EXAONE Deep 2.4B",
+  "match_score": 0
+ },
+ {
+  "model_id": "lg-ai-research:exaone-deep-32b:base",
+  "query": "EXAONE Deep 32B",
+  "match_score": 0
+ },
+ {
+  "model_id": "lg-ai-research:exaone-deep-7-8b:base",
+  "query": "EXAONE Deep 7.8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mahidol-university-ai-entrepreneurs-association-of-thailand:openthaigpt-1-6-otg-1-6:base",
+  "query": "OpenThaiGPT 1.6 /  OTG-1.6 (72B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "mahidol-university-ai-entrepreneurs-association-of-thailand:openthaigpt-r1-32b-otg-r1:base",
+  "query": "OpenThaiGPT R1 32b / OTG-R1 (32B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "mahidol-university-ai-entrepreneurs-association-of-thailand:openthaigpt-v1-0-0:base",
+  "query": "OpenThaiGPT v1.0.0 (13B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "marin:marin-8b:base",
+  "query": "Marin 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meituan-inc:longcat-flash:base",
+  "query": "LongCat-Flash",
+  "hf_repo": "tiny-random/longcat-flash",
+  "license_tag": null,
+  "downloads": 251,
+  "likes": 2,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-01T04:36:57.000Z",
+  "match_score": 0.088
+ },
+ {
+  "model_id": "meta:code-llama-70b:base",
+  "query": "Code Llama-70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-2-13b:base",
+  "query": "Llama 2-13B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-2-70b:base",
+  "query": "Llama 2-70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-2-7b:base",
+  "query": "Llama 2-7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-1-405b:base",
+  "query": "Llama 3.1-405B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-1-70b:base",
+  "query": "Llama 3.1-70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-1-8b:base",
+  "query": "Llama 3.1-8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-2-1b:base",
+  "query": "Llama 3.2 1B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-2-3b:base",
+  "query": "Llama 3.2 3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-3-70b:base",
+  "query": "Llama 3.3 70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-70b:base",
+  "query": "Llama 3-70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:llama-3-8b:base",
+  "query": "Llama 3-8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "meta:opt-1-3b:base",
+  "query": "OPT-1.3B",
+  "hf_repo": "facebook/opt-1.3b",
+  "license_tag": "license:other",
+  "downloads": 117076,
+  "likes": 186,
+  "pipeline_tag": "text-generation",
+  "created_at": "2022-05-11T08:26:00.000Z",
+  "match_score": 0.394
+ },
+ {
+  "model_id": "meta:opt-175b:base",
+  "query": "OPT-175B",
+  "hf_repo": null,
+  "license_tag": "license:other",
+  "downloads": 0,
+  "likes": 8,
+  "pipeline_tag": "text-generation",
+  "created_at": "2023-04-06T02:38:53.000Z",
+  "match_score": -0.012,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "meta:opt-66b:base",
+  "query": "OPT-66B",
+  "hf_repo": "facebook/opt-66b",
+  "license_tag": "license:other",
+  "downloads": 5299,
+  "likes": 174,
+  "pipeline_tag": "text-generation",
+  "created_at": "2022-06-23T21:51:55.000Z",
+  "match_score": 0.394
+ },
+ {
+  "model_id": "microsoft:phi-3-5-mini:base",
+  "query": "Phi-3.5-mini",
+  "hf_repo": "microsoft/Phi-3.5-mini-instruct",
+  "license_tag": "license:mit",
+  "downloads": 640159,
+  "likes": 1068,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-16T20:48:26.000Z",
+  "match_score": 0.283
+ },
+ {
+  "model_id": "microsoft:phi-3-5-moe:base",
+  "query": "Phi-3.5-MoE",
+  "hf_repo": "microsoft/Phi-3.5-MoE-instruct",
+  "license_tag": "license:mit",
+  "downloads": 143784,
+  "likes": 575,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-17T21:34:19.000Z",
+  "match_score": 0.284
+ },
+ {
+  "model_id": "microsoft:phi-3-medium-14b:base",
+  "query": "phi-3-medium 14B",
+  "match_score": 0
+ },
+ {
+  "model_id": "microsoft:phi-3-mini-3-8b:base",
+  "query": "phi-3-mini 3.8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "microsoft:phi-3-small-7-4b:base",
+  "query": "phi-3-small 7.4B",
+  "match_score": 0
+ },
+ {
+  "model_id": "microsoft:phi-4-mini:base",
+  "query": "Phi-4 Mini",
+  "match_score": 0
+ },
+ {
+  "model_id": "microsoft:phi-4-reasoning:base",
+  "query": "Phi-4-Reasoning",
+  "hf_repo": null,
+  "license_tag": "license:mit",
+  "downloads": 14,
+  "likes": 2,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-28T12:46:38.000Z",
+  "match_score": -0.015,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "microsoft:wizardlm-2-7b:base",
+  "query": "WizardLM-2 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "microsoft:wizardlm-2-8x22b:base",
+  "query": "WizardLM-2 8x22B",
+  "match_score": 0
+ },
+ {
+  "model_id": "minimax:minimax-m1-40k:base",
+  "query": "MiniMax-M1-40k",
+  "hf_repo": "MiniMaxAI/MiniMax-M1-40k",
+  "license_tag": "license:apache-2.0",
+  "downloads": 4915,
+  "likes": 185,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-06-05T08:42:49.000Z",
+  "match_score": 0.388
+ },
+ {
+  "model_id": "minimax:minimax-m1-80k:base",
+  "query": "MiniMax-M1-80k",
+  "hf_repo": "MiniMaxAI/MiniMax-M1-80k",
+  "license_tag": "license:apache-2.0",
+  "downloads": 797,
+  "likes": 692,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-06-13T08:21:14.000Z",
+  "match_score": 0.388
+ },
+ {
+  "model_id": "minimax:minimax-m2-5:base",
+  "query": "MiniMax-M2.5",
+  "hf_repo": "MiniMaxAI/MiniMax-M2.5",
+  "license_tag": "license:other",
+  "downloads": 637338,
+  "likes": 1507,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-02-12T06:05:24.000Z",
+  "match_score": 0.39
+ },
+ {
+  "model_id": "minimax:minimax-m2-7:base",
+  "query": "MiniMax-M2.7",
+  "hf_repo": "MiniMaxAI/MiniMax-M2.7",
+  "license_tag": "license:other",
+  "downloads": 928216,
+  "likes": 1244,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-04-09T03:37:12.000Z",
+  "match_score": 0.39
+ },
+ {
+  "model_id": "minimax:minimax-m2:base",
+  "query": "MiniMax-M2",
+  "hf_repo": "MiniMaxAI/MiniMax-M2",
+  "license_tag": "license:other",
+  "downloads": 245741,
+  "likes": 1503,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-10-22T13:45:10.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "minimax:minimax-text-01:base",
+  "query": "MiniMax-Text-01",
+  "hf_repo": "MiniMaxAI/MiniMax-Text-01",
+  "license_tag": null,
+  "downloads": 2274,
+  "likes": 657,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-12T13:48:31.000Z",
+  "match_score": 0.387
+ },
+ {
+  "model_id": "mistral:codestral-mamba:base",
+  "query": "Codestral Mamba",
+  "match_score": 0
+ },
+ {
+  "model_id": "university-of-washington:grover-mega:base",
+  "query": "Grover-Mega",
+  "match_score": 0
+ },
+ {
+  "model_id": "university-of-waterloo-01-ai-wuhan-university:map-neo:base",
+  "query": "MAP-Neo",
+  "match_score": 0
+ },
+ {
+  "model_id": "unknown:cogito-1-series:base",
+  "query": "Cogito 1 series",
+  "match_score": 0
+ },
+ {
+  "model_id": "alibaba:qwen-3-6-27b:base",
+  "query": "Qwen 3.6-27B",
+  "match_score": 0
+ },
+ {
+  "model_id": "xiaomi-corp:mimo-7b-base:base",
+  "query": "MiMo-7B-Base",
+  "hf_repo": "XiaomiMiMo/MiMo-7B-Base",
+  "license_tag": "license:mit",
+  "downloads": 134564,
+  "likes": 137,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-29T23:41:27.000Z",
+  "match_score": 0.09
+ },
+ {
+  "model_id": "xiaomi-corp:mimo-v2-5-pro:base",
+  "query": "MiMo-V2.5-Pro",
+  "hf_repo": "XiaomiMiMo/MiMo-V2.5-Pro",
+  "license_tag": "license:mit",
+  "downloads": 54976,
+  "likes": 744,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-04-27T12:52:53.000Z",
+  "match_score": 0.09
+ },
+ {
+  "model_id": "z-ai-zhipu-ai-tsinghua-university:glm-4-5:base",
+  "query": "GLM-4.5",
+  "hf_repo": "zai-org/GLM-4.5",
+  "license_tag": "license:mit",
+  "downloads": 109218,
+  "likes": 1410,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-07-20T03:25:36.000Z",
+  "match_score": 0.095
+ },
+ {
+  "model_id": "z-ai-zhipu-ai-tsinghua-university:glm-4-6:base",
+  "query": "GLM-4.6",
+  "hf_repo": "zai-org/GLM-4.6",
+  "license_tag": "license:mit",
+  "downloads": 26180,
+  "likes": 1234,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-29T18:22:51.000Z",
+  "match_score": 0.095
+ },
+ {
+  "model_id": "zero-one:yi-34b:base",
+  "query": "Yi-34B",
+  "hf_repo": "01-ai/Yi-34B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 10119,
+  "likes": 1302,
+  "pipeline_tag": "text-generation",
+  "created_at": "2023-11-01T07:03:50.000Z",
+  "match_score": 0.095
+ },
+ {
+  "model_id": "zero-one:yi-6b:base",
+  "query": "Yi 6B",
+  "match_score": 0
+ },
+ {
+  "model_id": "zhipu:glm-5-1:base",
+  "query": "GLM-5.1",
+  "hf_repo": "zai-org/GLM-5.1",
+  "license_tag": "license:mit",
+  "downloads": 82080,
+  "likes": 1840,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-04-03T09:28:47.000Z",
+  "match_score": 0.095
+ },
+ {
+  "model_id": "zhipu:glm-5-2:base",
+  "query": "GLM-5.2",
+  "hf_repo": "zai-org/GLM-5.2",
+  "license_tag": "license:mit",
+  "downloads": 2576335,
+  "likes": 5042,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-06-16T07:39:20.000Z",
+  "match_score": 0.095
+ },
+ {
+  "model_id": "zhipu:glm-5:base",
+  "query": "GLM-5",
+  "hf_repo": null,
+  "license_tag": "license:mit",
+  "downloads": 2576335,
+  "likes": 5042,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-06-16T07:39:20.000Z",
+  "match_score": -0.005,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "zyphra:zamba2-7b:base",
+  "query": "Zamba2-7B",
+  "hf_repo": "Zyphra/Zamba2-7B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 169,
+  "likes": 116,
+  "pipeline_tag": null,
+  "created_at": "2024-09-27T17:46:35.000Z",
+  "match_score": 0.092
+ },
+ {
+  "model_id": "allen-institute-for-ai-contextual-ai-university-of-washington-princeton-university:olmoe:base",
+  "query": "OLMoE",
+  "hf_repo": "allenai/OLMoE-1B-7B-0924",
+  "license_tag": "license:apache-2.0",
+  "downloads": 159825,
+  "likes": 148,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-07-20T18:38:51.000Z",
+  "match_score": -0.013
+ },
+ {
+  "model_id": "allen-institute-for-ai-university-of-washington-new-york-university-nyu:olmo-2-furious-13b:base",
+  "query": "OLMo 2 Furious 13B",
+  "match_score": 0
+ },
+ {
+  "model_id": "allen-institute-for-ai-university-of-washington-new-york-university-nyu:olmo-2-furious-7b:base",
+  "query": "OLMo 2 Furious 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "allen-institute-for-ai-university-of-washington:olmo-1b:base",
+  "query": "OLMo-1B",
+  "hf_repo": "allenai/OLMo-1B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 1575,
+  "likes": 108,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-01-26T06:18:45.000Z",
+  "match_score": 0.394
+ },
+ {
+  "model_id": "allen-institute-for-ai-university-of-washington:olmo-7b:base",
+  "query": "OLMo-7B",
+  "hf_repo": "allenai/OLMo-7B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 3709,
+  "likes": 653,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-01-09T23:13:23.000Z",
+  "match_score": 0.394
+ },
+ {
+  "model_id": "allen-institute-for-ai-university-of-washington:tulu-3-405b:base",
+  "query": "Tulu 3 405B",
+  "match_score": 0
+ },
+ {
+  "model_id": "allen-institute-for-ai-university-of-washington:tulu-3-70b:base",
+  "query": "Tulu 3 (Tülu 3) 70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "allen-institute-for-ai-university-of-washington:tulu-3-8b:base",
+  "query": "Tulu 3 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "allen-institute-for-ai:olmo-1-7-7b:base",
+  "query": "OLMo 1.7-7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "allen-institute-for-ai:olmo-2-32b:base",
+  "query": "OLMo 2 32B",
+  "match_score": 0
+ },
+ {
+  "model_id": "allen-institute-for-ai:olmo-3:base",
+  "query": "Olmo 3",
+  "match_score": 0
+ },
+ {
+  "model_id": "amazon:nova-2-pro:base",
+  "query": "Nova 2 Pro (Preview)",
+  "match_score": 0
+ },
+ {
+  "model_id": "ant-group:ling-lite-1-5:base",
+  "query": "Ling-lite-1.5 (\"Bailing\")",
+  "match_score": 0
+ },
+ {
+  "model_id": "ant-group:ling-plus:base",
+  "query": "Ling-Plus (\"Bailing\")",
+  "match_score": 0
+ },
+ {
+  "model_id": "ant-group:ring-mini-linear-2-0:base",
+  "query": "Ring-mini-linear-2.0",
+  "hf_repo": "inclusionAI/Ring-mini-linear-2.0",
+  "license_tag": "license:mit",
+  "downloads": 3781,
+  "likes": 89,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-09-24T09:08:32.000Z",
+  "match_score": 0.084
+ },
+ {
+  "model_id": "apple:openelm-1-1b:base",
+  "query": "OpenELM-1.1B",
+  "hf_repo": null,
+  "license_tag": null,
+  "downloads": 0,
+  "likes": 0,
+  "pipeline_tag": null,
+  "created_at": "2024-07-18T15:39:53.000Z",
+  "match_score": -0.014,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "apple:openelm-270m:base",
+  "query": "OpenELM-270M",
+  "hf_repo": "apple/OpenELM-270M",
+  "license_tag": "license:apple-amlr",
+  "downloads": 2162,
+  "likes": 77,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-12T21:42:49.000Z",
+  "match_score": 0.389
+ },
+ {
+  "model_id": "apple:openelm-3b:base",
+  "query": "OpenELM-3B",
+  "hf_repo": "apple/OpenELM-3B",
+  "license_tag": "license:apple-amlr",
+  "downloads": 519,
+  "likes": 130,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-12T21:48:54.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "apple:openelm-450m:base",
+  "query": "OpenELM-450M",
+  "hf_repo": "apple/OpenELM-450M",
+  "license_tag": "license:apple-amlr",
+  "downloads": 396,
+  "likes": 26,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-12T21:48:16.000Z",
+  "match_score": 0.389
+ },
+ {
+  "model_id": "baichuan:baichuan-2-7b:base",
+  "query": "Baichuan 2-7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "baidu:ernie-4-5-0-3b:base",
+  "query": "ERNIE-4.5-0.3B",
+  "hf_repo": "baidu/ERNIE-4.5-0.3B-PT",
+  "license_tag": "license:apache-2.0",
+  "downloads": 23482,
+  "likes": 112,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-06-28T06:11:42.000Z",
+  "match_score": 0.288,
+  "audit_note": "PT=预训练版后缀，官方 baidu org"
+ },
+ {
+  "model_id": "baidu:ernie-4-5-21b-a3b:base",
+  "query": "ERNIE-4.5-21B-A3B",
+  "hf_repo": "baidu/ERNIE-4.5-21B-A3B-PT",
+  "license_tag": "license:apache-2.0",
+  "downloads": 34827,
+  "likes": 175,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-06-28T06:13:30.000Z",
+  "match_score": 0.285,
+  "audit_note": "PT=预训练版后缀，官方 baidu org"
+ },
+ {
+  "model_id": "baidu:ernie-4-5-300b-a47b:base",
+  "query": "ERNIE-4.5-300B-A47B",
+  "hf_repo": "baidu/ERNIE-4.5-300B-A47B-PT",
+  "license_tag": "license:apache-2.0",
+  "downloads": 2162,
+  "likes": 78,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-06-28T05:38:53.000Z",
+  "match_score": 0.283,
+  "audit_note": "PT=预训练版后缀，官方 baidu org"
+ },
+ {
+  "model_id": "beijing-academy-of-artificial-intelligence-baai:bge-m3-embedding:base",
+  "query": "BGE-M3 Embedding",
+  "match_score": 0
+ },
+ {
+  "model_id": "bytedance:bfs-prover:base",
+  "query": "BFS-Prover",
+  "hf_repo": "ByteDance-Seed/BFS-Prover-V1-7B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 117,
+  "likes": 26,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-02-23T23:11:13.000Z",
+  "match_score": 0.287,
+  "audit_note": "V1-7B 版本+参数量后缀，官方 ByteDance-Seed org"
+ },
+ {
+  "model_id": "bytedance:seed-coder:base",
+  "query": "Seed-Coder",
+  "hf_repo": "ByteDance-Seed/Seed-Coder-8B-Base",
+  "license_tag": "license:mit",
+  "downloads": 650,
+  "likes": 75,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-27T03:53:38.000Z",
+  "match_score": 0.285
+ },
+ {
+  "model_id": "bytedance:seed-oss-36b-base:base",
+  "query": "Seed-OSS-36B-Base",
+  "hf_repo": "ByteDance-Seed/Seed-OSS-36B-Base",
+  "license_tag": "license:apache-2.0",
+  "downloads": 6397,
+  "likes": 66,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-08-20T13:57:44.000Z",
+  "match_score": 0.386
+ },
+ {
+  "model_id": "carnegie-mellon-university-cmu-google-brain:xlnet:base",
+  "query": "XLNet",
+  "hf_repo": null,
+  "license_tag": null,
+  "downloads": 20,
+  "likes": 0,
+  "pipeline_tag": null,
+  "created_at": "2022-03-02T23:29:04.000Z",
+  "match_score": -0.012,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "cerebras-systems:cerebras-gpt-13b:base",
+  "query": "Cerebras-GPT-13B",
+  "hf_repo": "bob-cob/Cerebras-GPT-13B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 25,
+  "likes": 0,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-07-05T23:30:46.000Z",
+  "match_score": 0.086
+ },
+ {
+  "model_id": "china-mobile:jiutian-139moe:base",
+  "query": "JIUTIAN-139MoE",
+  "match_score": 0
+ },
+ {
+  "model_id": "china-telecom:telechat-12b:base",
+  "query": "TeleChat-12B",
+  "hf_repo": "Tele-AI/TeleChat-12B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 17,
+  "likes": 11,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-03-19T04:36:10.000Z",
+  "match_score": 0.089
+ },
+ {
+  "model_id": "china-telecom:telechat-7b:base",
+  "query": "TeleChat-7B",
+  "hf_repo": "Tele-AI/telechat-7B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 30,
+  "likes": 107,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-01-08T02:19:54.000Z",
+  "match_score": 0.09
+ },
+ {
+  "model_id": "china-telecom:telechat2-35b:base",
+  "query": "TeleChat2-35B",
+  "hf_repo": "chuhac/TeleChat2-35B",
+  "license_tag": "license:other",
+  "downloads": 253,
+  "likes": 1,
+  "pipeline_tag": null,
+  "created_at": "2024-11-07T02:31:39.000Z",
+  "match_score": 0.088
+ },
+ {
+  "model_id": "china-telecom:telechat2-3b:base",
+  "query": "TeleChat2-3B",
+  "hf_repo": "Tele-AI/TeleChat2-3B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 10671,
+  "likes": 3,
+  "pipeline_tag": null,
+  "created_at": "2024-11-27T07:31:00.000Z",
+  "match_score": 0.089
+ },
+ {
+  "model_id": "china-telecom:telechat2-7b:base",
+  "query": "TeleChat2-7B",
+  "hf_repo": "Tele-AI/TeleChat2-7B-32K",
+  "license_tag": null,
+  "downloads": 15,
+  "likes": 3,
+  "pipeline_tag": null,
+  "created_at": "2025-02-12T01:24:53.000Z",
+  "match_score": -0.014,
+  "audit_note": "32K 为上下文长度后缀，官方 Tele-AI org"
+ },
+ {
+  "model_id": "cisco:foundation-sec-8b:base",
+  "query": "Foundation-sec-8b",
+  "hf_repo": "fdtn-ai/Foundation-Sec-8B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 7837,
+  "likes": 322,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-26T17:20:37.000Z",
+  "match_score": 0.085
+ },
+ {
+  "model_id": "cognition-stanford-university:kevin-32b:base",
+  "query": "Kevin-32B",
+  "hf_repo": "cognition-ai/Kevin-32B",
+  "license_tag": null,
+  "downloads": 38,
+  "likes": 163,
+  "pipeline_tag": null,
+  "created_at": "2025-05-06T09:15:47.000Z",
+  "match_score": 0.092
+ },
+ {
+  "model_id": "cohere-cohere-labs-formerly-cohere-for-ai:command-r:base",
+  "query": "Command R+",
+  "match_score": 0
+ },
+ {
+  "model_id": "cohere-labs-formerly-cohere-for-ai-brown-university-cohere-carnegie-mellon-university-cmu-massachusetts-institute-of-technology-mit:aya:base",
+  "query": "Aya",
+  "hf_repo": "CohereLabs/aya-23-8B",
+  "license_tag": "license:cc-by-nc-4.0",
+  "downloads": 9626,
+  "likes": 437,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-05-19T20:01:07.000Z",
+  "match_score": -0.007,
+  "audit_note": "aya-23-8B：aya 系列第23版8B，官方 CohereLabs org"
+ },
+ {
+  "model_id": "cohere:cohere-command-a-reasoning:base",
+  "query": "Cohere Command A Reasoning",
+  "match_score": 0
+ },
+ {
+  "model_id": "cohere:north-mini-code:base",
+  "query": "North Mini Code",
+  "match_score": 0
+ },
+ {
+  "model_id": "contextual-ai-the-university-of-hong-kong-microsoft:gritlm-7b:base",
+  "query": "GRITLM 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "contextual-ai-the-university-of-hong-kong-microsoft:gritlm-8x7b:base",
+  "query": "GRITLM 8x7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "databricks:dbrx:base",
+  "query": "DBRX",
+  "hf_repo": "Undi95/dbrx-base",
+  "license_tag": "license:other",
+  "downloads": 111,
+  "likes": 29,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-03-28T17:19:12.000Z",
+  "match_score": -0.008
+ },
+ {
+  "model_id": "deepseek-peking-university:deepseek-coder-1-3b:base",
+  "query": "DeepSeek Coder 1.3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek-peking-university:deepseek-coder-33b:base",
+  "query": "DeepSeek Coder 33B",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek-peking-university:deepseek-coder-6-7b:base",
+  "query": "DeepSeek Coder 6.7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek-tsinghua-university-peking-university:deepseekmath-7b:base",
+  "query": "DeepSeekMath 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek:deepseek-coder-v2-236b:base",
+  "query": "DeepSeek-Coder-V2 236B",
+  "match_score": 0
+ },
+ {
+  "model_id": "deepseek:deepseek-llm-67b:base",
+  "query": "DeepSeek LLM 67B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:codestral:base",
+  "query": "Codestral",
+  "hf_repo": "mistralai/Codestral-22B-v0.1",
+  "license_tag": "license:other",
+  "downloads": 35194,
+  "likes": 1346,
+  "pipeline_tag": null,
+  "created_at": "2024-05-29T11:28:50.000Z",
+  "match_score": 0.285
+ },
+ {
+  "model_id": "mistral:devstral-2:base",
+  "query": "Devstral 2 (123B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:magistral-small-1-0:base",
+  "query": "Magistral Small 1.0",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:magistral-small-1-1:base",
+  "query": "Magistral Small 1.1",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:ministral-3-14b:base",
+  "query": "Ministral 3 14B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:ministral-3-3b:base",
+  "query": "Ministral 3 3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:ministral-3-8b:base",
+  "query": "Ministral 3 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:ministral-8b:base",
+  "query": "Ministral 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:mistral-large-2:base",
+  "query": "Mistral Large 2",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:mistral-large-3:base",
+  "query": "Mistral Large 3",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:mistral-nemo:base",
+  "query": "Mistral NeMo",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:mistral-small-v24-09:base",
+  "query": "Mistral Small v24.09",
+  "match_score": 0
+ },
+ {
+  "model_id": "mistral:mixtral-8x22b:base",
+  "query": "Mixtral 8x22B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mit-ibm-watson-ai-lab-massachusetts-institute-of-technology-mit:gla-transformer-1-3b:base",
+  "query": "GLA Transformer 1.3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "mit-ibm-watson-ai-lab-massachusetts-institute-of-technology-mit:gla-transformer-340m:base",
+  "query": "GLA Transformer 340M",
+  "match_score": 0
+ },
+ {
+  "model_id": "mohamed-bin-zayed-university-of-artificial-intelligence-mbzuai-g42:k2-think:base",
+  "query": "K2 Think",
+  "match_score": 0
+ },
+ {
+  "model_id": "moonshot:kimi-dev-72b:base",
+  "query": "Kimi Dev 72b",
+  "match_score": 0
+ },
+ {
+  "model_id": "moonshot:kimi-k2-5:base",
+  "query": "Kimi K2.5",
+  "match_score": 0
+ },
+ {
+  "model_id": "moonshot:kimi-k2-6:base",
+  "query": "Kimi K2.6",
+  "match_score": 0
+ },
+ {
+  "model_id": "moonshot:kimi-k2-thinking:base",
+  "query": "Kimi K2 Thinking",
+  "match_score": 0
+ },
+ {
+  "model_id": "moonshot:kimi-linear:base",
+  "query": "Kimi Linear",
+  "match_score": 0
+ },
+ {
+  "model_id": "mosaicml:mpt-7b:base",
+  "query": "MPT-7B",
+  "hf_repo": "gl198976/mpt-7b",
+  "license_tag": "license:apache-2.0",
+  "downloads": 1086,
+  "likes": 2,
+  "pipeline_tag": "text-generation",
+  "created_at": "2023-05-06T04:59:10.000Z",
+  "match_score": 0.095
+ },
+ {
+  "model_id": "nexusflow:athene-70b:base",
+  "query": "Athene-70B",
+  "hf_repo": "Nexusflow/Athene-70B",
+  "license_tag": "license:other",
+  "downloads": 2456,
+  "likes": 199,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-07-19T07:32:05.000Z",
+  "match_score": 0.091
+ },
+ {
+  "model_id": "nexusflow:athene-v2:base",
+  "query": "Athene-V2",
+  "hf_repo": "Nexusflow/Athene-V2-Chat",
+  "license_tag": "license:other",
+  "downloads": 3635,
+  "likes": 294,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-11-12T20:58:12.000Z",
+  "match_score": -0.012
+ },
+ {
+  "model_id": "nous-research:hermes-3-405b:base",
+  "query": "Hermes 3 405B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nous-research:hermes-3-70b:base",
+  "query": "Hermes 3 70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nous-research:hermes-3-8b:base",
+  "query": "Hermes 3 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia-meta-ai:llama-3-1-nemotron-70b-instruct:base",
+  "query": "Llama-3.1-Nemotron-70B-Instruct",
+  "hf_repo": "nvidia/Llama-3.1-Nemotron-70B-Instruct",
+  "license_tag": "license:llama3.1",
+  "downloads": 56,
+  "likes": 569,
+  "pipeline_tag": null,
+  "created_at": "2024-10-12T03:38:17.000Z",
+  "match_score": 0.074
+ },
+ {
+  "model_id": "nvidia-servicenow:apriel-nemotron-15b:base",
+  "query": "Apriel Nemotron 15B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:hymba:base",
+  "query": "Hymba",
+  "hf_repo": "nvidia/Hymba-1.5B-Base",
+  "license_tag": "license:other",
+  "downloads": 1858,
+  "likes": 158,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-10-09T20:18:18.000Z",
+  "match_score": 0.288,
+  "audit_note": "1.5B-Base 参数量+Base 后缀，官方 nvidia org"
+ },
+ {
+  "model_id": "nvidia:llama-3-1-minitron-4b:base",
+  "query": "Llama-3.1-Minitron-4B",
+  "hf_repo": "nvidia/Llama-3.1-Minitron-4B-Width-Base",
+  "license_tag": "license:other",
+  "downloads": 5689,
+  "likes": 197,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-13T20:57:26.000Z",
+  "match_score": 0.274,
+  "audit_note": "Width-Base 为裁剪规格，官方 nvidia org"
+ },
+ {
+  "model_id": "nvidia:llama-nemotron-nano-8b:base",
+  "query": "Llama Nemotron Nano 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:llama-nemotron-super-49b:base",
+  "query": "Llama Nemotron Super 49B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:llama-nemotron-super-v1-5:base",
+  "query": "Llama Nemotron Super v1.5",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:llama-nemotron-ultra-253b:base",
+  "query": "Llama Nemotron Ultra 253B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:mamba2-hybrid:base",
+  "query": "Mamba2-Hybrid",
+  "hf_repo": "nvidia/mamba2-hybrid-8b-3t-4k",
+  "license_tag": "license:apache-2.0",
+  "downloads": 0,
+  "likes": 75,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-06-13T00:01:29.000Z",
+  "match_score": 0.282,
+  "audit_note": "8b-3t-4k 为规格后缀，官方 nvidia org"
+ },
+ {
+  "model_id": "nvidia:minitron-4b:base",
+  "query": "Minitron 4B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:minitron-8b:base",
+  "query": "Minitron 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-3-5-lightning:base",
+  "query": "Nemotron 3.5 Lightning",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-3-nano-30b-a3b:base",
+  "query": "Nemotron 3-Nano-30B-A3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-3-super:base",
+  "query": "Nemotron 3 Super",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-3-ultra:base",
+  "query": "Nemotron 3 Ultra",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-4-340b:base",
+  "query": "Nemotron-4 340B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-cascade-14b:base",
+  "query": "Nemotron-Cascade 14B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-h-47b:base",
+  "query": "Nemotron-H 47B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-h-56b:base",
+  "query": "Nemotron-H 56B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nemotron-h-8b:base",
+  "query": "Nemotron-H 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "nvidia:nv-embed-v1:base",
+  "query": "NV-Embed-v1",
+  "hf_repo": "nvidia/NV-Embed-v1",
+  "license_tag": "license:cc-by-nc-4.0",
+  "downloads": 440,
+  "likes": 429,
+  "pipeline_tag": null,
+  "created_at": "2024-05-23T01:20:16.000Z",
+  "match_score": 0.391
+ },
+ {
+  "model_id": "nvidia:nvidia-nemotron-nano-9b-v2:base",
+  "query": "NVIDIA-Nemotron-Nano-9B-v2",
+  "hf_repo": "nvidia/NVIDIA-Nemotron-Nano-9B-v2",
+  "license_tag": "license:other",
+  "downloads": 393247,
+  "likes": 514,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-08-12T22:43:32.000Z",
+  "match_score": 0.378
+ },
+ {
+  "model_id": "openai:gpt-oss-120b:base",
+  "query": "gpt-oss-120b",
+  "hf_repo": "openai/gpt-oss-120b",
+  "license_tag": "license:apache-2.0",
+  "downloads": 5013805,
+  "likes": 5123,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-08-04T22:33:06.000Z",
+  "match_score": 0.09
+ },
+ {
+  "model_id": "openai:gpt-oss-20b:base",
+  "query": "gpt-oss-20b",
+  "hf_repo": "openai/gpt-oss-20b",
+  "license_tag": "license:apache-2.0",
+  "downloads": 7036240,
+  "likes": 4950,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-08-04T22:33:29.000Z",
+  "match_score": 0.091
+ },
+ {
+  "model_id": "opengpt-x-fraunhofer-institute-for-algorithms-and-scientific-computing-forschungszentrum-julich-technische-universit-t-dresden:teuken-7b:base",
+  "query": "Teuken 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "perplexity:r1:1776",
+  "query": "R1 1776",
+  "match_score": 0
+ },
+ {
+  "model_id": "pleias:pleias-rag-1b:base",
+  "query": "Pleias-RAG-1B",
+  "hf_repo": "PleIAs/Pleias-RAG-1B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 164,
+  "likes": 72,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-07T23:30:25.000Z",
+  "match_score": 0.089
+ },
+ {
+  "model_id": "pleias:pleias-rag-350m:base",
+  "query": "Pleias-RAG-350m",
+  "hf_repo": "PleIAs/Pleias-RAG-350M",
+  "license_tag": "license:apache-2.0",
+  "downloads": 258,
+  "likes": 33,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-04-07T08:38:39.000Z",
+  "match_score": 0.087
+ },
+ {
+  "model_id": "prime-intellect-arcee-ai:arcee-trinity-large:base",
+  "query": "Arcee Trinity Large",
+  "match_score": 0
+ },
+ {
+  "model_id": "prime-intellect:intellect-3:base",
+  "query": "INTELLECT-3",
+  "match_score": 0
+ },
+ {
+  "model_id": "princeton-university-carnegie-mellon-university-cmu:mamba-2-2-7b:base",
+  "query": "Mamba 2, 2.7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "princeton-university-university-of-virginia:simpo:base",
+  "query": "SimPO",
+  "match_score": 0
+ },
+ {
+  "model_id": "rednote:dots-llm1:base",
+  "query": "dots.llm1",
+  "hf_repo": "dots-studio/dots.llm1.base",
+  "license_tag": "license:mit",
+  "downloads": 9668,
+  "likes": 69,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-05-14T10:03:46.000Z",
+  "match_score": -0.012
+ },
+ {
+  "model_id": "rwkv-foundation-eleutherai-ohio-state-university-university-of-california-santa-barbara-ucsb-wroclaw-tech-wroc-aw-university-of-science-and-technology-guangdong-laboratory-of-artificial-intelligence-and-digital-economy-pazhou-lab-new-york-university-nyu-harvard-university-contextual-ai-university-of-chinese-academy-of-sciences-university-of-california-santa-cruz-tsinghua-university-university-of-edinburgh-university-of-british-columbia-ubc-pennsylvania-state-university:rwkv-5-7b:base",
+  "query": "RWKV-5 (Eagle) 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "rwkv-foundation-eleutherai-ohio-state-university-university-of-california-santa-barbara-ucsb-wroclaw-tech-wroc-aw-university-of-science-and-technology-guangdong-laboratory-of-artificial-intelligence-and-digital-economy-pazhou-lab-new-york-university-nyu-harvard-university-contextual-ai-university-of-chinese-academy-of-sciences-university-of-california-santa-cruz-tsinghua-university-university-of-edinburgh-university-of-british-columbia-ubc-pennsylvania-state-university:rwkv-6-3b:base",
+  "query": "RWKV-6 (Finch) 3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "salesforce:xlam-8x22b:base",
+  "query": "xLAM-8x22B",
+  "hf_repo": "Salesforce/xLAM-8x22b-r",
+  "license_tag": "license:cc-by-nc-4.0",
+  "downloads": 17211,
+  "likes": 45,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-08-28T02:19:58.000Z",
+  "match_score": -0.01
+ },
+ {
+  "model_id": "sambanova-systems-inc:sambalingo-thai-chat-70b:base",
+  "query": "SambaLingo-Thai-Chat-70B",
+  "hf_repo": "sambanovasystems/SambaLingo-Thai-Chat-70B",
+  "license_tag": "license:llama2",
+  "downloads": 10,
+  "likes": 4,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-15T20:06:57.000Z",
+  "match_score": 0.079
+ },
+ {
+  "model_id": "sambanova-systems-inc:sambalingo-thai-chat:base",
+  "query": "SambaLingo-Thai-Chat (7B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "saudi-data-and-artificial-intelligence-authority:allam-7b:base",
+  "query": "ALLaM 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "sber-moscow-institute-of-physics-and-technology:gigaembeddings:base",
+  "query": "GigaEmbeddings",
+  "hf_repo": "ai-sage/Giga-Embeddings-instruct",
+  "license_tag": "license:mit",
+  "downloads": 459871,
+  "likes": 119,
+  "pipeline_tag": "feature-extraction",
+  "created_at": "2024-12-11T12:25:30.000Z",
+  "match_score": -0.022
+ },
+ {
+  "model_id": "sber:fred-t5-xl:base",
+  "query": "FRED-T5-XL",
+  "hf_repo": null,
+  "license_tag": "license:mit",
+  "downloads": 40,
+  "likes": 1,
+  "pipeline_tag": "text-generation",
+  "created_at": "2023-05-21T09:32:17.000Z",
+  "match_score": -0.016,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "sber:gigachat-lite:base",
+  "query": "GigaChat Lite (GigaChat-20B-A3B)",
+  "match_score": 0
+ },
+ {
+  "model_id": "sea-ai-lab-singapore-university-of-technology-design:sailor-7b-chat:base",
+  "query": "Sailor-7B-Chat",
+  "hf_repo": "sail/Sailor-7B-Chat",
+  "license_tag": "license:apache-2.0",
+  "downloads": 19,
+  "likes": 8,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-03-02T09:48:59.000Z",
+  "match_score": 0.088
+ },
+ {
+  "model_id": "shanghai-ai-lab-sensetime-chinese-university-of-hong-kong-cuhk-fudan-university:internlm2-20b:base",
+  "query": "InternLM2-20B",
+  "match_score": 0
+ },
+ {
+  "model_id": "shanghai-ai-lab:internlm2-5:base",
+  "query": "InternLM2.5",
+  "hf_repo": null,
+  "license_tag": "license:mit",
+  "downloads": 0,
+  "likes": 0,
+  "pipeline_tag": null,
+  "created_at": "2024-11-20T16:53:57.000Z",
+  "match_score": -0.023,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "shanghai-ai-lab:p1-235b-a22b:base",
+  "query": "P1-235B-A22B",
+  "hf_repo": "PRIME-RL/P1-235B-A22B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 27,
+  "likes": 20,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-10-22T17:08:32.000Z",
+  "match_score": 0.09
+ },
+ {
+  "model_id": "snowflake:arctic:base",
+  "query": "Arctic",
+  "hf_repo": null,
+  "license_tag": "license:creativeml-openrail-m",
+  "downloads": 17,
+  "likes": 4,
+  "pipeline_tag": "text-to-image",
+  "created_at": "2023-08-09T20:38:20.000Z",
+  "match_score": -0.01,
+  "drop_reason": "audit: 名称实指其他模型/非官方微调"
+ },
+ {
+  "model_id": "speakleash-cyfronet-agh:bielik-7b:base",
+  "query": "Bielik 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "stanford-university-microsoft-georgia-institute-of-technology:collabllm:base",
+  "query": "CollabLLM",
+  "hf_repo": "hour1/collabllm",
+  "license_tag": null,
+  "downloads": 0,
+  "likes": 0,
+  "pipeline_tag": null,
+  "created_at": "2025-12-17T08:24:11.000Z",
+  "match_score": 0.091
+ },
+ {
+  "model_id": "stanford-university-university-of-washington-allen-institute-for-ai-contextual-ai:s1-1:base",
+  "query": "s1.1",
+  "hf_repo": "simplescaling/s1.1-32B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 839,
+  "likes": 99,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-02-08T17:37:22.000Z",
+  "match_score": -0.006,
+  "audit_note": "32B 参数量后缀，官方 simplescaling org"
+ },
+ {
+  "model_id": "stanford-university-university-of-washington-allen-institute-for-ai-contextual-ai:s1-32b:base",
+  "query": "s1-32B",
+  "hf_repo": "simplescaling/s1-32B",
+  "license_tag": "license:apache-2.0",
+  "downloads": 215,
+  "likes": 293,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-01-14T20:30:52.000Z",
+  "match_score": 0.095
+ },
+ {
+  "model_id": "stanford-university-university-of-washington-allen-institute-for-ai-contextual-ai:s1:base",
+  "query": "s1",
+  "hf_repo": "superwhisper/s1-mini",
+  "license_tag": "license:other",
+  "downloads": 2976,
+  "likes": 228,
+  "pipeline_tag": "text-generation",
+  "created_at": "2026-08-12T14:33:55.000Z",
+  "match_score": -0.006
+ },
+ {
+  "model_id": "stepfun:step-3-5-flash:base",
+  "query": "Step 3.5 Flash",
+  "match_score": 0
+ },
+ {
+  "model_id": "t-bank:t-pro-2-0:base",
+  "query": "T-Pro 2.0",
+  "match_score": 0
+ },
+ {
+  "model_id": "t-bank:t-pro:base",
+  "query": "T-Pro",
+  "match_score": 0
+ },
+ {
+  "model_id": "technology-innovation-institute:falcon-180b:base",
+  "query": "Falcon-180B",
+  "hf_repo": "tiiuae/falcon-180B",
+  "license_tag": "license:unknown",
+  "downloads": 63,
+  "likes": 1152,
+  "pipeline_tag": "text-generation",
+  "created_at": "2023-08-28T23:28:49.000Z",
+  "match_score": 0.09
+ },
+ {
+  "model_id": "technology-innovation-institute:falcon-40b:base",
+  "query": "Falcon-40B",
+  "hf_repo": "tiiuae/falcon-40b",
+  "license_tag": "license:apache-2.0",
+  "downloads": 16696,
+  "likes": 2439,
+  "pipeline_tag": "text-generation",
+  "created_at": "2023-05-24T12:08:30.000Z",
+  "match_score": 0.091
+ },
+ {
+  "model_id": "technology-innovation-institute:falcon-h1:base",
+  "query": "Falcon-H1",
+  "hf_repo": "tiiuae/Falcon-H1-3B-Base",
+  "license_tag": "license:other",
+  "downloads": 1147,
+  "likes": 6,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-05-01T05:09:28.000Z",
+  "match_score": -0.014
+ },
+ {
+  "model_id": "tencent:hunyuan-large:base",
+  "query": "Hunyuan-Large",
+  "match_score": 0
+ },
+ {
+  "model_id": "tohoku-university-cyberagent-tokyo-institute-of-technology-fujitsu-riken-nagoya-university-kotoba-technologies:fugaku-llm:base",
+  "query": "Fugaku-LLM",
+  "hf_repo": "Fugaku-LLM/Fugaku-LLM-13B",
+  "license_tag": "license:other",
+  "downloads": 13,
+  "likes": 134,
+  "pipeline_tag": "text-generation",
+  "created_at": "2024-04-18T00:44:58.000Z",
+  "match_score": -0.012
+ },
+ {
+  "model_id": "tokyo-institute-of-technology:swallow:base",
+  "query": "Swallow",
+  "hf_repo": "tokyotech-llm/Swallow-7b-hf",
+  "license_tag": "license:llama2",
+  "downloads": 2363,
+  "likes": 17,
+  "pipeline_tag": "text-generation",
+  "created_at": "2023-11-25T10:09:49.000Z",
+  "match_score": -0.011
+ },
+ {
+  "model_id": "trillion-labs:trillion-7b:base",
+  "query": "Trillion-7B",
+  "hf_repo": "trillionlabs/Trillion-7B-preview",
+  "license_tag": "license:apache-2.0",
+  "downloads": 613,
+  "likes": 86,
+  "pipeline_tag": "text-generation",
+  "created_at": "2025-03-14T05:39:45.000Z",
+  "match_score": -0.017
+ },
+ {
+  "model_id": "tsinghua-university-modelbest:minicpm-1-2b:base",
+  "query": "MiniCPM-1.2B",
+  "match_score": 0
+ },
+ {
+  "model_id": "tsinghua-university-modelbest:minicpm-2-4b:base",
+  "query": "MiniCPM-2.4B",
+  "match_score": 0
+ },
+ {
+  "model_id": "typhoon-scb-10x:llama-3-1-typhoon-2-70b:base",
+  "query": "Llama 3.1 Typhoon 2 70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "typhoon-scb-10x:llama-3-1-typhoon-2-8b:base",
+  "query": "Llama 3.1 Typhoon 2 8B",
+  "match_score": 0
+ },
+ {
+  "model_id": "typhoon-scb-10x:llama-3-2-typhoon-2-1b:base",
+  "query": "LLama 3..2 Typhoon 2 1B",
+  "match_score": 0
+ },
+ {
+  "model_id": "typhoon-scb-10x:llama-3-2-typhoon-2-3b:base",
+  "query": "LLama 3.2 Typhoon 2 3B",
+  "match_score": 0
+ },
+ {
+  "model_id": "typhoon-scb-10x:typhoon-2-1-gemma-12b:base",
+  "query": "Typhoon 2.1 Gemma 12B",
+  "match_score": 0
+ },
+ {
+  "model_id": "typhoon-scb-10x:typhoon-2-1-gemma-4b:base",
+  "query": "Typhoon 2.1 Gemma 4B",
+  "match_score": 0
+ },
+ {
+  "model_id": "typhoon-scb-10x:typhoon-2-7b:base",
+  "query": "Typhoon 2 7B",
+  "match_score": 0
+ },
+ {
+  "model_id": "university-of-cambridge-southern-university-of-science-and-technology-sustech-hong-kong-university-of-science-and-technology-hkust-huawei-noah-s-ark-lab-alan-turing-institute-max-planck-institute-for-intelligent-systems:metamath-70b:base",
+  "query": "MetaMath 70B",
+  "match_score": 0
+ },
+ {
+  "model_id": "university-of-cambridge-southern-university-of-science-and-technology-sustech-hong-kong-university-of-science-and-technology-hkust-huawei-noah-s-ark-lab-alan-turing-institute-max-planck-institute-for-intelligent-systems:metamath-7b:base",
+  "query": "MetaMath 7B (LLaMa finetune)",
+  "match_score": 0
+ }
+]
