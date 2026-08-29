@@ -403,6 +403,49 @@ for k in TOP_KEYS:
 
 ---
 
+### 16. 【2026-08-29 整改轮新增】schema 转正三项 + 定价置信度改为 ERROR 级
+
+**16.1 三个字段从「野键」转正为规范键**（`validate_model_data.py` 的 `SCHEMA_BLOCK_KEYS` 已加白名单）
+
+| 字段 | 类型 | 取值口径 |
+|---|---|---|
+| `basic_info.license` | 自由文本 | 官方模型卡/HF 仓库 LICENSE 原文；闭源模型写「闭源 API」。**严禁凭 `open_weights` 反推**，未采集填 `null` |
+| `architecture.max_output_tokens` | 整数 | 官方单次最大输出 token 数，**与 `context_window_tokens` 是两个字段，勿混填** |
+| `architecture.reasoning_model` | 布尔 | 是否推理型/思考型；厂商未声明填 `null`，勿按「能力强」臆断 |
+
+转正原因：主库已有 8/4/4 条实值在用。`incoming/models/_samples/` 两个权威样例也已同步补上这三个键（值先置 `null`）。
+在白名单加上它们之前，下游按规范路径读取会得到 null——**数据真实存在但不可见**，与 §15.1 同一类失效。
+
+**16.2 `pricing.confidence` 现在是 ERROR 级检查**（此前只查 `benchmarks.*.confidence`，定价侧长期无人管）
+
+```python
+pconf = pricing.get("confidence")
+if pconf is not None and pconf not in CONFIDENCE_ENUM:
+    errors.append(...)
+```
+
+受控词表定义在 `docs/prompt.md` 的 `confidence` 枚举行（现为 442 行）：`T0 / T0-自报 / T0-自报-转述 / T1 / T2 / T3 / T4`；未采集填 `null`（`null` 不算越界）。
+历史漏网的 4 条越界值 `中 / 低 / high / N/A` 已在 D2 整改归位。
+另注意：`T0-自报-转述` 按决策 2（prompt.md:267）**只适用于 benchmark 自报分**，出现在 pricing 上属于误用，一律降级。
+
+**16.3 踩过的坑：权威样例自己带着 3 个 ERROR**
+
+`incoming/models/_samples/sample_openai_gpt-5-5-none.jsonl` 的 `positioning`
+原本是 `["旗舰","智能体","编码","知识工作"]`——后三个全是越界标签，**样例自己过不了门禁**。
+subagent 是照抄样例的，等于把错误标签批量复制。已按通用规范 §8.2-9 修正为 `["旗舰","工具调用增强"]`
+（`智能体`/`编码`→`工具调用增强`；`知识工作` 是纯场景描述，**删除而非映射**）。
+
+> 教训：改白名单或改样例后，必须把样例自己喂给门禁复跑。样例 ERROR 0 且漂移 0 才算闭环。
+
+**16.4 「未披露」字面判定已放宽为词序无关**
+
+原规则 `"未披露" not in notes`，匹配不到同样合法的 **「未官方披露」**（误报 4 条，含权威样例）。
+现改为 `NOT_DISCLOSED_RE = 未[^\s，。；;、]{0,3}披露|待补`，不允许跨越句读。
+仍然成立的通则：**门禁里凡是靠 notes 字面判定的规则，都是「文案契约」而不是语义检查**——
+写 notes 时优先套用受控措辞；改措辞前先想清楚会不会触发误报（D4 清样板句时正是这条咬人，见 §14 第 2 点）。
+
+---
+
 ## 11. 并发上限（429）的处理
 
 派发 subagent 采集时可能撞上平台级并发上限，报错形如 `429 queue.userLimit.title` 或 `429 queue.waiting.title`。**这是账号/平台维度的限制，与项目配置无关，立刻重试通常仍失败。**

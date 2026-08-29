@@ -31,3 +31,6 @@ Thumbs.db
 /incoming/models/*.jsonl
 !/incoming/models/_samples/
 !/incoming/models/_m_context.md
+
+# 整改脚本自动备份（可从 git 恢复，不入库）
+model_data_v2.jsonl.d*bak-*

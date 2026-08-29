@@ -25,6 +25,8 @@ import json
 import re
 import sys
 
+# 刻意不随白名单扩容升版本：新增键全部可选，旧记录读取路径不变；
+# 升成 1.2 会让 950 条存量记录同时命中下面的 schema_version WARN，把验收信号变成噪音。
 SCHEMA_VERSION = "1.1"
 
 TOP_KEYS = ["schema_version", "model_id", "basic_info", "architecture",
@@ -32,11 +34,14 @@ TOP_KEYS = ["schema_version", "model_id", "basic_info", "architecture",
 
 # 规范键白名单。权威来源 = incoming/models/_samples/ 下的样板文件（M 型 subagent 照抄的对象），
 # 取两个样例的并集（google 样例结构最全）。
+# 2026-08-29 扩三项：basic_info.license / architecture.max_output_tokens /
+# architecture.reasoning_model —— 主库已有 8/4/4 条实值在用，转正以免下游读不到。
 SCHEMA_BLOCK_KEYS = {
     "basic_info": {"full_name", "version", "vendor", "release_date",
-                   "positioning", "access", "notes"},
+                   "positioning", "access", "license", "notes"},
     "architecture": {"total_params_b", "active_params_b", "architecture_type",
                      "context_window_tokens", "context_window_effective_tokens",
+                     "max_output_tokens", "reasoning_model",
                      "knowledge_cutoff", "notes"},
     "benchmarks": {"self_reported", "independent", "arena_elo"},
     "pricing": {"currency", "unit", "input", "output", "cached_input", "cache_write",
@@ -56,6 +61,9 @@ POSITIONING_ENUM = {"旗舰", "中端", "轻量", "推理增强", "多模态", "
 CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"}
 DATE_MD_RE = re.compile(r"^\d{4}-\d{2}$")
 DATE_FULL_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# 「未披露」类声明词序变体很多（官方未披露 / 未官方披露 / 尚未披露），按字面匹配会把
+# 已如实声明的记录误判成缺声明；不允许跨越句读，避免「未提及，…已披露」这类误通过。
+NOT_DISCLOSED_RE = re.compile(r"未[^\s，。；;、]{0,3}披露|待补")
 RELAY_MARK = "转述"
 
 MODALITY_BOOL_SECTIONS = {
@@ -118,8 +126,8 @@ def check_record(rec):
     arch = rec.get("architecture") or {}
     tp, ap = arch.get("total_params_b"), arch.get("active_params_b")
     anotes = arch.get("notes") or ""
-    if tp is None and ap is None and "未披露" not in anotes and "待补" not in anotes:
-        warns.append("参数量全空但 architecture.notes 未声明「官方未披露」或「待补」")
+    if tp is None and ap is None and not NOT_DISCLOSED_RE.search(anotes):
+        warns.append("参数量全空但 architecture.notes 未声明「（官方）未披露」或「待补」")
 
     # 2. 上下文标称 / 有效
     cw, cwe = arch.get("context_window_tokens"), arch.get("context_window_effective_tokens")
@@ -157,6 +165,12 @@ def check_record(rec):
             warns.append("有定价但缺 pricing.effective_date（定价必须精确到日）")
         if not pricing.get("source_url"):
             warns.append("有定价但缺 pricing.source_url")
+    # 4.1 定价可信度必须在受控词表内（此前只校验 benchmarks 的 confidence，
+    #     pricing.confidence 长期无人查，导致 28 条「中/低/high/N/A」越界值漏网）
+    pconf = pricing.get("confidence")
+    if pconf is not None and pconf not in CONFIDENCE_ENUM:
+        errors.append(f"pricing.confidence={pconf!r} 不在枚举内"
+                      f"（允许：{sorted(CONFIDENCE_ENUM)}；未采集应为 null）")
 
     # 5. positioning：数组 + 枚举
     pos = (rec.get("basic_info") or {}).get("positioning")
@@ -198,6 +212,11 @@ def check_record(rec):
     rd = (rec.get("basic_info") or {}).get("release_date")
     if rd is not None and not (DATE_MD_RE.match(rd) or DATE_FULL_RE.match(rd)):
         errors.append(f"basic_info.release_date={rd!r} 非 ISO 8601（YYYY-MM 或 YYYY-MM-DD）")
+    # knowledge_cutoff 规范到月，实测有 28 条写成 YYYY / YYYY-MM-DD / mid-2021。
+    # 日级精度只是「比规范更细」不是错，降为 WARN 提示，不倒逼改数据（新检查一律先 WARN）。
+    kc = arch.get("knowledge_cutoff")
+    if kc is not None and not (DATE_MD_RE.match(str(kc)) or DATE_FULL_RE.match(str(kc))):
+        warns.append(f"architecture.knowledge_cutoff={kc!r} 非 YYYY-MM（规范精确到月）")
     meta = rec.get("meta") or {}
     for fld in ("collected_at", "verified_at"):
         v = meta.get(fld)

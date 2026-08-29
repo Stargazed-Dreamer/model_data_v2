@@ -338,12 +338,14 @@
     "api": true,
     "local_deployment": false,
     "notes": null
-  }
+  },
+  "license": null
 }
 ```
 
 - `positioning` 为数组，可选标签：旗舰 / 中端 / 轻量 / 推理增强 / 多模态 / 工具调用增强。  
 - `access` 对象中三个布尔字段：`open_weights`（是否开放权重）、`api`（是否有官方 API）、`local_deployment`（是否支持本地部署）。未知填 `null`。`notes` 可补充说明。
+- `license`：权重/使用许可，自由文本，如 `"MIT"`、`"NVIDIA Open Model License + Llama 3.1 Community License"`、`"闭源 API (proprietary, API-only)"`。开放权重模型取官方模型卡/HuggingFace 仓库 LICENSE 原文；闭源模型填「闭源 API」声明。未采集到填 `null`，严禁凭 `open_weights` 反推。
 
 #### `architecture` 对象
 所有字段可空，未知填 `null`。
@@ -355,6 +357,8 @@
   "architecture_type": "Unknown",
   "context_window_tokens": 200000,
   "context_window_effective_tokens": null,
+  "max_output_tokens": null,
+  "reasoning_model": null,
   "knowledge_cutoff": "2026-01",
   "notes": "官方未披露参数量；标称 200K 上下文，有效上下文未测试"
 }
@@ -365,6 +369,8 @@
 - `architecture_type`：枚举 `"Dense" / "MoE" / "Hybrid" / "Unknown"`。  
 - `context_window_tokens`：标称上下文窗口，单位 token。  
 - `context_window_effective_tokens`：有效上下文窗口；未经独立测试则为 `null`。  
+- `max_output_tokens`：官方声明的单次最大输出 token 数（整数），与上下文窗口是不同字段，勿混填。官方未给出则为 `null`。  
+- `reasoning_model`：布尔，是否为推理型/思考型模型（有独立思考链/推理档位）。厂商未声明则为 `null`，勿按「能力强」臆断。  
 - `knowledge_cutoff`：训练数据时间边界，如 `"2026-01"`。未知填 `null`。  
 - `notes`：补充说明，如“标称上下文 200K，但超过 64K 后出现 Lost-in-the-Middle，有效上下文未测试”。
 
