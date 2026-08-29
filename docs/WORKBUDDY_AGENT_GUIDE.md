@@ -441,8 +441,25 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
 
 原规则 `"未披露" not in notes`，匹配不到同样合法的 **「未官方披露」**（误报 4 条，含权威样例）。
 现改为 `NOT_DISCLOSED_RE = 未[^\s，。；;、]{0,3}披露|待补`，不允许跨越句读。
+
 仍然成立的通则：**门禁里凡是靠 notes 字面判定的规则，都是「文案契约」而不是语义检查**——
 写 notes 时优先套用受控措辞；改措辞前先想清楚会不会触发误报（D4 清样板句时正是这条咬人，见 §14 第 2 点）。
+
+**16.5 新规则 4.2：`pricing.source_type` 声称无价却仍挂着价格 → WARN**
+
+门禁此前只查 `source_type` 的**键名**，不查它的**语义**，于是「标签说查无官方价、值却填着 $0.65/$2.75」
+这类自相矛盾能一路通过验收。2026-08-29 补上（措辞清单见 `NO_PRICE_CLAIMS`），命中即要求二选一：改标签或剔 null。
+
+同批整改（D5）：6 条 —— 3 条按记录自身证据剔 null
+（`meta:meta-llama-3-70b-instruct` 价格实为 replicate 托管价，而它自己的 notes 写明「第三方托管价不混录」；
+`zhipu:chatglm2-6b` / `zhipu:autoglm-rumination` 的 0.0 属以零冒充「查无此价」，违红线 1），
+3 条更正 `source_type` 文案（`aya-expanse-32b` 旧标签过期、`minimax-m2-1` 把 `T0` 写进了 source_type 槽、
+`stepfun:step-3-5-flash` 写成英文 `official`）。
+
+**仍留 3 条 WARN 未清，且刻意不清**——需要外部核实才能定方向，不能靠猜：
+`meta:muse-spark-1-1` / `muse-spark-1-2`（价来自头条号 UGC，且 notes 是从 llama 记录复制的样板、与本模型无关）、
+`microsoft:mai-code-1-flash`（notes 自述「无法精确核实，不硬填」却仍填了 UGC 价）。
+另注意 `zhipu:glm-4-7-flash` 的 0.0/0.0 **是真价不是残留**——官方定价页明列「免费」，这类真零严禁一并剔掉。
 
 ---
 

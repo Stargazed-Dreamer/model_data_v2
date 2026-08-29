@@ -57,6 +57,11 @@ SUB_BLOCK_KEYS = {
                              "cached_input", "notes"},
 }
 PRICING_MUST_KEYS = ["cached_input", "cache_write", "batch_input", "batch_output"]
+ALL_PRICE_KEYS = ["input", "output"] + PRICING_MUST_KEYS
+# 「查无官方价」类文案：逐个显式列，不用模糊正则——通配写法会把「无价目表」「无法定价」
+# 这类不相干表述也吞进来，反而造出新的误报。新增措辞时在此补一行。
+NO_PRICE_CLAIMS = ("无官方 API 价", "无 API 定价", "无API定价", "无官方定价",
+                   "无公开定价", "无独立 API 定价", "无 API 计费")
 POSITIONING_ENUM = {"旗舰", "中端", "轻量", "推理增强", "多模态", "工具调用增强"}
 CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"}
 DATE_MD_RE = re.compile(r"^\d{4}-\d{2}$")
@@ -171,6 +176,17 @@ def check_record(rec):
     if pconf is not None and pconf not in CONFIDENCE_ENUM:
         errors.append(f"pricing.confidence={pconf!r} 不在枚举内"
                       f"（允许：{sorted(CONFIDENCE_ENUM)}；未采集应为 null）")
+
+    # 4.2 source_type 与价格值自相矛盾：声称「查无官方价」却仍挂着价格。
+    #     此前门禁对 source_type 只查键名不查语义，7 条同类矛盾长期无人发现。
+    #     暂记 WARN：其中 3 条（muse-spark x2 / mai-code）需外部核实后才能定方向，
+    #     直接升 ERROR 会把待拍板项混进验收口径。
+    stype = str(pricing.get("source_type") or "")
+    filled = [k for k in ALL_PRICE_KEYS if pricing.get(k) is not None]
+    if filled and any(c in stype for c in NO_PRICE_CLAIMS):
+        warns.append("pricing.source_type=%r 声称无官方价，但 %s 仍非 null —— 二者必有一处是残留，"
+                     "需核实后要么改标签要么剔 null"
+                     % (stype, ", ".join("pricing." + k for k in filled)))
 
     # 5. positioning：数组 + 枚举
     pos = (rec.get("basic_info") or {}).get("positioning")
