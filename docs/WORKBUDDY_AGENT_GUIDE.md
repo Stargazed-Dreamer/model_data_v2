@@ -14,14 +14,22 @@
 export PATH="/e/System_Programes/Git/cmd:$PATH"   # 每个新 Bash 会话都要先执行
 git --version        # 必须是 2.46.0.windows.1；若是 2.55.0 说明 PATH 没生效，停下重来
 
-# ② Python 命令统一加 UTF8 前缀（Windows GBK 控制台会崩）
+# ② 环境变量里的代理常是死的，push 前先绕开（见 §1.5）
+unset HTTP_PROXY HTTPS_PROXY
+
+# ③ Python 命令统一加 UTF8 前缀（Windows GBK 控制台会崩）
 PYTHONUTF8=1 python scripts/validate_model_data.py <file>
 
-# ③ 提交采集文件时必须 -f（.gitignore 第 29 行忽略了 incoming/models/*.jsonl）
+# ④ 提交采集文件时必须 -f（.gitignore 第 29 行忽略了 incoming/models/*.jsonl）
 git add -f incoming/models/<batch_id>__*.jsonl
 
-# ④ 作业顺序：先收尾自己平台上未提交的批次，再认领新批次
-# ⑤ 每批完成后立即 push，不要攒着 —— 烂尾比慢更严重
+# ⑤ 合并主库必须用 source_wins，不是 add（见 §13）
+python scripts/model_data_tool.py merge --file model_data_v2.jsonl --incoming <f> \
+  --on-null take_source --on-both source_wins --on-array replace --on-schema upgrade \
+  --tie-breaker keep_target --apply
+
+# ⑥ 作业顺序：先收尾自己平台上未提交的批次，再认领新批次
+# ⑦ 每批完成后立即 push，不要攒着 —— 烂尾比慢更严重
 ```
 
 ---
@@ -66,6 +74,25 @@ git --version    # 校验：必须输出 2.46.0.windows.1
 - remote：`https://github.com/Stargazed-Dreamer/model_data_v2.git`
 - 默认分支：`main`
 - 已配置 user.name / user.email（无需再设）
+
+### 1.5 【新坑】环境变量代理是死的，push 前必须绕开
+
+**现象**：`git push` / `git pull` 报
+```
+fatal: unable to access 'https://github.com/...': Failed to connect to 127.0.0.1 port 9910 after 2037 ms
+```
+
+**原因**：环境里设了 `HTTP_PROXY=http://127.0.0.1:9910/` / `HTTPS_PROXY=http://127.0.0.1:9910/`（`WORKBUDDY_PROXY_SOURCE=system`），但那个本地代理进程**没在运行**。git 会乖乖走代理然后连不上——注意这不报「代理错误」，而是伪装成网络不通，很容易误判成「没网」。
+
+**解法**：直接 `unset HTTP_PROXY HTTPS_PROXY` 走直连。本机实测直连 GitHub 是通的。
+
+```bash
+unset HTTP_PROXY HTTPS_PROXY
+git push origin main        # 立刻成功
+```
+
+> 每个新 Bash 会话都要重新 `unset`，shell state 不跨调用保留。
+> 排障时别用 `env | grep -i proxy` 全量打印——本仓库环境下那个变量会连带吐出几十万字符，直接把上下文冲垮。用 `env -u HTTP_PROXY ...` 或者直接 `unset` 后重试即可。
 
 ---
 
@@ -287,6 +314,46 @@ PYTHONUTF8=1 python scripts/model_data_tool.py set \
 
 `scripts/model_data_tool.py` 曾只有 `read` / `compare` / `table` / `list`（**只读**）+ `merge`（默认 dry-run，`--apply` 才写）。**没有单字段 set / update 命令。**
 
+### 13. 合并主库：是「填骨架」不是「加记录」（重要，极易踩错）
+
+> **2026-08-29 实测发现**：主库 `model_data_v2.jsonl` 里的 950 条记录中，**702 条花名册模型的骨架早已预填**（来源为 HF API 快照：full_name、vendor、release_date、参数量、access 三态、部分 pricing 都已有值，modality 多为全 null）。
+> 所以采集完成后合并时，目标记录**已存在**，merge 走的是 `set_field` / `fill_null` 路径，**不是** `add_record`。
+
+**后果**：若按直觉用 `--on-both conflict`，每条会报 10~16 处冲突、一个字段都不写，白跑一趟。
+
+正确命令（本轮 19 个模型全部 0 冲突通过）：
+
+```bash
+python scripts/model_data_tool.py merge \
+  --file model_data_v2.jsonl \
+  --incoming incoming/models/<file>.jsonl \
+  --on-null take_source \
+  --on-both source_wins \
+  --on-array replace \
+  --on-schema upgrade \
+  --tie-breaker keep_target \
+  --apply
+```
+
+- `--on-both source_wins`：采集值覆盖骨架值（骨架多为 HF 快照，人工采集更准）
+- `--on-null take_source`：骨架为 null 的字段用采集值填上
+- 骨架独有的字段（如 `pricing.promotions`）会被保留，merge 是递归合并不是整体替换
+- 合并前后**主库记录数不变**（950 条），这是正常的——不是没生效
+
+> ⚠️ 骨架里有些字段与实采结论冲突，例如 fugaku-llm 骨架写 `api=true`（HF 快照推导）而实查无官方 API。按 `source_wins` 会被实采值纠正，并在 `access.notes` 里写明差异。
+
+### 14. 门禁三个高频踩点（本轮全部踩过一遍）
+
+| 现象 | 原因 | 解法 |
+|---|---|---|
+| `ERROR basic_info.release_date='2003' 非 ISO 8601` | 只写了年份 | 必须是 `YYYY-MM-DD` 或 `YYYY-MM`；只有年份时**宁可记 null 并在 meta.notes 说明**，不要编造月份 |
+| `WARN 参数量全空但 architecture.notes 未声明` | notes 里没出现规定字串 | `architecture.notes` 必须含**字面**「未披露」或「待补」。写「论文未以现代口径披露」**不算**——校验器做的是子串匹配 |
+| `WARN 有标称上下文但有效上下文为空` | 填了 `context_window_tokens` 但 `context_window_effective_tokens` 为 null | notes 里写明「标称值，有效上下文待测」 |
+
+另外两个隐性规则：
+- 骨架里 `positioning` 常是 `[]`，用 `--on-array replace` 且来源非空时会被正常覆盖为采集值；**采集值必须是六值枚举子集**，否则合并时会被静默丢弃（见 §9）
+- 只写年份的历史模型（如 Bengio 2003 NPLM），`positioning` 六个标签**没有一个适用**，此时应记 `[]` 并说明，不要硬套标签
+
 - 想修主库里某个已合并记录的单个字段，**只能重跑 `merge --apply`**，没有其他正当路径
 - 但重跑 merge 会用源文件覆盖目标记录，可能把合并时自动补全的骨架结构冲掉
 > **2026-08-29 更新：上面这段已过时。** 当天给 `model_data_tool.py` 补了 `set` 子命令，专治「改主库单个字段」，见 §12。保留原文是为了留痕——如果你在旧版本工具上，仍是这个约束。
@@ -340,3 +407,10 @@ PYTHONUTF8=1 python scripts/model_data_tool.py set \
 - 2026-08-29 v1.5（用户提议「改一下 tool 脚本方便编辑」后落地）：给 `scripts/model_data_tool.py` 新增 **`set` 子命令**，补上主库单字段编辑这条缺失路径。设计沿用项目既有哲学——**默认 dry-run、`--apply` 才写、自动备份、原子替换、all-or-nothing**，另加两条保险：`--expect` 乐观锁、`--create-path` 默认拒绝（不静默造结构），写入后自动调 `validate_model_data.check_record` 复检并打印 ERROR/WARN 前后差值。详见 **§12**（§12.1 保留了改造前的历史结论作留痕）。
   - 顺带把 §7.4 里「主库 positioning 被吞、但没敢动主库」的遗留项了结：用 `set` 把 `carrotai` 的 `positioning` 从 `[]` 补回 `["工具调用增强"]`，全库仍 ERROR 0。
   - 给后来人的提醒：改主库前先 `cp` 一份到 `/backups/`，因为工具自动生成的 `<file>.bak` **每次写入都会覆盖**，不是历史快照。
+- 2026-08-29 v1.6（agent `workbuddy-04` 采集轮，**花名册 702 个模型全部采集完毕**）：
+  - 新增 **§1.5 死代理坑**：环境变量 `HTTP_PROXY/HTTPS_PROXY` 指向 `127.0.0.1:9910` 但该进程常不在运行，git 会伪装成「网络不通」。`unset HTTP_PROXY HTTPS_PROXY` 后直连即通。另注：排查时**不要** `env | grep proxy` 全量打印。
+  - 新增 **§13 合并是「填骨架」不是「加记录」**：主库 950 条里 702 条骨架已由 HF API 快照预填，合并必须用 `--on-both source_wins`，用 `conflict` 会 0 写入。这条如果不知道，新人会卡死在「为什么全冲突」。
+  - 新增 **§14 门禁三个高频踩点**：release_date 只写年份会 ERROR（须 YYYY-MM/YYYY-MM-DD，否则记 null）；参数量为空时 notes 必须含**字面**「未披露」或「待补」（子串匹配，近义写法不算）；标称上下文需注明「待测」。
+  - 新增 **§7.4 之外的实战补充**：认领批次后**必须先 `git add docs/batch_claim_ledger.jsonl` 再 commit**——只改文件不 add，git 会报「no changes added to commit」静默失败，批次的认领状态根本没进仓库。
+  - **占位记录条款（§8.2-14）的两个实战案例**：① `omni-epic` 经核查**不是语言模型**，而是调用基础模型生成 RL 环境的开放式算法框架；② `digivio`（上海数聚威）**无任何可归因的公开信息**（搜到的 Digivo/Divio/Digievo 全是同名不同主体）。两者都按占位记录落盘（门禁通过、ledger 照常 submitted），并在 notes 里写明「建议高端合并阶段决定保留/改指/删除」，而不是编造字段、也不是退回 pending 让别人重复踩坑。
+  - **本轮战绩**：接手时剩余 26 个模型，4 波共采集 **16 批 19 个模型**（k2-think / sailor-7b-chat / fugaku-llm / eurus-2-7b-prime / seed-diffusion-preview / omni-epic / sahabat-ai / teuken-7b / rwkv-5-7b / rwkv-6-3b / metamath-70b / metamath-7b / index-1-9b / jinshi / brain2qwerty / digivio / rnnsearch-50 / neural-lm / nplm），全部 ERROR=0，合并 0 冲突，每波单独 commit+push。**全库 305/305 批次 submitted，702/702 模型入主库，0 缺失，主库 950 条 ERROR 0。**
