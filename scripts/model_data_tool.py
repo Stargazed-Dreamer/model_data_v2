@@ -250,6 +250,31 @@ def _get(obj: Any, path: str) -> Any:
     return cur
 
 
+def _set(obj: Any, path: str, value: Any, create: bool = False) -> None:
+    """
+    按点号路径写值（原地修改）。
+
+    create=False（默认）：中间层缺失或非对象 → 抛 KeyError，绝不静默创建。
+    create=True：中间层缺失时补空 dict 继续往下写。
+    """
+    parts = path.split(".")
+    cur = obj
+    for part in parts[:-1]:
+        if not isinstance(cur, dict):
+            raise KeyError(f"路径 {path!r} 的中间层 {part!r} 不是对象（实际 {type(cur).__name__}），无法写入")
+        if part not in cur or not isinstance(cur.get(part), dict):
+            if not create:
+                raise KeyError(
+                    f"路径 {path!r} 的中间层 {part!r} 缺失或非对象；"
+                    f"确认要新建请加 --create-path"
+                )
+            cur[part] = {}
+        cur = cur[part]
+    if not isinstance(cur, dict):
+        raise KeyError(f"路径 {path!r} 的末层父节点不是对象（实际 {type(cur).__name__}），无法写入")
+    cur[parts[-1]] = value
+
+
 def compare_version(a: str, b: str) -> int:
     """版本号比较，返回 -1/0/1（按点分数字逐段比较）。"""
     def parse(v: str) -> List[int]:
@@ -457,6 +482,56 @@ class ModelDataStore:
 
     def records_as_list(self) -> List[Dict[str, Any]]:
         return [copy.deepcopy(r) for r in self.records.values()]
+
+    # ---------- 单字段写入（set） ----------
+    def set_fields(
+        self,
+        model_ids: List[str],
+        path: str,
+        value: Any,
+        expect: Any = None,
+        create: bool = False,
+        dry_run: bool = True,
+        backup: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        把若干条记录的同一字段设成同一值。
+
+        - expect 非 None 时作为乐观锁：任一条记录的当前值不等于 expect → 整体放弃，一条都不写
+        - dry_run=True（默认）不落盘，只返回计划
+        - 返回 {"changes": [(mid, old, new)], "errors": [(mid, 原因)]}
+        """
+        changes: List[Tuple[str, Any, Any]] = []
+        errors: List[Tuple[str, str]] = []
+
+        # 第一遍：全部校验通过才动手（all-or-nothing）
+        for mid in model_ids:
+            if mid not in self.records:
+                errors.append((mid, "目标文件中不存在该 model_id"))
+                continue
+            old = _get(self.records[mid], path)
+            if expect is not None and old != expect:
+                errors.append((mid, f"乐观锁失败：当前值 {_short(old)} != --expect {_short(expect)}"))
+                continue
+            # 预演一次写入，确认路径可写（不改变真实记录）
+            probe = copy.deepcopy(self.records[mid])
+            try:
+                _set(probe, path, copy.deepcopy(value), create=create)
+            except KeyError as e:
+                errors.append((mid, str(e)))
+                continue
+            changes.append((mid, old, value))
+
+        if errors or dry_run:
+            return {"changes": changes, "errors": errors, "written": False}
+
+        # 第二遍：真正写入
+        for mid, _old, _new in changes:
+            _set(self.records[mid], path, copy.deepcopy(value), create=create)
+        if backup:
+            self._backup()
+        self._save(self.records)
+        return {"changes": changes, "errors": errors, "written": True}
 
     # ---------- 合并 ----------
     def merge_incoming(
@@ -731,6 +806,39 @@ def _load_jsonl(path: str) -> List[Dict[str, Any]]:
     return out
 
 
+def _load_gate():
+    """
+    加载同目录 validate_model_data.py 的 check_record(rec) -> (errors, warns)。
+    加载失败返回 None（门禁校验是增值项，不该阻断写入本身）。
+    """
+    import importlib.util
+
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "validate_model_data.py")
+    if not os.path.exists(p):
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("_vmd_gate", p)
+        if spec is None or spec.loader is None:
+            return None
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return getattr(mod, "check_record", None)
+    except Exception:
+        return None
+
+
+def _parse_json_arg(s: str, what: str) -> Any:
+    """解析命令行传入的 JSON 字面量。字符串必须写成 '"xxx"'（带引号）。"""
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError as e:
+        raise SystemExit(
+            f"--{what} 不是合法 JSON：{s!r}（{e.msg}）。\n"
+            f"提示：字符串要带引号，如 --{what} '\"工具调用增强\"'；"
+            f"数组如 --{what} '[\"旗舰\",\"中端\"]'；null 直接写 null"
+        )
+
+
 def _enum_val(enum_cls, s: str):
     try:
         return enum_cls(s)
@@ -793,6 +901,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     pl = sub.add_parser("list", help="列出所有 model_id")
     pl.add_argument("--file", required=True)
 
+    # set —— 单字段写入（主库唯一直接编辑入口；默认 dry-run）
+    ps = sub.add_parser("set", help="把若干条记录的同一字段设为同一值（默认 dry-run，需 --apply）")
+    ps.add_argument("--file", required=True, help="目标 JSONL（通常是 model_data_v2.jsonl）")
+    ps.add_argument("--models", nargs="+", required=True, help="一个或多个 model_id")
+    ps.add_argument("--field", required=True, help="点号路径，如 basic_info.positioning")
+    ps.add_argument("--value", required=True, help="新值，JSON 字面量，如 '[\"工具调用增强\"]' 或 '\"中端\"' 或 null")
+    ps.add_argument("--expect", default=None,
+                    help="乐观锁：当前值必须等于该 JSON 值，否则整体放弃（一条都不写）")
+    ps.add_argument("--create-path", action="store_true",
+                    help="中间层缺失时自动补空对象（默认拒绝，避免静默造结构）")
+    ps.add_argument("--apply", action="store_true", help="真正写入（默认仅 dry-run 预览）")
+    ps.add_argument("--no-backup", action="store_true", help="写入时不自动备份")
+    ps.add_argument("--no-gate", action="store_true", help="写入后不自动跑门禁校验")
+
     # merge
     pm = sub.add_parser("merge", help="显式合并（默认 dry-run，需 --apply 才写）")
     pm.add_argument("--file", required=True, help="目标 JSONL")
@@ -837,6 +959,77 @@ def main(argv: Optional[List[str]] = None) -> int:
         store = ModelDataStore(args.file)
         for mid in store.list_ids():
             print(mid)
+        return 0
+
+    if args.cmd == "set":
+        value = _parse_json_arg(args.value, "value")
+        expect = _parse_json_arg(args.expect, "expect") if args.expect is not None else None
+
+        store = ModelDataStore(args.file)
+        if not store.records:
+            print(f"❌ 目标文件为空或不存在：{args.file}", file=sys.stderr)
+            return 2
+
+        mode = "APPLY（真实写入）" if args.apply else "DRY-RUN（仅预览，不改动文件）"
+        print(f"# 目标文件：{args.file}（{len(store.list_ids())} 条）")
+        print(f"# 字段路径：{args.field}")
+        print(f"# 新值：{_short(value)}")
+        print(f"# 乐观锁：{_short(expect) if expect is not None else '（未设）'}")
+        print(f"# 备份：{'关闭' if args.no_backup else '开启（写入前自动 .bak）'}")
+        print(f"# 模式：{mode}\n")
+
+        gate = None if args.no_gate else _load_gate()
+        before = {}
+        if gate:
+            for mid in args.models:
+                rec = store.records.get(mid)
+                if rec is not None:
+                    e, w = gate(rec)
+                    before[mid] = (len(e), len(w))
+
+        res = store.set_fields(
+            args.models, args.field, value,
+            expect=expect, create=args.create_path,
+            dry_run=not args.apply, backup=not args.no_backup,
+        )
+
+        for mid, old, new in res["changes"]:
+            print(f"  {mid}\n    {args.field}: {_short(old)} → {_short(new)}")
+        for mid, why in res["errors"]:
+            print(f"  ❌ {mid}: {why}")
+
+        if res["errors"]:
+            print(f"\n⛔ 有 {len(res['errors'])} 条校验失败，全部放弃（未写入任何记录）。")
+            return 2
+
+        if not res["written"]:
+            print(f"\n⚠ DRY-RUN 预览：{len(res['changes'])} 条待改，原文件未改动。确认后加 --apply。")
+            return 0
+
+        print(f"\n✅ 已写入 {len(res['changes'])} 条。")
+
+        if gate:
+            print("\n# 门禁复检（受影响记录）：")
+            bad = 0
+            for mid in args.models:
+                rec = store.records.get(mid)
+                if rec is None:
+                    continue
+                e, w = gate(rec)
+                be, bw = before.get(mid, (0, 0))
+                mark = "OK " if not e else "ERR"
+                delta = ""
+                if (len(e), len(w)) != (be, bw):
+                    delta = f"  （原 ERROR {be} / WARN {bw}）"
+                print(f"  [{mark}] {mid}: ERROR {len(e)} / WARN {len(w)}{delta}")
+                for msg in e:
+                    print(f"         - {msg}")
+                bad += len(e)
+            if bad:
+                print(f"\n⚠ 写入成功，但这些记录现共 {bad} 项 ERROR。可用原值再跑一次 set 回滚，"
+                      f"或从 {args.file}.bak 恢复。")
+            else:
+                print("\n  门禁通过（ERROR 0）。")
         return 0
 
     if args.cmd == "merge":

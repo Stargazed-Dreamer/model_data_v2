@@ -246,15 +246,51 @@ incoming/models/<bNNwM>__<model>__<variant>.jsonl
 | `git add -f` 报 `error: open("...") Filename too long` | 绝对路径 250~260 字符，撞 Windows 上限 | `git config core.longpaths true` 后重试（见 §8.1 补充） |
 | 主库校验 ERROR=0，但源文件校验 ERROR>0 | 越界 `positioning` 标签在合并时被**静默丢弃**，主库落成 `[]` | 两边都要看：主库干净 ≠ 源文件合规 ≠ 数据完整。按 §8.2-9 修源文件；主库回填见 §12 |
 
-### 12. 主库写入的唯一路径（重要）
+### 12. 主库单字段编辑：`set` 子命令（2026-08-29 新增）
 
-`scripts/model_data_tool.py` 的子命令只有 `read` / `compare` / `table` / `list`（**只读**）+ `merge`（默认 dry-run，`--apply` 才写）。**没有单字段 set / update 命令。**
+> **背景**：在此之前 `model_data_tool.py` 只有 `read`/`compare`/`table`/`list`（只读）+ `merge`。想改主库里一个已合并字段只能重跑 `merge --apply`，而 merge 会用源文件覆盖整条记录，可能冲掉合并时自动补全的骨架结构——**收益小于风险**。故补一个 `set` 专治这个场景。
+
+```bash
+# 1) 先 dry-run（默认就是 dry-run，不加 --apply 绝不写盘）
+PYTHONUTF8=1 python scripts/model_data_tool.py set \
+  --file model_data_v2.jsonl \
+  --models "vendor:model:base" \
+  --field basic_info.positioning \
+  --value '["工具调用增强"]' \
+  --expect '[]'          # 乐观锁：当前值必须等于它，否则整体放弃
+
+# 2) 确认预览无误，加 --apply 真写
+```
+
+| 参数 | 作用 |
+|---|---|
+| `--models` | 一个或多个 `model_id`，同一字段同一值批量改 |
+| `--field` | 点号路径，如 `basic_info.positioning` |
+| `--value` | **JSON 字面量**：字符串要带引号 `'"中端"'`；数组 `'["旗舰","中端"]'`；`null` 直接写 `null` |
+| `--expect` | **强烈建议带上**。当前值不等于它 → 一条都不写（乐观锁，防改错记录） |
+| `--create-path` | 中间层缺失时补空对象。**默认拒绝**，避免静默造出结构 |
+| `--apply` | 真正写入；不加则只预览 |
+| `--no-backup` | 关闭自动备份。**默认开启**（写入前生成 `<file>.bak`） |
+| `--no-gate` | 写入后不跑门禁。**默认开启门禁复检**，并打印 ERROR/WARN 的前后差值 |
+
+**安全设计（与 `merge` 一致：显式、无隐藏默认、dry-run 优先）**：
+
+- **all-or-nothing**：任一记录校验失败（model_id 不存在 / 乐观锁不匹配 / 路径不可写）→ **全部放弃**，不会写一半
+- 写入走 `_save()` 原子替换（临时文件 + `os.replace`），中断不会产生半个文件
+- 写入后自动调 `validate_model_data.check_record` 复检受影响记录；ERROR 变多会明确告诉你怎么回滚
+
+> ⚠️ `--file` 的 `.bak` 每次写入都会**覆盖**，不是历史快照。要留版本请自己 `cp` 到 `/backups/`（该目录已 gitignore）。
+>
+> 实测：本轮用 `set` 把 `carrotai` 的 `positioning` 从 `[]` 补回 `["工具调用增强"]`；写入前后逐条比对——950 条、model_id 集合完全一致、仅目标 1 条内容变化、全库仍 ERROR 0。另在副本上故意写越界标签验证门禁集成，工具正确报出 ERROR 1 并给出回滚指引。
+
+### 12.1 历史结论（2026-08-29 之前，仅供参考）
+
+`scripts/model_data_tool.py` 曾只有 `read` / `compare` / `table` / `list`（**只读**）+ `merge`（默认 dry-run，`--apply` 才写）。**没有单字段 set / update 命令。**
 
 - 想修主库里某个已合并记录的单个字段，**只能重跑 `merge --apply`**，没有其他正当路径
 - 但重跑 merge 会用源文件覆盖目标记录，可能把合并时自动补全的骨架结构冲掉
-- 因此：**改主库的收益 < 风险时，宁可不动，留到阶段 3 质检统一处理**，并在交接文档里写明
+> **2026-08-29 更新：上面这段已过时。** 当天给 `model_data_tool.py` 补了 `set` 子命令，专治「改主库单个字段」，见 §12。保留原文是为了留痕——如果你在旧版本工具上，仍是这个约束。
 
-> 本轮实例：3 条记录的 `positioning` 被合并工具丢成 `[]`（源文件用了越界标签）。只修了源文件让它过门禁，主库没动——全库 950 条里本就有 359 条 `positioning` 为空（37.8%），为 1 条记录重跑 merge 不划算。
 | Python 报 UnicodeEncodeError | GBK 控制台 | 命令前加 `PYTHONUTF8=1` |
 | 门禁报 positioning 越界 | 用了受控词表外的标签 | 六值枚举：`旗舰/中端/轻量/推理增强/多模态/工具调用增强`，越界标签按通用规范 §8.2-9 映射或删除 |
 | 门禁报顶层键数量不对 | `access` 被提到顶层 | `access` 必须嵌在 `basic_info.access` 内；8 个顶层键固定 |
@@ -301,3 +337,6 @@ incoming/models/<bNNwM>__<model>__<variant>.jsonl
   - 新增 **§9 一条 + §12**：`models_data_tool.py` **没有单字段写入命令**，主库只能靠 `merge --apply` 改；因此「主库 ERROR=0」不等于源文件合规——越界 `positioning` 在合并时被静默丢成 `[]`。改主库收益 < 风险时宁可不动，留给阶段 3。
   - **接管战绩**：7 批补提交（含 3 批越界标签修复后过门禁）、5 批退回 pending（4 批零产出 + 1 批截断文件隔离）、**claimed 残留清零**、工作区转干净。进度 676 → **683 / 702（97.3%）**。
   - **一个流程性结论**：本轮共发现 **96 个**（89+7）已合并进主库却从未入库的源文件。说明现有合并流程**既不入库源文件、也不清理它们**——所以「磁盘有文件」和「文件在仓库里」是两件事，每个采集阶段结束都必须单独扫一遍 `git ls-files` 差集，否则这些数据只有主库一条命。
+- 2026-08-29 v1.5（用户提议「改一下 tool 脚本方便编辑」后落地）：给 `scripts/model_data_tool.py` 新增 **`set` 子命令**，补上主库单字段编辑这条缺失路径。设计沿用项目既有哲学——**默认 dry-run、`--apply` 才写、自动备份、原子替换、all-or-nothing**，另加两条保险：`--expect` 乐观锁、`--create-path` 默认拒绝（不静默造结构），写入后自动调 `validate_model_data.check_record` 复检并打印 ERROR/WARN 前后差值。详见 **§12**（§12.1 保留了改造前的历史结论作留痕）。
+  - 顺带把 §7.4 里「主库 positioning 被吞、但没敢动主库」的遗留项了结：用 `set` 把 `carrotai` 的 `positioning` 从 `[]` 补回 `["工具调用增强"]`，全库仍 ERROR 0。
+  - 给后来人的提醒：改主库前先 `cp` 一份到 `/backups/`，因为工具自动生成的 `<file>.bak` **每次写入都会覆盖**，不是历史快照。
