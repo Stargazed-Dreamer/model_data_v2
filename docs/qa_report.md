@@ -5,12 +5,16 @@
 > 依据：`multi_agent_plan.md` §5「阶段 3 · 质检与验收」、`COLLECTION_PLAN_v2.md` §6 验收标准、`WORKBUDDY_AGENT_GUIDE.md`
 > 统计口径脚本：`scripts/qa_stats.py`（填充率）、`scripts/diff_incoming_db.py`（差异/冲突）
 
-> **【同日补记 2026-08-29 · 整改轮 D1–D5】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意三处时效性：
+> **【同日补记 2026-08-29 · 整改轮 D1–D6】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意四处时效性：
 > 1. §1 的 **ERROR 0 是在旧门禁下取得的**——旧门禁不查 `pricing.confidence` 枚举、不查 `knowledge_cutoff` 格式、
 >    也不查 `source_type` 与价格值是否自相矛盾。三项补齐后，当前主库仍为 **ERROR 0 / WARN 689 / 结构漂移 0**。
 > 2. §3.2 第 2 点与 §5-6 关于「开源权重却有定价」的判定**已被推翻**，红线 5 同日改按
 >    「厂商有无自有官方 API 刊例价」判定，详见 `multi_platform_subagent_guide.md` §5 红线 5 与 `WORKBUDDY_AGENT_GUIDE.md` §16。
 > 3. 门禁现行口径以 `scripts/validate_model_data.py` 为准，**本文与规范文档都只是它的说明，不是判据本身**。
+> 4. **主库记录数已变：950 → 940**。采集人在 `meta.verification_status` 标了 `存疑` 的 10 条经逐条复核确认查无依据，
+>    经用户拍板全部移出主库，原样存 `docs/unconfirmed_models.jsonl`，对应采集文件移入 `incoming/models/_quarantine/`
+>    （机制见 `WORKBUDDY_AGENT_GUIDE.md` §17）。花名册口径因此重基线为 **主库 692 + 隔离档 10 + 缺失 0**，
+>    这 10 条**不是漏采、不要重采**。本文正文所有 950 / 678 一类计数均为整改前快照，未回填。
 
 ---
 
@@ -31,6 +35,9 @@
 | 门禁 WARN | 678（不阻塞） |
 | schema | 全部 1.1 |
 | 重复 model_id | 0 |
+
+> **整改后现值（读表时替换使用）**：主库 **940 条**（花名册 692 + v1 遗留 248）、ERROR **0**、WARN **689**、
+> 结构漂移 0；另有 10 条存疑记录移出主库、原样存 `docs/unconfirmed_models.jsonl`。见文首补记第 4 点。
 
 ### WARN 678 的构成（按类型）
 
@@ -284,6 +291,7 @@ technology-innovation-institute:falcon-arabic
 | WARN 678 → **689** | 现值按规则实测构成：自报分 `source_type` 未含「自报」440、有效上下文缺测试方法说明 127、标称上下文缺「待测」标注 105、`knowledge_cutoff` 格式 9、参数量缺未披露声明 4、`source_type` 与价格值矛盾 3、缺 `source_url` 1 | 前三项占 97.5%，均属 notes 补写轮性质的采集工作；后三项为本轮新增检查照出的存量 |
 | v1 遗留开源权重定价 | ~~131 条中 43 条有定价，疑似违规~~ **初判不成立，已撤销**：40 条本就有厂商官方刊例价 | **不得按旧红线 5 置 null**，见 §3.2 更正框 |
 | 定价矛盾待核实 3 条 | `muse-spark-1-1` / `muse-spark-1-2` / `mai-code-1-flash`：标签称无官方价、值却挂着 UGC 转述价 | 需回厂商官方价目页逐条核实后定方向（属重采范畴，待拍板） |
+| ~~采集人标 `存疑` 的 10 条~~ **已处置（D6）** | `meta.verification_status == "存疑"` 逐条复核均查无立得住的依据，经用户拍板**全部移出主库**（950 → 940），原样存 `docs/unconfirmed_models.jsonl`，4 个对应采集文件移入 `incoming/models/_quarantine/` | 已结。这 10 个 model_id 不再计入花名册完成率（692/702 + 隔离 10），**不得当「漏采」重派**；重新入库须先拿到官方证据，流程见 `WORKBUDDY_AGENT_GUIDE.md` §17.5 |
 | `pricing.currency` 口径未定 | 六价键全 null 的 652 条里，`currency` 填 USD 331 / 填 null 321，接近对半——2026-08-25 那句「按红线不伪造 USD 默认值」从未真正落地 | 先拍板口径，再一次性归一（纯机械改动，但不能替人决定方向） |
 | 主库 positioning 空值 | 补合并后花名册填充率 89.5%，剩余多属确无适用标签 | 抽样复核即可 |
 | 可视化发布 | `viz/viz_index.html` 需按最终库重新生成 | 合并定版后执行 |

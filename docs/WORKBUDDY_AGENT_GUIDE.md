@@ -463,6 +463,56 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
 
 ---
 
+### 17. 【2026-08-29 整改轮新增】「存疑」记录的隔离档机制（D6）
+
+采集人在 `meta.verification_status` 里写的 **`存疑`** 是正式信号，含义是「我知道这条立不住，但按 SOP 不能自己删」。
+2026-08-29 逐条复核后确认 10 条全部查无立得住的依据，经用户拍板**全部移出主库**，主库 950 → **940 条**。
+
+**17.1 隔离档分两处，缺一不可**
+
+| 位置 | 内容 | 作用 |
+|---|---|---|
+| `docs/unconfirmed_models.jsonl` | 10 条完整记录，**逐字节原样**搬出（脚本内 `assert` 了 `json.dumps` 往返等于原文） | 唯一的数据留痕 + 可复跑的门禁对象（实测 ERROR 0 / WARN 0） |
+| `incoming/models/_quarantine/` | 其中 4 条对应的采集源文件 + `README.md` | 挡住自动回灌，见 17.2 |
+
+另外 6 条在 `incoming/models/` 下**没有对应采集文件**（已按原名、§8.1 降级名、缩短名穷举核实为 0 命中），
+所以 `docs/unconfirmed_models.jsonl` 那一行是它们唯一的证据。**不要清理这个文件。**
+
+**17.2 为什么「挪进子目录」就够了**
+
+`model_data_tool.py` 的 `merge --incoming <目录>` 展开目录用的是 **非递归** `os.listdir`
+（`scripts/model_data_tool.py:1087-1091`，只取该层 `.jsonl`，且跳过 `.` 开头）。
+所以 `_quarantine/` 里的文件不会被目录式合并扫到；而 `add_record` 对主库缺失的 model_id 会**直接新增**
+（同文件 565-569 行），也就是说：只要文件还躺在 `incoming/models/` 顶层，任何一次目录合并都会把这 10 条**静默复活**。
+子目录是一道不需要改代码的屏障——`_samples/` 用的也是同一个原理。
+
+反过来说，显式点名（`--incoming incoming/models/_quarantine/xxx.jsonl` 或 `@清单`）**是能绕过这道屏障的**，
+所以移动文件只是防误操作，真正的判据是 `docs/unconfirmed_models.jsonl` 里那条「查无依据」的记录。
+
+**17.3 花名册口径重新基线（重要，别让进度回退）**
+
+`docs/batch_claim_ledger.jsonl` 的 702 个 model_id 现在这样分布：**主库 692 + 隔离档 10 + 缺失 0**。
+「702/702 采集完毕」这句话仍然成立，但**不要**因为主库只剩 692 条就把这 10 个当「漏采」重新派发重采——
+它们不是没采到，是采到了且复核后判为立不住。要重开只有在**拿到新的官方证据**时，按 17.5 走。
+
+**17.4 `ledger.submitted_files` 不能当存在性判据**
+
+全库 1066 条 `submitted_files` 里有 **791 条指向不存在的路径**（本整改前就如此），且混着带/不带
+`incoming/models/` 前缀两种写法。历史惯例是合并后不保留源文件。判断「某模型的采集成果还在不在」，
+请查主库 + `docs/unconfirmed_models.jsonl`，不要查 ledger 的这个字段。
+
+**17.5 如果将来确实拿到官方证据，怎么放回来**
+
+1. 读 `docs/unconfirmed_models.jsonl` 取出该条，改字段并补 `source_url` / `effective_date` / 合规 `confidence`；
+2. 单文件跑门禁，**ERROR 必须 0**；
+3. 用 `merge --incoming <该文件> --on-both source_wins --apply`（显式点名，别指望目录扫描），或 `set` 子命令改主库；
+4. 从 `docs/unconfirmed_models.jsonl` 删掉对应行，并在 `incoming/models/_quarantine/README.md` 的留痕区记一句。
+
+> 通用教训：主库「有一条记录」和「这条记录可信」是两件事。采集人的存疑标记必须有人在收尾时消费掉，
+> 否则它会以 WARN 的形式永远留在库里，最后没人知道这 10 条到底算不算数。
+
+---
+
 ## 11. 并发上限（429）的处理
 
 派发 subagent 采集时可能撞上平台级并发上限，报错形如 `429 queue.userLimit.title` 或 `429 queue.waiting.title`。**这是账号/平台维度的限制，与项目配置无关，立刻重试通常仍失败。**
@@ -509,3 +559,4 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
   - 新增 **§7.4 之外的实战补充**：认领批次后**必须先 `git add docs/batch_claim_ledger.jsonl` 再 commit**——只改文件不 add，git 会报「no changes added to commit」静默失败，批次的认领状态根本没进仓库。
   - **占位记录条款（§8.2-14）的两个实战案例**：① `omni-epic` 经核查**不是语言模型**，而是调用基础模型生成 RL 环境的开放式算法框架；② `digivio`（上海数聚威）**无任何可归因的公开信息**（搜到的 Digivo/Divio/Digievo 全是同名不同主体）。两者都按占位记录落盘（门禁通过、ledger 照常 submitted），并在 notes 里写明「建议高端合并阶段决定保留/改指/删除」，而不是编造字段、也不是退回 pending 让别人重复踩坑。
   - **本轮战绩**：接手时剩余 26 个模型，4 波共采集 **16 批 19 个模型**（k2-think / sailor-7b-chat / fugaku-llm / eurus-2-7b-prime / seed-diffusion-preview / omni-epic / sahabat-ai / teuken-7b / rwkv-5-7b / rwkv-6-3b / metamath-70b / metamath-7b / index-1-9b / jinshi / brain2qwerty / digivio / rnnsearch-50 / neural-lm / nplm），全部 ERROR=0，合并 0 冲突，每波单独 commit+push。**全库 305/305 批次 submitted，702/702 模型入主库，0 缺失，主库 950 条 ERROR 0。**
+- 2026-08-29 v1.7（用户发起的**全库整改轮**，不采集、只修质量与仓库卫生）：新增 §15（三处文档与代码不符）、§16（schema 转正 3 字段 + `pricing.confidence` 升 ERROR + 规则 4.2 + 文案契约通则）、§17（「存疑」记录隔离档机制）。数据侧 D1-D6 六批整改，脚本一律放 `temp/`（gitignore）且每步带「改动条数必须等于预期」和「逐条前后跑 `check_record`，不得新增 ERROR」两道保险。仓库侧清死脚本、删可再生 HF 缓存、失效名册改名加弃用说明。**主库 950 → 940 条，ERROR 0 / WARN 689 / 结构漂移 0。**
