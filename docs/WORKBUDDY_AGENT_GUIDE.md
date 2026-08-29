@@ -169,8 +169,23 @@ git ls-files incoming/models/ | grep b9w6-openai
 | `claimed` 且超时 > 24h（他人平台） | stale | 可接管：`claimed_by` 改本平台 ID，notes 留痕"接管原平台 X 超时未交" |
 | `claimed` 且未超时（他人平台，< 24h） | **进行中** | **禁止抢**。可能是对方正在采集或即将 submit，只在报告里提示用户 |
 | `claimed` 但磁盘已有完整文件（他人，未超时） | 对方将交 | **不动**，仅报告 |
+| `claimed` 但**用户已确认该 agent 停摆**（额度超限 / 进程被杀 / 明确不再回来） | 立即接管 | 超时规则不再适用，按 §7.4 三分类处置 |
 
 > 判定超时用 `claimed_at` 与当前时间比较。`claimed_at` 有 `+08:00` 和 `+00:00` 两种写法，**比较前统一转 UTC**。
+
+### 7.4 接管停摆批次的三分类（关键）
+
+用户确认某批 agent 不会再回来后，对它名下所有 `claimed` 批次**逐个分类处置**，不要一刀切：
+
+| 磁盘文件情况 | 判定 | 动作 |
+|---|---|---|
+| 文件存在、`json.loads` 通过、数据已在主库 | 采完了，只差收尾 | 改 `submitted` + 填 `submitted_files` + `add -f` 入库，`claimed_by` **保持原值** |
+| 文件存在但 **`json.loads` 抛异常** | 写到一半被截断 | 隔离到 `backups/quarantine/<名>.corrupt-<日期>`，改 `pending` + 清空 `claimed_by`，notes 写明需重采 |
+| 文件根本不存在 | 认领了但零产出 | 改 `pending` + 清空 `claimed_by` / `claimed_at`，notes 留痕（同 §11.3） |
+
+> ⚠️ **必须逐文件 `json.loads` 验证，不能只看文件大小。** 实测一个 7472 字节的文件看着正常，实际 JSON 字符串未闭合——agent 正在写盘时被截停。按大小判断会把它误判成「已完成」而补提交，把坏数据固化进仓库。
+
+**判定集体停摆的辅助信号**：统计 ledger 里 `submitted_at` 的小时分布，若某时刻之后归零而 `claimed_at` 全停在同一时刻，基本可确认（本轮实测：05:39~05:43 认领 12 批，05 时还有 59 批/小时，06 时起归零）。
 
 ### 7.3 强制自检（会话结束前必做）
 
@@ -229,6 +244,17 @@ incoming/models/<bNNwM>__<model>__<variant>.jsonl
 | `git push` 卡住不动 / 弹窗 | 用了 WorkBuddy 自带 git | `export PATH="/e/System_Programes/Git/cmd:$PATH"`，校验版本 2.46.0 |
 | `git status` 干净但远端没文件 | 漏了 `git add -f` | 重跑 `git add -f` + commit + push，`git ls-files` 验证 |
 | `git add -f` 报 `error: open("...") Filename too long` | 绝对路径 250~260 字符，撞 Windows 上限 | `git config core.longpaths true` 后重试（见 §8.1 补充） |
+| 主库校验 ERROR=0，但源文件校验 ERROR>0 | 越界 `positioning` 标签在合并时被**静默丢弃**，主库落成 `[]` | 两边都要看：主库干净 ≠ 源文件合规 ≠ 数据完整。按 §8.2-9 修源文件；主库回填见 §12 |
+
+### 12. 主库写入的唯一路径（重要）
+
+`scripts/model_data_tool.py` 的子命令只有 `read` / `compare` / `table` / `list`（**只读**）+ `merge`（默认 dry-run，`--apply` 才写）。**没有单字段 set / update 命令。**
+
+- 想修主库里某个已合并记录的单个字段，**只能重跑 `merge --apply`**，没有其他正当路径
+- 但重跑 merge 会用源文件覆盖目标记录，可能把合并时自动补全的骨架结构冲掉
+- 因此：**改主库的收益 < 风险时，宁可不动，留到阶段 3 质检统一处理**，并在交接文档里写明
+
+> 本轮实例：3 条记录的 `positioning` 被合并工具丢成 `[]`（源文件用了越界标签）。只修了源文件让它过门禁，主库没动——全库 950 条里本就有 359 条 `positioning` 为空（37.8%），为 1 条记录重跑 merge 不划算。
 | Python 报 UnicodeEncodeError | GBK 控制台 | 命令前加 `PYTHONUTF8=1` |
 | 门禁报 positioning 越界 | 用了受控词表外的标签 | 六值枚举：`旗舰/中端/轻量/推理增强/多模态/工具调用增强`，越界标签按通用规范 §8.2-9 映射或删除 |
 | 门禁报顶层键数量不对 | `access` 被提到顶层 | `access` 必须嵌在 `basic_info.access` 内；8 个顶层键固定 |
@@ -270,3 +296,8 @@ incoming/models/<bNNwM>__<model>__<variant>.jsonl
 - 2026-08-29 v1.3（agent `workbuddy-03`，纯收尾轮，未采集、未 push）：① 补 §8.1 的 `core.longpaths` 坑——降级命名只保证**写盘**，250~260 字符的路径仍会让 `git add -f` 失败，必须 `git config core.longpaths true`；② 本轮把 89 个「已 submitted 但从未入库」的采集文件补入 git（commit `9503626`），全部门禁 ERROR=0，数据早已合并进主库（0 丢失）。加上 v1.1/v1.2 的 36+40 个，历史漏 `add -f` 的缺口至此基本扫清。
   - **收尾轮的方法论（可复用）**：`git ls-files incoming/models/` 与磁盘 `incoming/models/*.jsonl` 求差集 → 用 `batch_id.split('-')[0]` 短标识反查 ledger（降级命名的文件前缀不含完整 batch_id，直接 `split('__')[0]` 会查不到，判成「无主文件」）→ 按 ledger status 分流，`submitted` 的才收，`claimed` 的一律不动 → 逐个 `git add -f`（`xargs` 会报 environment too large，用 Python `subprocess`）→ 提交前 `git diff --cached --name-only` 确认 index 里没有别人的东西。
   - **本轮实测的停滞判定**：12 个 `claimed` 批次全部停在 05:39~05:43，7 小时零新提交；其中 8 个文件已落盘（7 个数据已进主库、1 个是**写了一半的截断 JSON**），4 个连文件都没有。判定「已 submitted 未入库」和「在途未完成」时，**必须逐文件解析 JSON 是否完整**，只看文件大小会漏掉截断文件（本例 7.4KB 看着正常，实际字符串未闭合）。
+- 2026-08-29 v1.4（agent `workbuddy-03`，同日第二阶段——用户确认 3 个 Trae agent **额度超限集体停摆**后接管）：
+  - 新增 **§7.2 末行 + §7.4 接管三分类**：用户确认停摆后超时规则不再适用，按「文件完整 / 文件截断 / 零产出」三类分别处置。核心是**逐文件 `json.loads`**，并按 `submitted_at` 小时分布辅助判定集体停摆。
+  - 新增 **§9 一条 + §12**：`models_data_tool.py` **没有单字段写入命令**，主库只能靠 `merge --apply` 改；因此「主库 ERROR=0」不等于源文件合规——越界 `positioning` 在合并时被静默丢成 `[]`。改主库收益 < 风险时宁可不动，留给阶段 3。
+  - **接管战绩**：7 批补提交（含 3 批越界标签修复后过门禁）、5 批退回 pending（4 批零产出 + 1 批截断文件隔离）、**claimed 残留清零**、工作区转干净。进度 676 → **683 / 702（97.3%）**。
+  - **一个流程性结论**：本轮共发现 **96 个**（89+7）已合并进主库却从未入库的源文件。说明现有合并流程**既不入库源文件、也不清理它们**——所以「磁盘有文件」和「文件在仓库里」是两件事，每个采集阶段结束都必须单独扫一遍 `git ls-files` 差集，否则这些数据只有主库一条命。
