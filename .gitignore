@@ -15,6 +15,8 @@ model_data_v2.jsonl.*_bak
 
 # ===== 平台 / 编辑器杂项 =====
 /启动可视化.bat
+# ledger 改前备份（各平台本地保留即可，不进仓库；正式备份请放 /backups/）
+docs/*.bak
 *.log
 *.tmp
 *.swp
