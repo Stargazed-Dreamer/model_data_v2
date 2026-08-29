@@ -15,6 +15,11 @@
 - 没查到 = null，严禁 false/0/空串冒充"没查到"
 - 不伪造 T0。搜索结果转述的官方数据：source_type="行业媒体聚合官方发布"，confidence="T3"，
   source_url 填实际可引用的文章 URL；若能确认转述内容与官方原文一致可标 "T0-自报-转述"
+- **定价置 null 的判定基准 = 厂商有无自有官方 API 刊例价，不是「是否开源权重」**（2026-08-29 修订）。
+  厂商自营 API 有刊例价就照常采（DeepSeek / Qwen / Kimi / GLM / MiniMax / Mistral 开源权重但也有官方价）；
+  确认无自有刊例价才六价键全 null，`source_type="开源权重模型核对（无官方 API 价）"` + `confidence="T0"`
+  —— 此处 T0 评的是「已核对官方渠道确认无价」这个核实动作，不是给不存在的价格贴 T0，不算伪造。
+  **OpenRouter / NVIDIA hub / 云厂商的转售价不是官方价，禁止填入。**
 - 每个 benchmarks.* 条目必须带 source_url
 - meta.collected_at = "2026-08-25"；meta.verification_status = "待验证"
 - 禁止改动 model_data_v2.jsonl（合并由主 agent 统一执行）

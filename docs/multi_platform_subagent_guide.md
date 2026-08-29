@@ -138,13 +138,19 @@ git push
    - basic_info.release_date：YYYY-MM-DD
    - architecture.context_window_tokens / context_window_effective_tokens / knowledge_cutoff / total_params_b / active_params_b
    - modality.input.{text,image,audio,video} / output.{text,image} / native_multimodal（布尔三态 true/false/null）
-   - pricing：USD/M tokens（官方源 T0，媒体转述 T3）；开源权重模型全 null + notes 注明
+   - pricing：USD/M tokens（官方源 T0，媒体转述 T3）；**厂商无自有官方 API 刊例价时六价键全 null + notes 注明**（判定基准见下方「硬性红线」定价条目，不是「是否开源权重」）
    - access.{open_weights, api, local_deployment}
    - benchmarks.self_reported：官方自报跑分，score 一律 0-1 小数（百分制 ÷100 并在 notes 注明），每条带 source_url，source_type 必须含「自报」字样，confidence 用 "T0-自报-转述"
 
 ## 硬性红线
 - 查不到 = null，严禁 false/0/空串冒充"没查到"
 - 不伪造 T0：搜索结果转述的官方数据 → source_type="行业媒体聚合官方发布"，confidence="T3"
+- **定价填 null 的判定基准 = 「厂商是否公布自有官方 API 刊例价」，不是「是否开源权重」**。
+  厂商自己运营 API 且有刊例价 → 照常填 T0（DeepSeek / Moonshot / 阿里 Qwen / 智谱 GLM / MiniMax / Mistral 均属此类，虽也开源权重）；
+  查遍官方渠道确认无自有刊例价 → 六价键全 null，`source_type="开源权重模型核对（无官方 API 价）"`、`confidence="T0"`
+  （此处 T0 指「已核对官方渠道、确认其无公开 API 价」这一核实动作的可信度，**不是**给不存在的价格贴 T0，不算伪造）。
+  闭源但官方页查不到价用 `"官方定价页核对（无公开定价）"`，已下架用 `"官方定价页核对（已下架）"`。
+  **严禁把第三方托管商报价（OpenRouter / NVIDIA hub / 云厂商转售）当官方价填进去。**
 - 每个 benchmarks.* 条目必须带 source_url
 - meta.collected_at = "YYYY-MM-DD"（今天），meta.verification_status = "待验证"
 - 文件 = 单行压缩 JSON，schema 1.1，**8 个顶层键**（schema_version/model_id/basic_info/architecture/benchmarks/pricing/modality/meta），禁止删键，**禁止把 access 提为顶层键**（access 嵌套在 basic_info.access 内，见样板）
@@ -229,7 +235,17 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 2. **不伪造 T0**：直接来自官方源的标 `T0` 或 `T0-自报`；经媒体转述的官方数据标 `T3`，source_type="行业媒体聚合官方发布"
 3. **每个 benchmarks.* 条目必须带 source_url**
 4. **跑分 score 一律 0-1 小数**（百分制 ÷100 并在 notes 注明"原值 X 分，÷100 转小数"）；非百分制跑分（如 Elo / Perplexity）按红线置 score=null，原始值保留在 notes
-5. **开源权重模型 pricing 全 null**（Gemma / Llama / Qwen / Mistral 等开源权重模型，官方不公布 API 调用价，pricing 六价格键全 null + currency=null + notes 注明"开源权重模型，可经 HuggingFace/ModelScope 自托管或经云厂商托管调用"）；access.open_weights=true / api=true（云托管）/ local_deployment=true
+5. **定价 null 的判定基准 = 厂商有无自有官方 API 刊例价**（2026-08-29 修订）。
+   - 厂商自己运营 API 并公布刊例价 → **无论是否开源权重**，按官方定价页正常填，`confidence="T0"`
+   - 查遍官方渠道确认厂商无自有刊例价（纯开源权重 / 仅提供权重不自营 API）→ pricing 六价格键全 null，
+     `source_type="开源权重模型核对（无官方 API 价）"` + `confidence="T0"`，notes 注明「可经 HuggingFace/ModelScope 自托管或经第三方云厂商调用」
+   - 闭源但官方定价页查不到 → 同上全 null，`source_type="官方定价页核对（无公开定价）"`；模型已下架 → `"官方定价页核对（已下架）"`
+   - **严禁用第三方托管商报价（OpenRouter / NVIDIA hub / 云厂商转售）冒充官方价**；发现已误填的，剔为 null 并在 notes 保留原观测值留痕
+   - `access.open_weights` / `access.api` / `access.local_deployment` 三者**互相独立、按事实各填**：`api` 只表示**厂商自营官方 API**，
+     第三方云托管不算 true。不得由「开源」推出「有官方 API」，也不得由「有云托管」推出「api=true」
+   > 旧版写作「开源权重模型 pricing 全 null」，已废弃：该口径把「开源权重」当成了判定条件，
+   > 而 DeepSeek / 阿里 Qwen / Moonshot Kimi / 智谱 GLM / MiniMax / Mistral 都是**既开源权重、又有自有官方 API 刊例价**的模型，
+   > 按旧口径会被错误置 null（数据丢失），或迫使采集者改写口径绕过红线。
 6. **positioning 受控词表**：`["旗舰", "中端", "轻量", "推理增强", "多模态", "工具调用增强"]`，越界标签会被门禁拒
 7. **文件 = 单行压缩 JSON**，schema 1.1，**8 个顶层键**（schema_version / model_id / basic_info / architecture / benchmarks / pricing / modality / meta），禁止删键，**禁止把 access 提为顶层键**（access 嵌套在 basic_info.access 内，与主库一致；如果 subagent 把 access 提到顶层，主 agent 修复时把它移回 basic_info.access）
 8. **文件名 sanitize**：model_id 中 `:` → `__`，JSON 内容里 model_id 保持三段式原样
@@ -282,7 +298,7 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 ### 8.2 数据采集
 
 6. **arxiv ID 经常错**：任务书给的 arxiv ID 约有 5-10% 是错的（如 2408.01847 实为天文学论文，2503.19711 实为写作论文）。subagent 必须经 WebFetch 直验后再采用，并在 meta.notes 标注纠错。
-7. **开源权重模型 pricing 全 null**：Gemma / Llama / Qwen / Mistral 等开源权重模型，官方不公布 API 调用价，pricing 六价格键全 null + currency=null + notes 注明。**不要用第三方云厂商转售价冒充官方价**。
+7. **定价 null 判定见 §5 红线 5**：基准是「厂商有无自有官方 API 刊例价」，**不是「是否开源权重」**。两个实测反向坑：① DeepSeek / Qwen / Kimi / GLM / MiniMax / Mistral 开源权重但自营 API 有刊例价，按「开源即 null」会把真价丢掉；② 反过来拿 OpenRouter / NVIDIA hub / 云厂商转售价冒充官方价填进去，是伪 T0。
 8. **CNY 定价折算**：中国厂商（百度/阿里/智谱/月之暗面等）官方定价常以 CNY 给出，需按可查汇率折算 USD（PBOC 中间价 + 日期留痕）。汇率查询优先用中国外汇交易中心 chinamoney.com.cn 官方源。
 9. **positioning 受控词表**：`["旗舰", "中端", "轻量", "推理增强", "多模态", "工具调用增强"]` 六值枚举，越界标签（如"端侧"、"代码专用"、"开源权重"、"高推理深度预览"）会被门禁拒。映射规则：轻量高速→轻量；高性价比→中端；智能体系列/计算机使用/编码系列→工具调用增强；混合推理/前沿推理→推理增强。删除而非映射：纯场景描述（"专业工作"、"知识工作"）。
 10. **非百分制跑分**：Elo / CFEval / Perplexity / Bits-per-char 等非 0-1 量纲的跑分，按红线置 score=null，原始值保留在 notes。Codeforces Elo=2386 / CFEval=2134 等不能直接进 self_reported.score。
