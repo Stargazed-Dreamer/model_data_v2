@@ -188,6 +188,14 @@ def check_record(rec):
                      "需核实后要么改标签要么剔 null"
                      % (stype, ", ".join("pricing." + k for k in filled)))
 
+    # 4.3 无价即无币种（2026-08-29 拍板口径）：六个价键全 null 时 currency 也应为 null。
+    #     填 USD 会被下游读成「已按美元核实过、确认无价」，属红线 1 的伪造默认值。
+    #     历史上 645 条无价记录里 USD 323 / null 318 对半分裂，D7 已一次性归一为 null，
+    #     本条 WARN 只负责挡住后续采集再写回 USD。unit 不在此约束内（量纲默认值不携带「已核实」含义）。
+    if not filled and pricing.get("currency") is not None:
+        warns.append("pricing 六个价键全为 null，但 pricing.currency=%r —— 无价应填 null，"
+                     "USD 等币种仅在确有价格时才有意义" % (pricing.get("currency"),))
+
     # 5. positioning：数组 + 枚举
     pos = (rec.get("basic_info") or {}).get("positioning")
     if pos is None:

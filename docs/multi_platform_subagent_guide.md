@@ -147,7 +147,8 @@ git push
 - 不伪造 T0：搜索结果转述的官方数据 → source_type="行业媒体聚合官方发布"，confidence="T3"
 - **定价填 null 的判定基准 = 「厂商是否公布自有官方 API 刊例价」，不是「是否开源权重」**。
   厂商自己运营 API 且有刊例价 → 照常填 T0（DeepSeek / Moonshot / 阿里 Qwen / 智谱 GLM / MiniMax / Mistral 均属此类，虽也开源权重）；
-  查遍官方渠道确认无自有刊例价 → 六价键全 null，`source_type="开源权重模型核对（无官方 API 价）"`、`confidence="T0"`
+  查遍官方渠道确认无自有刊例价 → 六价键全 null **且 `currency` 也置 null（无价即无币种，别留 `"USD"` 默认值，门禁规则 4.3 会 WARN）**，
+  `source_type="开源权重模型核对（无官方 API 价）"`、`confidence="T0"`
   （此处 T0 指「已核对官方渠道、确认其无公开 API 价」这一核实动作的可信度，**不是**给不存在的价格贴 T0，不算伪造）。
   闭源但官方页查不到价用 `"官方定价页核对（无公开定价）"`，已下架用 `"官方定价页核对（已下架）"`。
   **严禁把第三方托管商报价（OpenRouter / NVIDIA hub / 云厂商转售）当官方价填进去。**
@@ -238,6 +239,7 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 5. **定价 null 的判定基准 = 厂商有无自有官方 API 刊例价**（2026-08-29 修订）。
    - 厂商自己运营 API 并公布刊例价 → **无论是否开源权重**，按官方定价页正常填，`confidence="T0"`
    - 查遍官方渠道确认厂商无自有刊例价（纯开源权重 / 仅提供权重不自营 API）→ pricing 六价格键全 null，
+     **`currency` 一并置 null（无价即无币种；留 `"USD"` 会被读成「已按美元核实、确认无价」，门禁规则 4.3 报 WARN）**，
      `source_type="开源权重模型核对（无官方 API 价）"` + `confidence="T0"`，notes 注明「可经 HuggingFace/ModelScope 自托管或经第三方云厂商调用」
    - 闭源但官方定价页查不到 → 同上全 null，`source_type="官方定价页核对（无公开定价）"`；模型已下架 → `"官方定价页核对（已下架）"`
    - **严禁用第三方托管商报价（OpenRouter / NVIDIA hub / 云厂商转售）冒充官方价**；发现已误填的，剔为 null 并在 notes 保留原观测值留痕
