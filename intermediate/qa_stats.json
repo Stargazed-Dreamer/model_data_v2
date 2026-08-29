@@ -1,0 +1,822 @@
+{
+  "total": 950,
+  "roster_n": 702,
+  "legacy_n": 248,
+  "dims": [
+    {
+      "dim": "发布日期",
+      "path": "basic_info.release_date",
+      "desc": "YYYY-MM-DD 或 YYYY-MM",
+      "roster": {
+        "filled": 702,
+        "total": 702,
+        "pct": 100.0
+      },
+      "legacy": {
+        "filled": 248,
+        "total": 248,
+        "pct": 100.0
+      },
+      "delta": 0.0
+    },
+    {
+      "dim": "定位标签",
+      "path": "basic_info.positioning",
+      "desc": "受控词表六值，非空数组",
+      "roster": {
+        "filled": 628,
+        "total": 702,
+        "pct": 89.5
+      },
+      "legacy": {
+        "filled": 203,
+        "total": 248,
+        "pct": 81.9
+      },
+      "delta": 7.6
+    },
+    {
+      "dim": "开放权重",
+      "path": "basic_info.access.open_weights",
+      "desc": "三态布尔",
+      "roster": {
+        "filled": 665,
+        "total": 702,
+        "pct": 94.7
+      },
+      "legacy": {
+        "filled": 216,
+        "total": 248,
+        "pct": 87.1
+      },
+      "delta": 7.6
+    },
+    {
+      "dim": "API 可用",
+      "path": "basic_info.access.api",
+      "desc": "三态布尔",
+      "roster": {
+        "filled": 647,
+        "total": 702,
+        "pct": 92.2
+      },
+      "legacy": {
+        "filled": 212,
+        "total": 248,
+        "pct": 85.5
+      },
+      "delta": 6.7
+    },
+    {
+      "dim": "本地部署",
+      "path": "basic_info.access.local_deployment",
+      "desc": "三态布尔",
+      "roster": {
+        "filled": 620,
+        "total": 702,
+        "pct": 88.3
+      },
+      "legacy": {
+        "filled": 187,
+        "total": 248,
+        "pct": 75.4
+      },
+      "delta": 12.9
+    },
+    {
+      "dim": "总参数量",
+      "path": "architecture.total_params_b",
+      "desc": "B 为单位",
+      "roster": {
+        "filled": 523,
+        "total": 702,
+        "pct": 74.5
+      },
+      "legacy": {
+        "filled": 139,
+        "total": 248,
+        "pct": 56.0
+      },
+      "delta": 18.5
+    },
+    {
+      "dim": "激活参数量",
+      "path": "architecture.active_params_b",
+      "desc": "MoE 模型",
+      "roster": {
+        "filled": 346,
+        "total": 702,
+        "pct": 49.3
+      },
+      "legacy": {
+        "filled": 119,
+        "total": 248,
+        "pct": 48.0
+      },
+      "delta": 1.3
+    },
+    {
+      "dim": "上下文窗口",
+      "path": "architecture.context_window_tokens",
+      "desc": "标称值",
+      "roster": {
+        "filled": 470,
+        "total": 702,
+        "pct": 67.0
+      },
+      "legacy": {
+        "filled": 241,
+        "total": 248,
+        "pct": 97.2
+      },
+      "delta": -30.2
+    },
+    {
+      "dim": "有效上下文",
+      "path": "architecture.context_window_effective_tokens",
+      "desc": "实测值",
+      "roster": {
+        "filled": 119,
+        "total": 702,
+        "pct": 17.0
+      },
+      "legacy": {
+        "filled": 89,
+        "total": 248,
+        "pct": 35.9
+      },
+      "delta": -18.9
+    },
+    {
+      "dim": "知识截止",
+      "path": "architecture.knowledge_cutoff",
+      "desc": "YYYY-MM-DD",
+      "roster": {
+        "filled": 115,
+        "total": 702,
+        "pct": 16.4
+      },
+      "legacy": {
+        "filled": 63,
+        "total": 248,
+        "pct": 25.4
+      },
+      "delta": -9.0
+    },
+    {
+      "dim": "多模态输入",
+      "path": "modality.input",
+      "desc": "除 text 外任一项非 null",
+      "roster": {
+        "filled": 580,
+        "total": 702,
+        "pct": 82.6
+      },
+      "legacy": {
+        "filled": 234,
+        "total": 248,
+        "pct": 94.4
+      },
+      "delta": -11.8
+    },
+    {
+      "dim": "原生多模态",
+      "path": "modality.native_multimodal",
+      "desc": "任一项非 null",
+      "roster": {
+        "filled": 560,
+        "total": 702,
+        "pct": 79.8
+      },
+      "legacy": {
+        "filled": 221,
+        "total": 248,
+        "pct": 89.1
+      },
+      "delta": -9.3
+    },
+    {
+      "dim": "自报跑分",
+      "path": "benchmarks.self_reported",
+      "desc": "非空数组",
+      "roster": {
+        "filled": 393,
+        "total": 702,
+        "pct": 56.0
+      },
+      "legacy": {
+        "filled": 164,
+        "total": 248,
+        "pct": 66.1
+      },
+      "delta": -10.1
+    },
+    {
+      "dim": "独立评测",
+      "path": "benchmarks.independent",
+      "desc": "非空数组",
+      "roster": {
+        "filled": 128,
+        "total": 702,
+        "pct": 18.2
+      },
+      "legacy": {
+        "filled": 122,
+        "total": 248,
+        "pct": 49.2
+      },
+      "delta": -31.0
+    },
+    {
+      "dim": "Arena Elo",
+      "path": "benchmarks.arena_elo",
+      "desc": "非空数组",
+      "roster": {
+        "filled": 45,
+        "total": 702,
+        "pct": 6.4
+      },
+      "legacy": {
+        "filled": 118,
+        "total": 248,
+        "pct": 47.6
+      },
+      "delta": -41.2
+    },
+    {
+      "dim": "定价-输入",
+      "path": "pricing.input",
+      "desc": "USD/M tokens",
+      "roster": {
+        "filled": 155,
+        "total": 702,
+        "pct": 22.1
+      },
+      "legacy": {
+        "filled": 147,
+        "total": 248,
+        "pct": 59.3
+      },
+      "delta": -37.2
+    },
+    {
+      "dim": "定价-输出",
+      "path": "pricing.output",
+      "desc": "USD/M tokens",
+      "roster": {
+        "filled": 142,
+        "total": 702,
+        "pct": 20.2
+      },
+      "legacy": {
+        "filled": 145,
+        "total": 248,
+        "pct": 58.5
+      },
+      "delta": -38.3
+    },
+    {
+      "dim": "定价-生效日",
+      "path": "pricing.effective_date",
+      "desc": "精确到日",
+      "roster": {
+        "filled": 702,
+        "total": 702,
+        "pct": 100.0
+      },
+      "legacy": {
+        "filled": 240,
+        "total": 248,
+        "pct": 96.8
+      },
+      "delta": 3.2
+    },
+    {
+      "dim": "来源 URL",
+      "path": "meta.source_urls",
+      "desc": "非空数组",
+      "roster": {
+        "filled": 700,
+        "total": 702,
+        "pct": 99.7
+      },
+      "legacy": {
+        "filled": 247,
+        "total": 248,
+        "pct": 99.6
+      },
+      "delta": 0.1
+    },
+    {
+      "dim": "采集日期",
+      "path": "meta.collected_at",
+      "desc": "YYYY-MM-DD",
+      "roster": {
+        "filled": 702,
+        "total": 702,
+        "pct": 100.0
+      },
+      "legacy": {
+        "filled": 248,
+        "total": 248,
+        "pct": 100.0
+      },
+      "delta": 0.0
+    }
+  ],
+  "meta": {
+    "verification_status": {
+      "待验证": 866,
+      "已验证": 54,
+      "已过期": 20,
+      "存疑": 10
+    },
+    "dishonest_verified": [],
+    "collected_at": {
+      "2026-08-24": 82,
+      "2026-08-25": 2,
+      "2026-08-26": 193,
+      "2026-08-27": 163,
+      "2026-08-28": 359,
+      "2026-08-29": 151
+    },
+    "placeholder_notes": {
+      "count": 53,
+      "total": 950,
+      "pct": 5.6,
+      "by_group": {
+        "roster": {
+          "count": 52,
+          "total": 702,
+          "pct": 7.4
+        },
+        "legacy": {
+          "count": 1,
+          "total": 248,
+          "pct": 0.4
+        }
+      },
+      "confirmed_absent": 243
+    },
+    "pricing_by_kind": {
+      "roster/商业API": {
+        "pricing_filled": 96,
+        "total": 191,
+        "pct": 50.3
+      },
+      "roster/开源权重": {
+        "pricing_filled": 51,
+        "total": 406,
+        "pct": 12.6
+      },
+      "roster/未知/混合": {
+        "pricing_filled": 8,
+        "total": 105,
+        "pct": 7.6
+      },
+      "legacy/商业API": {
+        "pricing_filled": 72,
+        "total": 83,
+        "pct": 86.7
+      },
+      "legacy/开源权重": {
+        "pricing_filled": 43,
+        "total": 131,
+        "pct": 32.8
+      },
+      "legacy/未知/混合": {
+        "pricing_filled": 32,
+        "total": 34,
+        "pct": 94.1
+      }
+    },
+    "confidence": {
+      "null": 1111,
+      "T0": 122,
+      "T0-自报": 1546,
+      "T0-自报-转述": 799,
+      "T1": 1145,
+      "T2": 13,
+      "T3": 725,
+      "T4": 6,
+      "pricing:N/A": 1,
+      "pricing:T0": 783,
+      "pricing:T0-自报": 6,
+      "pricing:T0-自报-转述": 17,
+      "pricing:T1": 7,
+      "pricing:T2": 8,
+      "pricing:T3": 114,
+      "pricing:T4": 2,
+      "pricing:high": 1,
+      "pricing:中": 2,
+      "pricing:低": 1
+    },
+    "source_type": {
+      "null": 791,
+      "独立评测平台": 635,
+      "LMArena 镜像(DataLearner)，原始来源 LM Arena (arena.ai 被 Cloudflare 拦截，采用公开镜像)": 442,
+      "T0-自报": 379,
+      "行业媒体聚合官方发布（自报分转述）": 268,
+      "pricing:开源权重模型核对（无官方 API 价）": 244,
+      "行业媒体聚合官方发布": 208,
+      "T0-自报-转述": 200,
+      "官方技术报告（自报）": 198,
+      "官方 Model Card（自报）": 198,
+      "pricing:官方定价页": 143,
+      "官方技术报告": 115,
+      "pricing:官方定价页核对（无公开定价）": 105,
+      "pricing:官方定价页核对（已下架）": 94,
+      "第三方登记站": 86,
+      "官方自报": 78,
+      "T0 官方自报": 76,
+      "行业媒体转述官方发布（自报）": 56,
+      "T0 官方模型卡自报": 52,
+      "官方模型卡自报": 47,
+      "官方技术报告-自报": 46,
+      "官方 Model Card 自报": 45,
+      "pricing:行业媒体聚合官方发布": 44,
+      "pricing:T0 官方一手": 44,
+      "官方模型卡": 42,
+      "官方技术博客自报": 42,
+      "官方模型卡（自报）": 40,
+      "T0 官方论文自报": 36,
+      "T0 官方一手 arXiv 论文/官方模型卡自报": 35,
+      "官方Model Card自报": 34,
+      "T0-自报 官方一手": 29,
+      "T0-自报-转述（arXiv:2201.11990 论文官方自报 + 腾讯云 developer/article/2264570 转述）": 27,
+      "行业媒体转述官方自报发布": 25,
+      "官方技术报告(arxiv)自报": 25,
+      "T0": 22,
+      "pricing:官方定价页核对": 21,
+      "行业媒体聚合官方发布（自报）": 21,
+      "官方 GitHub README 自报": 20,
+      "官方模型卡（自报分转述）": 20,
+      "T0 官方一手技术报告（自报）": 20,
+      "官方论文自报": 20,
+      "官方发布公告": 19,
+      "官方 GitHub README 基准表": 19,
+      "官方技术报告自报": 18,
+      "行业媒体转述官方发布": 18,
+      "官方技术报告(自报)": 17,
+      "第三方评测机构 Artificial Analysis 聚合数据（转述）": 16,
+      "官方产品页自报": 16,
+      "官方自报 HF 模型卡": 16,
+      "T0 官方论文/技术博客自报": 16,
+      "官方模型卡自报（经镜像转述）": 15,
+      "官方 Model Card 自报跑分表": 15,
+      "LMArena 镜像(AnotherWrapper)，原始来源 LMArena，快照 2026-08-25": 14,
+      "PyLate 官方文档自报": 14,
+      "T0 官方一手（自报）": 14,
+      "自报": 14,
+      "pricing:媒体转述": 12,
+      "官方GitHub README(对比表)": 12,
+      "独立评测平台(Artificial Analysis)": 12,
+      "T0 官方 Model Card 自报": 12,
+      "官方 blog（自报）": 12,
+      "官方 Model Card 自报（BF16 基线，FP8 同源权重，经 scnet.cn 镜像转述）": 12,
+      "官方 HF Model Card 自报": 12,
+      "T0 官方自报（model card 评测表）": 12,
+      "官方GitHub README/技术报告": 11,
+      "官方GitHub README（技术报告尚未发布）": 11,
+      "官方自报（DeepSeek 官方 updates 变更日志）": 11,
+      "pricing:开源权重模型（无 API 定价）": 11,
+      "T0-自报-官方模型卡": 11,
+      "官方Model Card（自报）": 11,
+      "官方技术报告+HF Model Card（自报）": 11,
+      "官方公告-自报": 11,
+      "官方自报-媒体转述": 10,
+      "T0 官方一手自报（官方原文直采）": 10,
+      "Google 官方论文自报（arXiv 2210.11416 Table 4）": 10,
+      "pricing:official": 10,
+      "官方模型卡自报（T0 直采）": 10,
+      "官方技术博客": 10,
+      "Mistral 官方技术报告自报（arXiv:2401.04088 Table 2）": 10,
+      "官方发布公告自报评测表": 10,
+      "官方发布公告自报跑分（搜索结果转述）": 10,
+      "第三方基准测试聚合(GPT-Fathom arXiv:2309.16583)": 10,
+      "Epoch AI 数据库转述自 Yi 官方技术报告自报跑分": 10,
+      "第三方转述官方评测": 9,
+      "LMArena 镜像(DataLearner)，原始来源 LM Arena": 9,
+      "官方GitHub仓库README-自报": 9,
+      "官方博客自报对照表": 9,
+      "vendor_self_reported": 9,
+      "pricing:行业媒体聚合官方发布（自报分转述）": 9,
+      "第三方评测聚合": 9,
+      "官方 NVIDIA Developer Blog（自报）": 9,
+      "第三方聚合站转述 Stanford CRFM HELM 独立评测": 9,
+      "Model Card": 9,
+      "Model Card 自报": 8,
+      "第三方平台复刻转述官方模型卡（NVIDIA NIM 文档）": 8,
+      "Fujitsu 官方公告自报": 8,
+      "官方 Model Card 自报（HuggingFace ibm-granite 仓库 model-index 元数据）": 8,
+      "官方 blog/HF Model Card（自报）": 8,
+      "官方论文自报（arXiv HTML 直采，Table 1）": 8,
+      "官方自报(WebSearch快照转述)": 8,
+      "自报-转述（官方仓库 README 自报表）": 8,
+      "官方 HF README 自报": 8,
+      "百科转述官方技术报告": 8,
+      "官方博客自报（SOTA 声明）": 7,
+      "第三方聚合（datalearner）": 7,
+      "官方技术报告（转述）": 7,
+      "官方自报（T0 官方一手）": 7,
+      "官方 Model Card Evaluation Results 表自报": 7,
+      "官方发布自报": 7,
+      "T0 官方自报（HF Model Card 直采，OpenCompass 评测）": 7,
+      "官方模型卡自报（11B 卡对比表）": 7,
+      "pricing:开源模型核对（无官方 API 价)": 6,
+      "官方HF模型页（厂商自报）": 6,
+      "Anthropic 官方公告自报-转述": 6,
+      "官方自报-发布公告": 6,
+      "官方 ModelScope 模型卡（R1 技术报告 arXiv:2501.12948 同源自报）": 6,
+      "官方技术报告+GitHub README（自报）": 6,
+      "官方模型卡自报（instruct 变体代理）": 6,
+      "官方技术报告（厂商自报）": 6,
+      "第三方独立评测转述": 6,
+      "官方 Model Card 自报（Open LLM Leaderboard 评测回写）": 6,
+      "官方技术报告自报（表5，经媒体转录）": 6,
+      "官方发布博客自报": 6,
+      "官方模型卡(自报)": 6,
+      "官方模型卡自报（OpenCompass 评测）": 6,
+      "T1 独立第三方（Open LLM Leaderboard）": 6,
+      "pricing:官方模型卡": 5,
+      "T0-自报-转述（官方技术报告）": 5,
+      "行业媒体转述官方发布（自报分）": 5,
+      "官方自报（GitHub README 蒸馏模型评测表）": 5,
+      "官方技术报告自报（arxiv 摘要直采）": 5,
+      "pricing:官方定价页核对（模型已下架）": 5,
+      "pricing:官方定价页核对（preview 已下架）": 5,
+      "T0-自报-技术报告": 5,
+      "论文自报转述": 5,
+      "pricing:开源权重自托管（官方未提供商业化 API 计费价）": 5,
+      "pricing:T0": 5,
+      "第三方独立评测（Epoch AI AI Benchmarking Hub 数据，经 token.app 聚合转述）": 5,
+      "官方自报-转述(codingfleet 引 OpenAI GPT-5.6 scorecard)": 5,
+      "官方自报-HF Model Card 直采": 5,
+      "T0 官方自报（开发者用 lm-eval-harness 自测）": 5,
+      "官方技术博客自报（发布版 Tongyi DeepResearch）": 4,
+      "pricing:行业媒体转述官方发布": 4,
+      "厂商官方博客（镜像技术报告 Section 6.2.1）": 4,
+      "官方技术报告(arxiv)": 4,
+      "第三方评测聚合（Artificial Analysis 系聚合站转述）": 4,
+      "官方模型卡-自报": 4,
+      "pricing:官方博客": 4,
+      "HuggingFace 模型卡自报": 4,
+      "arXiv 论文自报（摘要直引）": 4,
+      "媒体转述": 4,
+      "官方社区公告（OpenAI 员工发布）": 4,
+      "T0 官方一手自报（arXiv 论文原文 Table 直采）": 4,
+      "pricing:开源权重模型（HuggingFace 托管）": 4,
+      "SKT 自报-中文媒体转述": 4,
+      "pricing:Hugging Face": 4,
+      "T0 官方自报（arxiv 论文 Table 1，base model）": 4,
+      "官方GitHub README": 4,
+      "pricing:官方定价页(不可访问)": 4,
+      "行业媒体聚合官方发布（自报分）": 4,
+      "pricing:官方GitHub README": 3,
+      "官方GitHub README(Long CoT表)": 3,
+      "LMArena": 3,
+      "pricing:行业媒体聚合": 3,
+      "pricing:开源权重模型（Apache 2.0）": 3,
+      "官方System Card": 3,
+      "行业媒体聚合自报-转述": 3,
+      "厂商博客（自报）": 3,
+      "T0-自报-官方博客": 3,
+      "第三方榜单聚合（BFCL 官方排行榜转述）": 3,
+      "官方论文自报（T0 直采）": 3,
+      "行业媒体聚合官方自报发布": 3,
+      "自报跑分 arxiv 论文摘要直采": 3,
+      "官方公告": 3,
+      "官方产品页": 3,
+      "pricing:官方产品页": 3,
+      "T2-第三方": 3,
+      "pricing:开源权重自托管，无按 token 计费（官方模型卡/官方发布转述）": 3,
+      "官方 Model Card 自报（经 ModelScope 镜像访问，HuggingFace 直连不可达）": 3,
+      "官方技术报告（自报-转述）": 3,
+      "第三方评测聚合站转述": 3,
+      "官方自报-转述": 3,
+      "官方 GitHub Model Card（自报）": 3,
+      "官方博客（经媒体中文转述）": 3,
+      "第三方评测（Artificial Analysis）经媒体转述": 3,
+      "vendor_cited_third_party": 3,
+      "行业媒体转述（官方自报）": 3,
+      "官方 Model Card（自报，引用 Artificial Analysis）": 3,
+      "自报-转述": 2,
+      "官方发布博客(自报)": 2,
+      "pricing:开源权重模型，无公开 API 定价": 2,
+      "pricing:内部模型核对（无公开 API 价)": 2,
+      "行业媒体转述官方自报": 2,
+      "T0-自报 官方公告直采": 2,
+      "Anthropic 官方博客自报（1.2 发布文中对比 1.1 跑分）": 2,
+      "Anthropic 官方自报": 2,
+      "官方发布公告原文": 2,
+      "pricing:开源权重模型（无官方 API 定价）": 2,
+      "Model Card（官方自报）": 2,
+      "pricing:开源权重模型核对(无官方 API 价)": 2,
+      "pricing:官方定价页核对(已下架)": 2,
+      "第三方独立评测平台（搜索转述）": 2,
+      "T3": 2,
+      "官方论文 arXiv 摘要自报": 2,
+      "T0 官方一手-自报": 2,
+      "官方博客（自报）": 2,
+      "官方 HuggingFace 模型卡自报": 2,
+      "pricing:T0-自报": 2,
+      "HuggingFace 官方模型卡自报": 2,
+      "研究论文-自报": 2,
+      "arXiv 论文实验段自报（第三方转述）": 2,
+      "官方博客自报（转述）": 2,
+      "T0 官方一手自报": 2,
+      "Mistral 官方技术报告自报（arXiv:2401.04088 Table 2/3）": 2,
+      "pricing:官方定价页核对（未单列）": 2,
+      "官方博客自报": 2,
+      "pricing:独立价格追踪": 2,
+      "pricing:开源权重模型（NVIDIA Open Model License）": 2,
+      "官方技术报告自报（表6，经媒体转录）": 2,
+      "行业媒体聚合第三方评测(Artificial Analysis)": 2,
+      "官方系统卡 PDF": 2,
+      "官方研究博文": 2,
+      "学术独立评测（Stanford HELM v0.2.4）": 2,
+      "pricing:开源权重模型（无官方 token API 定价）": 2,
+      "T0 官方自报（model card 评测表，Audio）": 2,
+      "pricing:T2 HuggingFace": 2,
+      "自报-论文转述": 2,
+      "pricing:开源权重（无API定价）": 2,
+      "独立评测平台聚合": 2,
+      "T1 机构新闻发布": 2,
+      "T2 学术会议展示转述": 2,
+      "pricing:开源权重模型-无官方商用定价": 2,
+      "pricing:官方未直采-aws-bedrock与upstage-api分发": 2,
+      "媒体转述智谱官方自报": 2,
+      "pricing:官方定价页（媒体截图转述）": 1,
+      "pricing:官方发布博客(输入价) + 行业媒体转述(输出价)": 1,
+      "pricing:官方文档": 1,
+      "pricing:官方未公开定价（Preview 阶段）": 1,
+      "pricing:ZenMux API 平台（Tbox provider）": 1,
+      "行业媒体转述独立评测": 1,
+      "pricing:官方定价页转述（base 版直采，32k 变体未独立披露）": 1,
+      "官方自报（官方页面原文经搜索引擎快照直接可见）": 1,
+      "pricing:Anthropic 官方定价 PDF": 1,
+      "pricing:Anthropic 官方一手": 1,
+      "第三方榜单聚合": 1,
+      "第三方独立评测榜单": 1,
+      "pricing:私有端侧模型（无公开 API 定价）": 1,
+      "厂商官方博客（镜像技术报告 Section 6.2.1 Human evaluation 数据）": 1,
+      "pricing:Apple 研究论文模型(无独立 API 定价)": 1,
+      "pricing:开源模型核对（千帆未单列 0.3B API 价）": 1,
+      "pricing:开源模型核对（千帆未单列 21B-A3B 官方 API 价）": 1,
+      "pricing:开源模型核对（千帆未单列 300B-A47B 官方 API 价）": 1,
+      "官方发布博客（自报）": 1,
+      "官方发布博客引用独立榜单（LMArena Search Arena）": 1,
+      "pricing:官方定价页核对（千帆未单列 ERNIE 5.1）": 1,
+      "pricing:开源权重研究项目（无官方 API 定价）": 1,
+      "pricing:官方定价页（tpm保障包段仍列 doubao-pro-32k；标准 token 单价经行业媒体转述官方原定价）": 1,
+      "pricing:开源权重模型（MIT 许可，无官方 token API 定价）": 1,
+      "pricing:开源权重模型（Apache 2.0，无官方 token API 定价）": 1,
+      "pricing:研究项目无官方 API 定价": 1,
+      "pricing:T0 官方一手（无公开定价）": 1,
+      "pricing:开源权重模型（无公开 API 定价）": 1,
+      "pricing:开源权重模型": 1,
+      "T3-转述": 1,
+      "pricing:官方文档直读": 1,
+      "pricing:官方定价页直读": 1,
+      "pricing:T0 官方一手（开源权重模型六价格键置 null；官方明示无公开单价）": 1,
+      "pricing:T0 官方一手（开源权重模型六价格键置 null，托管 API 报价仅作 notes 备查）": 1,
+      "第三方评测机构指数（经 Cohere 官方博客转述）": 1,
+      "pricing:T0 官方一手（开源权重模型六价格键置 null；官方明示速率限制内免费）": 1,
+      "pricing:官方博客（定价指引至 /blog/increased-agent-usage）": 1,
+      "pricing:官方模型文档定价表": 1,
+      "pricing:官方发布博客定价声明": 1,
+      "pricing:官方发布博客（未公布 per-token 定价）": 1,
+      "pricing:Model Card": 1,
+      "pricing:官方定价页（DeepL Pro 按月订阅+按字符计费，非 per-token）": 1,
+      "pricing:官方定价页核对（蒸馏模型不在目录）": 1,
+      "官方 GitHub 自报（T0 直采）": 1,
+      "T1.5-第三方评测": 1,
+      "行业媒体聚合官方发布-转述自报": 1,
+      "pricing:占位记录（企业私有部署，无公开 per-token 定价）": 1,
+      "原始论文自报": 1,
+      "行业媒体聚合第三方": 1,
+      "pricing:实验版未公开发布定价（自报）": 1,
+      "pricing:官方技术报告（自报）": 1,
+      "pricing:闭源研究模型（未商业化，无 API 定价）": 1,
+      "行业媒体聚合官方发布-转述": 1,
+      "行业媒体聚合第三方榜单（转述）": 1,
+      "pricing:官方定价页（IBM Watsonx）": 1,
+      "pricing:官方定价页（未列出该模型）": 1,
+      "pricing:third_party": 1,
+      "pricing:T1 官方文档转述": 1,
+      "pricing:占位记录（科研机构模型未公开定价）": 1,
+      "pricing:T3-媒体转述": 1,
+      "自报-GPT-4评分（首发版v0，非v1.3独立）": 1,
+      "pricing:无官方API定价": 1,
+      "T0 自报（论文摘要）": 1,
+      "pricing:开源权重（Llama 2 Community License）免费可商用，Meta 无官方 token 计费 API": 1,
+      "pricing:NVIDIA 官方 model hub 列第三方托管商(Deep Infra)报价": 1,
+      "第三方推理平台聚合": 1,
+      "pricing:第三方推理平台聚合": 1,
+      "pricing:开源权重（无官方 API 托管定价）": 1,
+      "第三方推理聚合平台 AutoExacto 实测": 1,
+      "pricing:第三方推理聚合平台（开源权重无官方 API 定价）": 1,
+      "pricing:研究论文（非商业模型，无定价）": 1,
+      "pricing:T0 官方一手（论文 + 官方博客）": 1,
+      "pricing:开源权重模型（MIT）": 1,
+      "pricing:第三方转述(待官方核验)": 1,
+      "pricing:官方定价页核对（已被迭代版本替代）": 1,
+      "pricing:官方定价页核对（模型已退役，现行页无标价）": 1,
+      "官方公告自报": 1,
+      "pricing:官方公告（无具体定价数值）": 1,
+      "独立第三方评测": 1,
+      "pricing:官方一手发布": 1,
+      "pricing:官方公告": 1,
+      "官方技术博客转述": 1,
+      "pricing:开源模型核对（无官方 API 价）": 1,
+      "官方博客自报-经聚合站转述": 1,
+      "独立评测机构Artificial Analysis Intelligence Index": 1,
+      "pricing:独立评测聚合": 1,
+      "pricing:官方发布页": 1,
+      "pricing:开源权重，无 token 定价": 1,
+      "第三方独立评测机构 Artificial Analysis": 1,
+      "pricing:开源权重模型，无独立 API token 计费层": 1,
+      "pricing:开源权重研究型模型（无 API 定价）": 1,
+      "pricing:开源权重": 1,
+      "pricing:开源权重（研究模型，无官方 API 计价）": 1,
+      "pricing:官方一手": 1,
+      "pricing:T0 官方一手（开放权重发布声明，非 API 定价页）": 1,
+      "pricing:开源权重模型核对（无官方按量 API 价）": 1,
+      "pricing:开源权重模型核对（NVIDIA NIM 免费端点 + OpenRouter 免费变体）": 1,
+      "pricing:T0 官方一手技术报告（非定价页）": 1,
+      "pricing:开源权重模型（CC-BY-4.0 + Apache 2.0）": 1,
+      "pricing:T3 行业媒体聚合官方发布": 1,
+      "pricing:官方发布博客+官方模型页交叉转述": 1,
+      "pricing:官方发布公告定价表": 1,
+      "第三方独立榜聚合": 1,
+      "pricing:官方定价页-转述": 1,
+      "pricing:官方定价页（搜索结果转述）": 1,
+      "pricing:官方模型页(developers.openai.com)经 WebSearch 获取，T0-自报-转述": 1,
+      "官方发布博客（GA 公告）": 1,
+      "独立评测平台（Stanford CRFM HELM 榜单页直采）": 1,
+      "官方论文自报(InstructGPT arXiv:2203.02155)": 1,
+      "学术独立评测（GPT-Fathom, arXiv:2309.16583）": 1,
+      "pricing:开源权重（MIT），无官方商业定价": 1,
+      "pricing:T0 官方未公开定价（企业销售模式）": 1,
+      "行业媒体转述评测数据": 1,
+      "第三方公开榜单（MERA 官方榜单，条目由 GIGACHAT 团队自提交）": 1,
+      "第三方公开评测（MERA Code 论文结果表，经 Google Scholar 缓存检索获得）": 1,
+      "pricing:行业媒体聚合官方发布（Sber 官方 RUB 定价转述，非官方页面直采）": 1,
+      "独立评测": 1,
+      "pricing:T0 官方一手（开源权重模型，无付费 API 定价）": 1,
+      "SKT 自报内部基准-中文媒体转述": 1,
+      "MathArena 排行榜-中文媒体转述": 1,
+      "Artificial Analysis 独立评估-中文媒体转述": 1,
+      "pricing:官方报道转述": 1,
+      "pricing:开源权重模型核对（无官方 token API 定价）": 1,
+      "pricing:开源权重模型（无官方 TII 托管 API 定价）": 1,
+      "T0 官方自报（model card 评测表，bash-only harness）": 1,
+      "T0 官方自报（model card 评测表，best harness）": 1,
+      "T0 官方自报（model card 评测表，Vision）": 1,
+      "pricing:T0 官方一手（未公布定价）": 1,
+      "pricing:占位记录（企业级私有化部署模型，官方未公开按量定价）": 1,
+      "pricing:T0 官方一手（厂商私有化部署 toB 模式，官网/发布会均未公开 API 计费价目）": 1,
+      "自报（论文摘要转述）": 1,
+      "pricing:官方技术报告": 1,
+      "pricing:无商业定价（开源权重，Apache-2.0 免费发布）": 1,
+      "pricing:占位记录（工业垂直大模型，官方未公开 token 级定价）": 1,
+      "T0 官方一手（arXiv 摘要原文直采，作者自报定性结论，摘要未给出数值分数）": 1,
+      "pricing:未公开": 1,
+      "pricing:无公开定价": 1,
+      "pricing:无公开定价（Google 内部研究模型，从未开放付费 API）": 1,
+      "pricing:无公开定价源（研究型/机构内部部署模型）": 1,
+      "pricing:T4 占位（未检索到奇元 3.0 一手或媒体来源）": 1,
+      "LMSYS 官方博客自报（v1.1 转述自 v0 评测）": 1,
+      "pricing:T0-自报-转述": 1,
+      "pricing:T3": 1,
+      "pricing:行业媒体转述官方发布（华尔街见闻李开复专访）": 1,
+      "pricing:官方 API 平台文档": 1,
+      "pricing:政府监管备案": 1,
+      "pricing:官方发布会权威媒体转述": 1,
+      "官方发布公告（自报）-媒体转述": 1,
+      "pricing:官方技术博客（自报）": 1,
+      "pricing:行业媒体转述（官方自报）": 1,
+      "pricing:官方技术博客自报": 1,
+      "pricing:媒体转述（搜狐/腾讯云托管 API 价）": 1,
+      "pricing:官方 Model Card（自报）": 1,
+      "pricing:官方开放平台定价页（搜索结果摘要）": 1,
+      "官方 Model Card（自报，引用官方榜单）": 1,
+      "pricing:官方定价页 + 官方博客": 1,
+      "pricing:行业媒体聚合官方发布（xAI 2025-04-10 API 公告）": 1,
+      "官方文档自报": 1
+    },
+    "pricing_currency": {
+      "USD": 302
+    },
+    "effective_date": {
+      "to_day": 854,
+      "with_value": 942
+    },
+    "gate_tail": "校验完成：950 条，ERROR 0 项（涉及 0 条记录），WARN 678 项",
+    "gate": {
+      "records": 950,
+      "error": 0,
+      "warn": 678
+    }
+  }
+}

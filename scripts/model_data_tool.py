@@ -779,13 +779,37 @@ class ModelDataStore:
                 pass
 
     def _save(self, records: Dict[str, Dict[str, Any]]) -> None:
-        """原子写：先写同目录临时文件，再 os.replace 覆盖。"""
+        """原子写：先写同目录临时文件，再 os.replace 覆盖。
+
+        Windows 上 os.replace 会被瞬时锁定拦截（实时杀毒 / 索引器扫描刚写入的
+        大文件），报错 `PermissionError: [WinError 5] 拒绝访问`。实测 5.8MB 主库
+        随机复现，重试一次即成功。故加重试退避，避免整次写入功亏一篑。
+        """
+        import time
+
         d = os.path.dirname(os.path.abspath(self.path)) or "."
         tmp = os.path.join(d, f".{os.path.basename(self.path)}.tmp.{os.getpid()}")
-        with open(tmp, "w", encoding="utf-8") as f:
+        # newline='\n' 必须显式指定：Windows 下默认会写成 CRLF，而 .gitattributes 强制 LF，
+        # 单行 JSONL 里混入 \r 会造成解析隐患与整文件 diff 噪声（DEPLOY.md §5.2）
+        with open(tmp, "w", encoding="utf-8", newline="\n") as f:
             for rec in records.values():
                 f.write(json.dumps(rec, ensure_ascii=False) + "\n")
-        os.replace(tmp, self.path)
+
+        last_err = None
+        for attempt in range(8):
+            try:
+                os.replace(tmp, self.path)
+                return
+            except PermissionError as e:          # Windows 瞬时锁定
+                last_err = e
+                time.sleep(0.3 * (attempt + 1))   # 0.3s → 2.4s 线性退避
+            except OSError:
+                raise
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise last_err
 
 
 # ==================================================================
@@ -918,7 +942,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     # merge
     pm = sub.add_parser("merge", help="显式合并（默认 dry-run，需 --apply 才写）")
     pm.add_argument("--file", required=True, help="目标 JSONL")
-    pm.add_argument("--incoming", required=True, help="待合并的 JSONL（另一 Agent 产出）")
+    pm.add_argument("--incoming", required=True, nargs="+",
+                    help="待合并的 JSONL（另一 Agent 产出）；可给多个文件、目录（展开其下 *.jsonl），"
+                         "或 @清单文件（每行一个路径，规避命令行长度上限）。"
+                         "多文件时在内存中依次合并，最后只落盘一次、只备份一次")
     pm.add_argument("--on-null", required=True, help="NullRule: take_source|keep_target|conflict")
     pm.add_argument("--on-both", required=True, help="BothPresentRule: source_wins|target_wins|newer_wins|conflict")
     pm.add_argument("--on-both-override", nargs="*", default=[],
@@ -1049,11 +1076,38 @@ def main(argv: Optional[List[str]] = None) -> int:
             return 2
 
         target_store = ModelDataStore(args.file)
-        incoming = _load_jsonl(args.incoming)
+
+        # --incoming 支持多文件 / 目录：展开成文件列表，依次读入拼成一份来源
+        src_files: List[str] = []
+        for item in args.incoming:
+            if item.startswith("@"):                     # 清单文件：每行一个路径
+                list_path = item[1:]
+                with open(list_path, encoding="utf-8") as lf:
+                    src_files.extend(ln.strip() for ln in lf if ln.strip())
+            elif os.path.isdir(item):
+                src_files.extend(sorted(
+                    os.path.join(item, n) for n in os.listdir(item)
+                    if n.endswith(".jsonl") and not n.startswith(".")
+                ))
+            else:
+                src_files.append(item)
+        if not src_files:
+            raise SystemExit(f"--incoming 未匹配到任何 .jsonl 文件：{args.incoming}")
+
+        incoming: List[Dict[str, Any]] = []
+        for fp in src_files:
+            incoming.extend(_load_jsonl(fp))
 
         print(f"# 合并策略：{strat.describe()}")
         print(f"# 目标文件：{args.file}（{len(target_store.list_ids())} 条）")
-        print(f"# 来源文件：{args.incoming}（{len(incoming)} 条）")
+        print(f"# 来源文件：{len(src_files)} 个（{len(incoming)} 条记录）")
+        if len(src_files) <= 5:
+            for fp in src_files:
+                print(f"#   - {fp}")
+        else:
+            for fp in src_files[:3]:
+                print(f"#   - {fp}")
+            print(f"#   ... 另有 {len(src_files) - 3} 个")
         print(f"# 模式：{'APPLY（真实写入）' if args.apply else 'DRY-RUN（仅预览，不改动文件）'}\n")
 
         plan = target_store.merge_incoming(

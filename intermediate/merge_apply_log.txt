@@ -1,0 +1,416 @@
+# 合并策略：on_null=take_source | on_both=source_wins | on_array=replace | on_schema=upgrade
+# 目标文件：model_data_v2.jsonl（950 条）
+# 来源文件：277 个（277 条记录）
+#   - incoming/models/b235w1-ainnovation__ainnovation__ainno-75b-2-0__base.jsonl
+#   - incoming/models/b240w1-aircas-pcl__aircas-pcl__kongtian-lingmou-3-0__base.jsonl
+#   - incoming/models/b109w1-aleph-alpha__aleph-alpha__pharia-1-llm-7b__base.jsonl
+#   ... 另有 274 个
+# 模式：APPLY（真实写入）
+
+==============================================================================
+合并操作计划 (MergePlan)
+==============================================================================
+变更统计: set_field=3928, fill_null=4889, add_field=271
+------------------------------------------------------------------------------
+[set_field] ainnovation:ainno-75b-2-0:base :: basic_info.full_name  "\"AInno-75B 2.0\"" → "\"AInno-75B (奇智孔明工业大模型 2.0)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] ainnovation:ainno-75b-2-0:base :: basic_info.version  null → "\"AInno-75B / AInnoGC 2.0\""
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] ainnovation:ainno-75b-2-0:base :: basic_info.vendor  "\"ainnovation\"" → "\"AInnovation (青岛创新奇智科技集团股份有限公司, 02121.HK)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] ainnovation:ainno-75b-2-0:base :: basic_info.release_date  "\"2024-03\"" → "\"2024-03-27\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] ainnovation:ainno-75b-2-0:base :: basic_info.positioning  "[]" → "[\"多模态\", \"中端\"]"
+    原因: on_array=replace：来源数组整体替换目标数组
+[fill_null] ainnovation:ainno-75b-2-0:base :: basic_info.access.open_weights  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: basic_info.access.api  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: basic_info.access.local_deployment  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: basic_info.access.notes  null → "\"工业垂直大模型，非公开 API 商品。AInno-75B 通过创新奇智自有的 AInnovation Clo...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] ainnovation:ainno-75b-2-0:base :: basic_info.notes  "\"厂商查证(2026-08-26): 创新奇智（AInnovation，2121.HK）；置信度 high；依... → "\"AInno-75B 于 2024-03-27 由创新奇智在北京举办的「奇智孔明工业大模型升级发布会暨大模型技...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] ainnovation:ainno-75b-2-0:base :: architecture.notes  "\"上下文长度未从架构来源获取，待补\"" → "\"total_params_b=75（750 亿以上，官方发布会与多家媒体一致披露，T2 一手转述；AInno...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] ainnovation:ainno-75b-2-0:base :: pricing.free_tier  null → "{\"available\": false, \"rpm\": null, \"rpd\": null, \"t...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: pricing.long_context  null → "{\"threshold_tokens\": null, \"input\": null, \"output\"...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] ainnovation:ainno-75b-2-0:base :: pricing.source_type  "\"官方定价页核对（无公开定价）\"" → "\"占位记录（工业垂直大模型，官方未公开 token 级定价）\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] ainnovation:ainno-75b-2-0:base :: pricing.confidence  "\"T0\"" → "\"T2\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] ainnovation:ainno-75b-2-0:base :: pricing.notes  "\"ainno-75b-2-0：社区微调/行业定制模型（来源聚合站标注 unknown），无可靠官方定价源；遵循... → "\"占位记录：AInno-75B 为创新奇智工业垂直大模型，未对外公开 token 级定价（无 input/ou...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.input.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.input.image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.input.video  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.input.code  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] ainnovation:ainno-75b-2-0:base :: modality.input.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"原生多模态输入。机器之心原创报道（toutiao 7351317820367520267 文）原文转述创新奇...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.output.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.output.code  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.output.image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.output.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.output.speech  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] ainnovation:ainno-75b-2-0:base :: modality.output.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"多模态输出。机器之心原文转述张发恩：『它的输出同样多样，能够生成文本、图像、视频、CAD 设计图或者具体操作...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.native_multimodal.input_image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.native_multimodal.input_video  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.native_multimodal.output_image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] ainnovation:ainno-75b-2-0:base :: modality.native_multimodal.output_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] ainnovation:ainno-75b-2-0:base :: modality.native_multimodal.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"原生多模态模型（非外挂 captioner 拼接）。input_image=true / input_vid...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] ainnovation:ainno-75b-2-0:base :: meta.collected_at  "\"2026-08-24\"" → "\"2026-08-29\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] ainnovation:ainno-75b-2-0:base :: meta.source_urls  "[\"https://www.php.cn/faq/727953.html\", \"https://epoch... → "[\"http://m.toutiao.com/group/7351317820367520267/\", \"...
+    原因: on_array=replace：来源数组整体替换目标数组
+[set_field] ainnovation:ainno-75b-2-0:base :: meta.notes  "\"数据来自 Epoch AI 公开数据集（《Data on AI Models》模型清单 + 《AI Benc... → "\"采集日期 2026-08-29。批次 b235w1-ainnovation（ledger 已认领，statu...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.full_name  "\"Kongtian Lingmou 3.0\"" → "\"空天·灵眸 3.0 (Kongtian Lingmou 3.0)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.version  null → "\"3.0\""
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.vendor  "\"aircas-pcl\"" → "\"中国科学院空天信息创新研究院(AIRCAS) + 鹏城实验室(PCL)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.release_date  "\"2024-09\"" → "\"2024-09-21\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.positioning  "[]" → "[\"多模态\"]"
+    原因: on_array=replace：来源数组整体替换目标数组
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.access.open_weights  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.access.api  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.access.local_deployment  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.access.notes  null → "\"中国科学院空天信息创新研究院(空天院)付琨研究员团队联合鹏城实验室研制，2024-09-21于济南第一届空天...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: basic_info.notes  "\"厂商查证(2026-08-26): 中国科学院空天信息创新研究院、鹏城实验室（联合研制）；置信度 high；... → "\"'空天·灵眸'是我国首个面向多模态遥感数据生成式基础模型，也是首个专为遥感领域打造的行业基础模型，自2022...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: architecture.architecture_type  "\"Unknown\"" → "\"RS-vHeat(热传导原创架构,非Transformer)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: architecture.notes  "\"上下文长度未从架构来源获取，待补\"" → "\"参数规模：官方称'基础模型参数规模首次超过百亿'(百亿参数级,>10B)，精确数值官方未披露，total_p...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: pricing.free_tier  null → "{\"available\": null, \"rpm\": null, \"rpd\": null, \"tp...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: pricing.long_context  null → "{\"threshold_tokens\": null, \"input\": null, \"output\"...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: pricing.notes  "\"kongtian-lingmou-3-0：社区微调/行业定制模型（来源聚合站标注 unknown），无可靠官... → "\"占位记录：本模型为科研机构(中国科学院空天信息创新研究院+鹏城实验室)研制的遥感基础模型，非商业API产品，...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.input.image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.input.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.input.pdf  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.input.code  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.input.web  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: modality.input.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"原生遥感影像输入。pcl.ac.cn/html/943/2024-09-26/content-4499.ht...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.output.code  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.output.image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.output.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.output.speech  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: modality.output.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"输出为视觉解译结果。image=true：语义分割输出分割图、变化检测输出变化图、目标检测输出检测可视化，均...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.native_multimodal.input_image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.native_multimodal.input_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.native_multimodal.output_image  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aircas-pcl:kongtian-lingmou-3-0:base :: modality.native_multimodal.output_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: modality.native_multimodal.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"原生多模态(多传感器)视觉模型：input_image=true(可见光/SAR/热红外/多/高光谱原生影像...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: meta.collected_at  "\"2026-08-24\"" → "\"2026-08-29\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: meta.source_urls  "[\"https://www.stdaily.com/web/gdxw/2024-09/22/content_2... → "[\"https://www.pcl.ac.cn/html/943/2024-09-26/content-449...
+    原因: on_array=replace：来源数组整体替换目标数组
+[set_field] aircas-pcl:kongtian-lingmou-3-0:base :: meta.notes  "\"数据来自 Epoch AI 公开数据集（《Data on AI Models》模型清单 + 《AI Benc... → "\"采集日期2026-08-29。T0主源：pcl.ac.cn/html/943/2024-09-26/cont...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: basic_info.full_name  "\"Pharia-1-LLM-7B\"" → "\"Aleph Alpha Pharia-1 LLM 7B\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: basic_info.version  null → "\"Pharia-1-LLM-7B-control / control-aligned\""
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: basic_info.vendor  "\"Aleph Alpha\"" → "\"aleph-alpha\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: basic_info.release_date  "\"2024-08\"" → "\"2024-08-27\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: basic_info.positioning  "[]" → "[\"轻量\"]"
+    原因: on_array=replace：来源数组整体替换目标数组
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: basic_info.access.local_deployment  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: basic_info.access.notes  null → "\"三通道访问：(1) 开放权重——Hugging Face 上以 Open Aleph License 发布（...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[add_field] aleph-alpha:pharia-1-llm-7b:base :: basic_info.notes  null → "\"Pharia-1-LLM-7B 由德国 Aleph Alpha Research（IPAI Aleph Al...
+    原因: 来源存在目标缺失的键，作为新增字段写入（新增，非覆盖）
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: architecture.total_params_b  "7.042" → "7.04"
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: architecture.active_params_b  null → "7.04"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: architecture.architecture_type  "\"Unknown\"" → "\"Dense Transformer\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: architecture.context_window_tokens  null → "8192"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: architecture.context_window_effective_tokens  null → "8192"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: architecture.knowledge_cutoff  null → "\"2023-04\""
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: architecture.notes  "\"上下文长度未从架构来源获取，待补\"" → "\"huggingface.co/Aleph-Alpha/Pharia-1-LLM-7B-control 官方模...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: benchmarks.self_reported  "[]" → "[{\"name\": \"ARC-Challenge\", \"score\": 0.546, \"sourc...
+    原因: on_array=replace：来源数组整体替换目标数组
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: pricing.notes  "\"pharia-1-llm-7b：Aleph Alpha Lumina 面向欧洲政企，未公开标准按量价目表\"" → "\"开源权重模型（Open Aleph License，限非商业研究/教育用途），权重经 HuggingFace...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.input.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.input.image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.input.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.input.video  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.input.pdf  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.input.code  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.input.web  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: modality.input.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"纯文本基座模型。huggingface.co 官方模型卡 Model type/architecture 明...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.output.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.output.code  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.output.image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.output.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.output.speech  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: modality.output.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"输出仅文本与代码（自回归 transformer 文本生成）。官方模型卡 Intended Use 列举 '...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.native_multimodal.input_image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.native_multimodal.input_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.native_multimodal.input_video  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.native_multimodal.output_image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] aleph-alpha:pharia-1-llm-7b:base :: modality.native_multimodal.output_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: modality.native_multimodal.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"非原生多模态模型：Pharia-1-LLM-7B 为纯文本 decoder-only transformer...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: meta.collected_at  "\"2026-08-24\"" → "\"2026-08-29\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: meta.source_urls  "[\"https://huggingface.co/Aleph-Alpha/Pharia-1-LLM-7B-co... → "[\"https://huggingface.co/Aleph-Alpha/Pharia-1-LLM-7B-co...
+    原因: on_array=replace：来源数组整体替换目标数组
+[set_field] aleph-alpha:pharia-1-llm-7b:base :: meta.notes  "\"数据来自 Epoch AI 公开数据集（《Data on AI Models》模型清单 + 《AI Benc... → "\"采集日期 2026-08-29。T0 主源：huggingface.co/Aleph-Alpha/Phari...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:agentfounder-30b:base :: basic_info.full_name  "\"AgentFounder-30B\"" → "\"Alibaba AgentFounder-30B (Tongyi DeepResearch-30B-A3B)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:agentfounder-30b:base :: basic_info.version  null → "\"Tongyi-DeepResearch-30B-A3B (released open-weights, 20...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:agentfounder-30b:base :: basic_info.vendor  "\"Alibaba\"" → "\"Alibaba Tongyi Lab (通义实验室)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:agentfounder-30b:base :: basic_info.release_date  "\"2025-09\"" → "\"2025-09-17\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:agentfounder-30b:base :: basic_info.positioning  "[]" → "[\"工具调用增强\", \"中端\", \"推理增强\"]"
+    原因: on_array=replace：来源数组整体替换目标数组
+[fill_null] alibaba:agentfounder-30b:base :: basic_info.access.local_deployment  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: basic_info.access.notes  null → "\"开源权重模型（Apache-2.0），权重托管于 HuggingFace (Alibaba-NLP/Tong...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[add_field] alibaba:agentfounder-30b:base :: basic_info.notes  null → "\"AgentFounder-30B 是阿里巴巴通义实验室联合香港大学、上海科技大学、浙江大学等于 2025-0...
+    原因: 来源存在目标缺失的键，作为新增字段写入（新增，非覆盖）
+[set_field] alibaba:agentfounder-30b:base :: architecture.total_params_b  "30.0" → "30.5"
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:agentfounder-30b:base :: architecture.active_params_b  null → "3.3"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:agentfounder-30b:base :: architecture.architecture_type  "\"Unknown\"" → "\"Sparse MoE\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:agentfounder-30b:base :: architecture.context_window_tokens  null → "131072"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: architecture.context_window_effective_tokens  null → "131072"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:agentfounder-30b:base :: architecture.notes  "\"上下文长度未从架构来源获取，待补\"" → "\"架构参数 T0 直采自 GitHub README 官方描述：an agentic large langua...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:agentfounder-30b:base :: benchmarks.self_reported  "[]" → "[{\"benchmark\": \"HLE\", \"score\": 0.329, \"metric\": ...
+    原因: on_array=replace：来源数组整体替换目标数组
+[set_field] alibaba:agentfounder-30b:base :: pricing.notes  "\"AgentFounder-30b 为阿里开源 Agent 模型，Hugging Face 开源权重，未在百炼... → "\"开源权重模型，pricing 六价格键（input/output/cached_input/cache_wr...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:agentfounder-30b:base :: modality.input.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.input.image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.input.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.input.video  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.input.pdf  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.input.code  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.input.web  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:agentfounder-30b:base :: modality.input.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"纯文本 LLM，无原生多模态输入编码器。text=true（原生文本输入）；image/audio/vide...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:agentfounder-30b:base :: modality.output.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.output.code  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.output.image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.output.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.output.speech  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:agentfounder-30b:base :: modality.output.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"输出仅文本与代码。text=true（原生文本生成，含 Thought-Action-Observation...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:agentfounder-30b:base :: modality.native_multimodal.input_image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.native_multimodal.input_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.native_multimodal.input_video  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.native_multimodal.output_image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:agentfounder-30b:base :: modality.native_multimodal.output_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:agentfounder-30b:base :: modality.native_multimodal.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"非原生多模态模型：input_image/input_audio/input_video 均 false（无...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:agentfounder-30b:base :: meta.collected_at  "\"2026-08-24\"" → "\"2026-08-27\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:agentfounder-30b:base :: meta.source_urls  "[\"https://arxiv.org/abs/2509.13310\", \"https://epoch.a... → "[\"https://tongyi-agent.github.io/blog/introducing-tongy...
+    原因: on_array=replace：来源数组整体替换目标数组
+[set_field] alibaba:agentfounder-30b:base :: meta.notes  "\"数据来自 Epoch AI 公开数据集（《Data on AI Models》模型清单 + 《AI Benc... → "\"采集日期 2026-08-27。T0 主源：(1) tongyi-agent.github.io/blog/...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:gte-modernbert:base :: basic_info.full_name  "\"gte-modernbert\"" → "\"GTE-modernbert-base\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:gte-modernbert:base :: basic_info.version  null → "\"gte-modernbert-base\""
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:gte-modernbert:base :: basic_info.vendor  "\"Alibaba\"" → "\"Alibaba (Tongyi Lab)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:gte-modernbert:base :: basic_info.release_date  "\"2025-01\"" → "\"2025-01-20\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:gte-modernbert:base :: basic_info.positioning  "[]" → "[\"轻量\"]"
+    原因: on_array=replace：来源数组整体替换目标数组
+[fill_null] alibaba:gte-modernbert:base :: basic_info.access.local_deployment  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: basic_info.access.notes  null → "\"开源权重（Apache 2.0）发布于 HuggingFace Alibaba-NLP/gte-modern...
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[add_field] alibaba:gte-modernbert:base :: basic_info.notes  null → "\"官方 Model Card（huggingface.co/Alibaba-NLP/gte-modernber...
+    原因: 来源存在目标缺失的键，作为新增字段写入（新增，非覆盖）
+[fill_null] alibaba:gte-modernbert:base :: architecture.active_params_b  null → "0.149"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:gte-modernbert:base :: architecture.architecture_type  "\"Unknown\"" → "\"ModernBERT (encoder-only, dense)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:gte-modernbert:base :: architecture.context_window_tokens  null → "8192"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: architecture.context_window_effective_tokens  null → "8192"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:gte-modernbert:base :: architecture.notes  "\"上下文长度未从架构来源获取，待补\"" → "\"官方 Model Card 直采：Model Size 149M（total_params_b=0.149）...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:gte-modernbert:base :: benchmarks.self_reported  "[]" → "[{\"name\": \"MTEB-en (Average, 56 tasks)\", \"score\": ...
+    原因: on_array=replace：来源数组整体替换目标数组
+[fill_null] alibaba:gte-modernbert:base :: pricing.currency  null → "\"USD\""
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:gte-modernbert:base :: pricing.notes  "\"GTE-ModernBERT 为阿里开源 embedding 模型，开源权重发布，无官方 API 定价\"" → "\"开源权重模型（Apache 2.0），权重免费下载，无 token 计费；按 M 型采集规则「开源权重模型 ...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:gte-modernbert:base :: modality.input.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.input.image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.input.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.input.video  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.input.pdf  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.input.code  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.input.web  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:gte-modernbert:base :: modality.input.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"嵌入模型，仅文本输入（M 型采集规则：嵌入模型仅 text 输入，无图像/音频）。text=true：模型接...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:gte-modernbert:base :: modality.output.text  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.output.code  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.output.image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.output.audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.output.speech  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:gte-modernbert:base :: modality.output.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"输出为 768 维浮点嵌入向量（dense embedding，dim=768），非生成文本。M 型采集规则...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:gte-modernbert:base :: modality.native_multimodal.input_image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.native_multimodal.input_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.native_multimodal.input_video  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.native_multimodal.output_image  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[fill_null] alibaba:gte-modernbert:base :: modality.native_multimodal.output_audio  null → "false"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:gte-modernbert:base :: modality.native_multimodal.notes  "\"来源数据未含多模态信息；需另行采集官方产品页/API 文档（决策7）\"" → "\"原生多模态全 false（M 型采集规则：嵌入模型 native_multimodal 全 false）。模...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:gte-modernbert:base :: meta.collected_at  "\"2026-08-24\"" → "\"2026-08-27\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:gte-modernbert:base :: meta.source_urls  "[\"https://huggingface.co/Alibaba-NLP/gte-modernbert-bas... → "[\"https://huggingface.co/Alibaba-NLP/gte-modernbert-bas...
+    原因: on_array=replace：来源数组整体替换目标数组
+[set_field] alibaba:gte-modernbert:base :: meta.notes  "\"数据来自 Epoch AI 公开数据集（《Data on AI Models》模型清单 + 《AI Benc... → "\"采集日期 2026-08-27（M 型单模型深度档案，batch_id=b15w1-alibaba）。T0 ...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:marco-o1:base :: basic_info.full_name  "\"Marco-o1\"" → "\"Alibaba Marco-o1\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:marco-o1:base :: basic_info.version  null → "\"Marco-o1 v1\""
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:marco-o1:base :: basic_info.vendor  "\"Alibaba\"" → "\"Alibaba (Alibaba International Digital Commerce, Marco...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:marco-o1:base :: basic_info.release_date  "\"2024-10\"" → "\"2024-11-13\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:marco-o1:base :: basic_info.positioning  "[]" → "[\"推理增强\", \"中端\"]"
+    原因: on_array=replace：来源数组整体替换目标数组
+[fill_null] alibaba:marco-o1:base :: basic_info.access.local_deployment  null → "true"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:marco-o1:base :: basic_info.access.notes  "\"HF 仓库: ATH-MaaS/Marco-o1；license: apache-2.0；downloads... → "\"开源权重模型，权重托管在 HuggingFace AIDC-AI/Marco-o1 与 GitHub AID...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[add_field] alibaba:marco-o1:base :: basic_info.notes  null → "\"Alibaba Marco-o1 由阿里巴巴国际数字商业集团（AIDC）MarcoPolo Team 研发，...
+    原因: 来源存在目标缺失的键，作为新增字段写入（新增，非覆盖）
+[fill_null] alibaba:marco-o1:base :: architecture.active_params_b  null → "7.0"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:marco-o1:base :: architecture.architecture_type  "\"Unknown\"" → "\"Dense Transformer (decoder-only)\""
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[fill_null] alibaba:marco-o1:base :: architecture.context_window_tokens  null → "32768"
+    原因: 目标为空(null)，来源有值，on_null=take_source：用来源填充
+[set_field] alibaba:marco-o1:base :: architecture.notes  "\"上下文长度未从架构来源获取，待补\"" → "\"基于 Qwen2-7B-Instruct（huggingface.co/Qwen/Qwen2-7B-Inst...
+    原因: 两者皆有值且不同，on_both=source_wins：来源覆盖目标
+[set_field] alibaba:marco-o1:base :: benchmarks.self_reported  "[]" → "[{\"benchmark\": \"MGSM-En (Test@1)\", \"sub_benchmark\"...
+    原因: on_array=replace：来源数组整体替换目标数组
+... 其余 8888 条省略
+==============================================================================
