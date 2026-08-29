@@ -339,6 +339,11 @@ python scripts/model_data_tool.py merge \
 - `--on-null take_source`：骨架为 null 的字段用采集值填上
 - 骨架独有的字段（如 `pricing.promotions`）会被保留，merge 是递归合并不是整体替换
 - 合并前后**主库记录数不变**（950 条），这是正常的——不是没生效
+- ⚠️ **`--on-array replace` 会把「来源数组为空」当成清空指令**（详见 §18）。
+  采集分片经常只填 `benchmarks.self_reported`，`independent` / `arena_elo` 留 `[]`，
+  replace 就把目标里已有的条目整组抹掉，且合并计划里一行提示都没有。
+  工具已加**空数组保护**：来源为空且目标非空时默认保留目标并在计划里记 `skip`；
+  确需清空必须显式加 `--allow-empty-replace`。合并后务必比对一次跑分条目总数，见 §18 的取证脚本。
 
 > ⚠️ 骨架里有些字段与实采结论冲突，例如 fugaku-llm 骨架写 `api=true`（HF 快照推导）而实查无官方 API。按 `source_wins` 会被实采值纠正，并在 `access.notes` 里写明差异。
 
@@ -461,6 +466,21 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
 `microsoft:mai-code-1-flash`（notes 自述「无法精确核实，不硬填」却仍填了 UGC 价）。
 另注意 `zhipu:glm-4-7-flash` 的 0.0/0.0 **是真价不是残留**——官方定价页明列「免费」，这类真零严禁一并剔掉。
 
+**16.6 新规则 4.3：六个价键全 null 却仍填 `currency` → WARN（D7，2026-08-29）**
+
+口径：**无价即无币种**。留 `"USD"` 会被分析端读成「已按美元核实过、确认无价」，与红线 1「查不到不硬填」冲突。
+
+根因不在采集人，在文档：`docs/prompt.md` 的 pricing 字段说明原文写的是 **「`currency`：默认 `"USD"`」**，
+照文档写就必然产出「有币种、无价格」的记录——存量 645 条无价记录里 USD 323 / null 318 / 连 unit 也 null 4 条，
+正好对半分裂（2026-08-25 那句「不伪造 USD 默认值」从未落地过）。
+已改文档为「有价格时填 USD；六价键全 null 时必须 null」，用 `temp/d7_currency_null.py` 把 323 条归一
+（改动 323 行 / 仅 currency 一个字段 / 前后逐条 `check_record` 无新增 ERROR），并同步改了三处采集侧文档。
+
+`unit` 不在此约束内，继续保留 `per_million_tokens`：它是量纲声明、不携带「已核实」语义，下游做单位换算需要它一直在。
+
+> 与 §14 的关系：§14 那类是「文案契约误报」，这一类是**文档给的默认值本身就是伪造值**——采集端没做错任何事。
+> 改口径必须同时改文档，否则加多少条门禁规则都是白堵。
+
 ---
 
 ### 17. 【2026-08-29 整改轮新增】「存疑」记录的隔离档机制（D6）
@@ -472,8 +492,12 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
 
 | 位置 | 内容 | 作用 |
 |---|---|---|
-| `docs/unconfirmed_models.jsonl` | 10 条完整记录，**逐字节原样**搬出（脚本内 `assert` 了 `json.dumps` 往返等于原文） | 唯一的数据留痕 + 可复跑的门禁对象（实测 ERROR 0 / WARN 0） |
+| `docs/unconfirmed_models.jsonl` | 10 条完整记录，**逐字节原样**搬出（脚本内 `assert` 了 `json.dumps` 往返等于原文） | 唯一的数据留痕 + 可复跑的门禁对象（现 ERROR 0 / WARN 8） |
 | `incoming/models/_quarantine/` | 其中 4 条对应的采集源文件 + `README.md` | 挡住自动回灌，见 17.2 |
+
+> 那 8 条 WARN 全部是 D7 新增的规则 4.3（六价键全 null 却填着 `currency="USD"`）命中归档副本自身。
+> **归档文件刻意不跟着归一**——它的价值就在「与主库当时的字节完全一致」，改了就不是同一份证据了。
+> 回流主库时（17.5）再按新口径修正即可。
 
 另外 6 条在 `incoming/models/` 下**没有对应采集文件**（已按原名、§8.1 降级名、缩短名穷举核实为 0 命中），
 所以 `docs/unconfirmed_models.jsonl` 那一行是它们唯一的证据。**不要清理这个文件。**
@@ -510,6 +534,56 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
 
 > 通用教训：主库「有一条记录」和「这条记录可信」是两件事。采集人的存疑标记必须有人在收尾时消费掉，
 > 否则它会以 WARN 的形式永远留在库里，最后没人知道这 10 条到底算不算数。
+
+---
+
+### 18. 【2026-08-29 最严重发现】补合并用 `--on-array replace` 静默抹掉了已采集跑分
+
+**事实**：commit `85b9fae`（阶段 3「补合并 277 条从未入库的采集成果」）执行 §13 那条标准命令时，
+`--on-array replace` 把主库里**已经采到的跑分条目整组覆盖成空**。两种口径都量了一遍：
+
+| 口径 | 记录数 | 条目数 | 构成 |
+|---|---|---|---|
+| 数组长度缩水（取证脚本） | 75 | 196 | independent 164 / arena_elo 29 / self_reported 3 |
+| 按主键比对（恢复脚本，更宽） | 81 | 215 | 含长度没变但具体条目被换掉的记录 |
+
+丢的不是 HF 骨架填充值，是**前几轮人工采集的真数据**：例如 `cohere:cohere-command-a` 的三条
+Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注）被整体清零。
+
+**机制**：采集分片常常只填 `self_reported`，`independent` / `arena_elo` 留 `[]`。
+`_merge_value` 里「来源为空就不动」只判 `source is None`，**空容器不算空**，于是空数组直接进
+`_merge_list` 的 REPLACE 分支把目标整组替换掉。合并计划里连一行提示都没有。
+
+**三条本可以早点发现的线索**（都值得记住）：
+
+1. **填充率反常**：质检报告 §3.2 当时记录的「花名册 702 的 independent 覆盖反而低于 v1 遗留」，
+   真实原因就是这次覆盖，不是样本构成差异。当前全库 `independent>0` 只有 22%（191/858），
+   而未被动过的 08-24 骨架记录是 72%（59/82）——同一年代同源数据不该差三倍。
+2. **验收口径盲区**：阶段 3 的验收是「ERROR 数量」+「记录数不变」。数组内容被清空既不报 ERROR
+   也不改记录数，所以合并「成功」了。**任何只数记录条数的验收都看不见字段级破坏。**
+3. **WARN 下降当好消息**：那次合并后 WARN 684→678。跑分条目变少 → 「自报分 source_type 未含自报」
+   这类 WARN 自然变少。**WARN 下降要先问「是修好了还是删掉了」，不能直接记成绩。**
+
+**已落地的修复**：
+
+- `scripts/model_data_tool.py` 加**空数组保护**：`on_array=replace` 且来源为空、目标非空时保留目标，
+  并在计划里显式记一条 `skip`；确要清空必须传新参数 `--allow-empty-replace`。
+  `describe()` 会打印 `on_array=replace(空数组保护:开/关)`，让每次合并计划都能审计到这个开关。
+- 验证脚本 `temp/d8_verify_empty_array_guard.py`：复现事故场景，断言保护开启时骨架条目保住且来源真实数据仍写入、
+  显式放行时仍可清空。**注意**：验证合并结果必须取 `_merge_into` 的返回值——
+  `merge_incoming(dry_run=True)` 的结果只在 `working` 深拷贝里，读 `store.records` 会得到未合并的目标，
+  断言会因错误的原因通过（我第一版就踩了这个）。
+- 取证脚本 `temp/d8_benchmark_loss_forensics.py`：遍历全部改过主库的提交，对每个 model_id 记录三个数组的
+  **历史最大长度**，与当前比较 ⇒ 找出所有「曾经有、现在没有」的数组缩水。这个方法是通用的，
+  下次合并验收直接跑它。
+
+**恢复**：`temp/d8_restore_benchmarks.py`（默认 dry-run）按主键**只回补不覆盖**——把基线提交里有、
+当前没有的条目并回来，当前已有条目一律不动。保险含「序列化风格全库一致才允许整体重序列化」
+「除 benchmarks 外语义逐字节等价」「逐条前后 `check_record` 不得新增 ERROR」。
+已验证回补不会造成 `arena_elo` 多个 `is_primary: true`（现状仅 `alibaba:qwen-3-8-max` 一条重复，早于事故存在）。
+
+> **收尾必做自检**（写进 SOP）：每次 `merge --apply` 之后跑一次
+> `python temp/d8_benchmark_loss_forensics.py`，要求输出「缩水条目数 0」。
 
 ---
 
@@ -560,3 +634,4 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
   - **占位记录条款（§8.2-14）的两个实战案例**：① `omni-epic` 经核查**不是语言模型**，而是调用基础模型生成 RL 环境的开放式算法框架；② `digivio`（上海数聚威）**无任何可归因的公开信息**（搜到的 Digivo/Divio/Digievo 全是同名不同主体）。两者都按占位记录落盘（门禁通过、ledger 照常 submitted），并在 notes 里写明「建议高端合并阶段决定保留/改指/删除」，而不是编造字段、也不是退回 pending 让别人重复踩坑。
   - **本轮战绩**：接手时剩余 26 个模型，4 波共采集 **16 批 19 个模型**（k2-think / sailor-7b-chat / fugaku-llm / eurus-2-7b-prime / seed-diffusion-preview / omni-epic / sahabat-ai / teuken-7b / rwkv-5-7b / rwkv-6-3b / metamath-70b / metamath-7b / index-1-9b / jinshi / brain2qwerty / digivio / rnnsearch-50 / neural-lm / nplm），全部 ERROR=0，合并 0 冲突，每波单独 commit+push。**全库 305/305 批次 submitted，702/702 模型入主库，0 缺失，主库 950 条 ERROR 0。**
 - 2026-08-29 v1.7（用户发起的**全库整改轮**，不采集、只修质量与仓库卫生）：新增 §15（三处文档与代码不符）、§16（schema 转正 3 字段 + `pricing.confidence` 升 ERROR + 规则 4.2 + 文案契约通则）、§17（「存疑」记录隔离档机制）。数据侧 D1-D6 六批整改，脚本一律放 `temp/`（gitignore）且每步带「改动条数必须等于预期」和「逐条前后跑 `check_record`，不得新增 ERROR」两道保险。仓库侧清死脚本、删可再生 HF 缓存、失效名册改名加弃用说明。**主库 950 → 940 条，ERROR 0 / WARN 689 / 结构漂移 0。**
+- 2026-08-29 v1.8（整改轮 D7 + 合并安全取证）：新增 **§16.6**（门禁规则 4.3「无价即无币种」，323 条 `currency` 归一为 null，根因是 prompt.md 字段说明写着「默认 USD」）、**§13 空数组危险标注**、**§18**（本轮最严重发现：`85b9fae` 的补合并用 `--on-array replace` 静默抹掉 81 条记录 / 215 个已采集跑分条目；含三条本可早发现的线索、取证方法、恢复脚本现状）。给 `model_data_tool.py` 的 replace 分支加了**空数组保护**并新增 `--allow-empty-replace` 显式放行位。顺带修 `incoming/models/_m_context.md` 里写死的 `meta.collected_at = "2026-08-25"`（照抄会让全库采集时间戳失真）。

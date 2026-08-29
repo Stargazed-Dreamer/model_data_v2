@@ -126,6 +126,9 @@ class MergeStrategy:
     # 路径级 on_both 覆盖：如 {"meta.collected_at": SOURCE_WINS}——数据字段保守 conflict、
     # 个别元数据字段显式放行的场景（2026-08-26 collected_at 口径拍板引入）
     both_overrides: Dict[str, BothPresentRule] = field(default_factory=dict)
+    # 空数组保护开关：默认 False，即 on_array=replace 且来源数组为空、目标非空时保留目标。
+    # 显式置 True 才允许「用空数组清空目标」，属逃生阀而非合并规则，故不进 validate() 必填项。
+    allow_empty_replace: bool = False
 
     def validate(self) -> None:
         missing = []
@@ -164,10 +167,13 @@ class MergeStrategy:
                 f"(recency={self.recency_field or '?'}, "
                 f"tie_breaker={self.tie_breaker.value if self.tie_breaker else '?'})"
             )
+        arr = self.on_array.value if self.on_array else "?"
+        if self.on_array == ArrayRule.REPLACE:
+            arr += "(空数组保护:关)" if self.allow_empty_replace else "(空数组保护:开)"
         return (
             f"on_null={self.on_null.value if self.on_null else '?'}"
             f" | {both}"
-            f" | on_array={self.on_array.value if self.on_array else '?'}"
+            f" | on_array={arr}"
             f" | on_schema={self.on_schema.value if self.on_schema else '?'}"
         )
 
@@ -716,6 +722,15 @@ class ModelDataStore:
     def _merge_list(self, target, source, path, strat, source_newer, plan, mid):
         policy = strat.on_array
         if policy == ArrayRule.REPLACE:
+            # 空数组保护：来源为空、目标非空时 replace 等于「用空白覆盖已有条目」。
+            # 2026-08-29 的 277 文件补合并就是这样静默抹掉 76 条记录共 80 个历史数组条目
+            # （采集分片常只填 self_reported，independent 留空 []，replace 直接把骨架里的
+            # T1 独立跑分整组清零）。确实要清空请显式传 --allow-empty-replace。
+            if not source and target and not strat.allow_empty_replace:
+                plan.add(Change(mid, path, "skip", _short(target), "[]",
+                                "on_array=replace 但来源数组为空、目标非空：按空数组保护保留目标"
+                                "（要清空请显式加 --allow-empty-replace）"))
+                return target
             if target != source:
                 plan.add(Change(mid, path, "set_field", _short(target), _short(source),
                                 "on_array=replace：来源数组整体替换目标数组"))
@@ -895,6 +910,7 @@ def _build_strategy(args) -> MergeStrategy:
         array_key_overrides=dict(args.array_key_override or {}),
         on_schema=_enum_val(SchemaRule, args.on_schema),
         both_overrides=_parse_both_overrides(getattr(args, "on_both_override", None) or []),
+        allow_empty_replace=bool(getattr(args, "allow_empty_replace", False)),
     )
 
 
@@ -955,6 +971,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     pm.add_argument("--tie-breaker", default=None,
                     help="newer_wins 且 recency 相等/缺失时的平局裁决：keep_target|source_wins|conflict（必填）")
     pm.add_argument("--on-array", required=True, help="ArrayRule: replace|append_unique|union_by_key")
+    pm.add_argument("--allow-empty-replace", action="store_true",
+                    help="默认关闭：on_array=replace 且来源数组为空、目标非空时保留目标（空数组保护）。"
+                         "显式传本参数才允许用空数组清空目标已有条目")
     pm.add_argument("--array-key", nargs="*", default=[], help="UNION_BY_KEY 默认主键，如 benchmark config date")
     pm.add_argument("--array-key-override", nargs="*", default=[],
                     help="路径:键1,键2 形式，可重复，如 benchmarks.arena_elo:sub_benchmark,date")

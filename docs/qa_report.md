@@ -5,9 +5,10 @@
 > 依据：`multi_agent_plan.md` §5「阶段 3 · 质检与验收」、`COLLECTION_PLAN_v2.md` §6 验收标准、`WORKBUDDY_AGENT_GUIDE.md`
 > 统计口径脚本：`scripts/qa_stats.py`（填充率）、`scripts/diff_incoming_db.py`（差异/冲突）
 
-> **【同日补记 2026-08-29 · 整改轮 D1–D6】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意四处时效性：
+> **【同日补记 2026-08-29 · 整改轮 D1–D7】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意六处时效性：
 > 1. §1 的 **ERROR 0 是在旧门禁下取得的**——旧门禁不查 `pricing.confidence` 枚举、不查 `knowledge_cutoff` 格式、
->    也不查 `source_type` 与价格值是否自相矛盾。三项补齐后，当前主库仍为 **ERROR 0 / WARN 689 / 结构漂移 0**。
+>    不查 `source_type` 与价格值是否自相矛盾，也不查「无价却填了币种」。四项补齐后，当前主库仍为
+>    **ERROR 0 / WARN 689 / 结构漂移 0**。
 > 2. §3.2 第 2 点与 §5-6 关于「开源权重却有定价」的判定**已被推翻**，红线 5 同日改按
 >    「厂商有无自有官方 API 刊例价」判定，详见 `multi_platform_subagent_guide.md` §5 红线 5 与 `WORKBUDDY_AGENT_GUIDE.md` §16。
 > 3. 门禁现行口径以 `scripts/validate_model_data.py` 为准，**本文与规范文档都只是它的说明，不是判据本身**。
@@ -15,6 +16,12 @@
 >    经用户拍板全部移出主库，原样存 `docs/unconfirmed_models.jsonl`，对应采集文件移入 `incoming/models/_quarantine/`
 >    （机制见 `WORKBUDDY_AGENT_GUIDE.md` §17）。花名册口径因此重基线为 **主库 692 + 隔离档 10 + 缺失 0**，
 >    这 10 条**不是漏采、不要重采**。本文正文所有 950 / 678 一类计数均为整改前快照，未回填。
+> 5. **本文 §3 / §3.1 的 `independent` 与 `arena_elo` 两行不可信**：本轮「补合并 277 条」用
+>    `--on-array replace` 静默抹掉了 81 条记录 / 215 个已采集跑分条目，把这两个维度的填充率打了下来。
+>    详见 §3.2 第 4 点更正框与 `WORKBUDDY_AGENT_GUIDE.md` §18。
+> 6. **`pricing.currency` 口径已拍板并归一（D7）**：无价即无币种，六价键全 null 的 323 条已统一为 `null`，
+>    门禁新增规则 4.3 防回归；§6.2 里「currency 口径未定」一行已结。根因是 `prompt.md` 原文写着
+>    「`currency` 默认 `"USD"`」，该字段说明与三处采集侧文档同日一并改正。
 
 ---
 
@@ -177,6 +184,18 @@ python scripts/model_data_tool.py merge \
 
 3. **Arena Elo 6.4% 属正常**：只有上过 LMArena 榜的模型才有该字段，长尾模型本就没有。
 
+4. > **【重要更正 · 本文 §3 / §3.1 的 independent 与 arena_elo 两行不可信】**
+   > 本轮自己的「补合并 277 条」用了 `--on-array replace`，而采集分片普遍只填 `self_reported`、
+   > `independent` / `arena_elo` 留空 `[]` —— **空数组把目标里已有的条目整组抹掉了**：
+   > 按主键比对 **81 条记录 / 215 个条目**（`independent` 177、`arena_elo` 29、`self_reported` 9），
+   > 丢的是前几轮人工采集的真数据（如 `cohere:cohere-command-a` 的三条 Arena Elo）。
+   > 反常证据：从未被合并触碰的 08-24 骨架记录 `independent` 覆盖 **72%**（59/82），
+   > 而被合并过的记录只有 **22%**（191/858）——同源于 Epoch/公开榜单的数据不可能差三倍。
+   > 所以这两个维度的「花名册低于 v1 遗留」**不是样本构成差异，是本轮合并造成的破坏**；
+   > 取证与恢复方法见 `WORKBUDDY_AGENT_GUIDE.md` §18。
+   > 教训：**「记录数不变 + ERROR 0」这套验收口径看不见字段级破坏**，且合并后 WARN 由 684 降到 678
+   > 当时被当成成绩记录——那 6 条正是被删掉的跑分带走的 WARN。
+
 ### 3.3 占位符 notes 的口径修正
 
 `COLLECTION_PLAN_v2` §6-5 原文口径是「待补/未含」。但若把"官方未披露""待实测"也算作占位符，
@@ -292,7 +311,8 @@ technology-innovation-institute:falcon-arabic
 | v1 遗留开源权重定价 | ~~131 条中 43 条有定价，疑似违规~~ **初判不成立，已撤销**：40 条本就有厂商官方刊例价 | **不得按旧红线 5 置 null**，见 §3.2 更正框 |
 | 定价矛盾待核实 3 条 | `muse-spark-1-1` / `muse-spark-1-2` / `mai-code-1-flash`：标签称无官方价、值却挂着 UGC 转述价 | 需回厂商官方价目页逐条核实后定方向（属重采范畴，待拍板） |
 | ~~采集人标 `存疑` 的 10 条~~ **已处置（D6）** | `meta.verification_status == "存疑"` 逐条复核均查无立得住的依据，经用户拍板**全部移出主库**（950 → 940），原样存 `docs/unconfirmed_models.jsonl`，4 个对应采集文件移入 `incoming/models/_quarantine/` | 已结。这 10 个 model_id 不再计入花名册完成率（692/702 + 隔离 10），**不得当「漏采」重派**；重新入库须先拿到官方证据，流程见 `WORKBUDDY_AGENT_GUIDE.md` §17.5 |
-| `pricing.currency` 口径未定 | 六价键全 null 的 652 条里，`currency` 填 USD 331 / 填 null 321，接近对半——2026-08-25 那句「按红线不伪造 USD 默认值」从未真正落地 | 先拍板口径，再一次性归一（纯机械改动，但不能替人决定方向） |
+| ~~`pricing.currency` 口径未定~~ **已拍板并归一（D7）** | 六价键全 null 的 645 条里 USD 323 / null 318 / 连 unit 也 null 4，接近对半。**根因是 `prompt.md` 字段说明原文写「`currency` 默认 `"USD"`」**——照文档写就会产出「有币种无价格」的记录 | 已按「无价即无币种」把 323 条归一为 null，门禁新增规则 4.3 防回归，采集侧三处文档同日改正。`unit` 保持 `per_million_tokens` 不动（量纲声明，不携带「已核实」语义） |
+| 🔴 **本轮补合并造成的跑分条目丢失（待拍板是否回补）** | `85b9fae` 用 `--on-array replace` 把 81 条记录 / 215 个**已采集**跑分条目覆盖成空（independent 177 / arena_elo 29 / self_reported 9），丢的是前几轮人工成果而非骨架填充值 | 见 §3.2 第 4 点与指南 §18。工具已加空数组保护（默认不覆盖，需 `--allow-empty-replace` 显式放行）并通过 `temp/d8_verify_empty_array_guard.py` 验证；恢复脚本 `temp/d8_restore_benchmarks.py` dry-run 已就绪（只回补不覆盖、不新增 ERROR、不产生多 `is_primary`），**等拍板后再 `--apply`** |
 | 主库 positioning 空值 | 补合并后花名册填充率 89.5%，剩余多属确无适用标签 | 抽样复核即可 |
 | 可视化发布 | `viz/viz_index.html` 需按最终库重新生成 | 合并定版后执行 |
 | 交付 push | 主库已定版待推 | 用 `C:\Program Files\Git\cmd\git`（system credential.helper=manager，静默通过） |
