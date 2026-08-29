@@ -546,6 +546,17 @@ subagent 是照抄样例的，等于把错误标签批量复制。已按通用�
 |---|---|---|---|
 | 数组长度缩水（取证脚本） | 75 | 196 | independent 164 / arena_elo 29 / self_reported 3 |
 | 按主键比对（恢复脚本，更宽） | 81 | 215 | 含长度没变但具体条目被换掉的记录 |
+| **回补后确认的真实损失** | **81** | **206** | independent 177 / arena_elo 29（`85b9fae` 造成） |
+
+> 另有 1 条 `independent`（`eurus-2-7b-prime` 的 GPQA Diamond T1）在 **d922620 之前**就丢了、基线 943b6f2 里本来也没有，
+> 恢复脚本按单一基线看不见它，是回补后复跑取证脚本才发现的 ⇒ 一并找回，**累计回补 82 条记录 / 207 个条目**。
+> 教训：恢复基线只能保证「基线之后」的损失被找回，务必用「全历史最大长度」复扫一遍。
+
+> 第 2 行比第 3 行多的 9 条全在 `self_reported`，且全部属于 `nvidia:llama-nemotron-ultra-253b:base` 一条记录。
+> 逐条核对后判定**不算损失**：943b6f2 那 9 条是 legacy `name`/`mode` 写法（其中 8 条同数组内逐字重复），
+> 当前库里的 6 条是后来重新核实的 canonical `benchmark`/`sub_benchmark` + `confidence` 写法，
+> 同名基准分数还与之矛盾 —— 那次 replace 对这条记录是**合法的 schema 升级**。
+> 教训：**「数组变短了」只是嫌疑，不等于数据被破坏**；回补前必须逐条比对新旧表示是否同一测量。
 
 丢的不是 HF 骨架填充值，是**前几轮人工采集的真数据**：例如 `cohere:cohere-command-a` 的三条
 Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注）被整体清零。
@@ -557,8 +568,9 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 **三条本可以早点发现的线索**（都值得记住）：
 
 1. **填充率反常**：质检报告 §3.2 当时记录的「花名册 702 的 independent 覆盖反而低于 v1 遗留」，
-   真实原因就是这次覆盖，不是样本构成差异。当前全库 `independent>0` 只有 22%（191/858），
+   真实原因就是这次覆盖，不是样本构成差异。覆盖后全库 `independent>0` 只剩 22%，
    而未被动过的 08-24 骨架记录是 72%（59/82）——同一年代同源数据不该差三倍。
+   回补 207 个条目后升到 **33.8%（318/940）**，差距仍在但已回到可解释区间。
 2. **验收口径盲区**：阶段 3 的验收是「ERROR 数量」+「记录数不变」。数组内容被清空既不报 ERROR
    也不改记录数，所以合并「成功」了。**任何只数记录条数的验收都看不见字段级破坏。**
 3. **WARN 下降当好消息**：那次合并后 WARN 684→678。跑分条目变少 → 「自报分 source_type 未含自报」
@@ -577,13 +589,29 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
   **历史最大长度**，与当前比较 ⇒ 找出所有「曾经有、现在没有」的数组缩水。这个方法是通用的，
   下次合并验收直接跑它。
 
-**恢复**：`temp/d8_restore_benchmarks.py`（默认 dry-run）按主键**只回补不覆盖**——把基线提交里有、
+**恢复（已执行）**：`temp/d8_restore_benchmarks.py --apply` 按主键**只回补不覆盖**——把基线提交里有、
 当前没有的条目并回来，当前已有条目一律不动。保险含「序列化风格全库一致才允许整体重序列化」
 「除 benchmarks 外语义逐字节等价」「逐条前后 `check_record` 不得新增 ERROR」。
-已验证回补不会造成 `arena_elo` 多个 `is_primary: true`（现状仅 `alibaba:qwen-3-8-max` 一条重复，早于事故存在）。
+随后 `temp/d8_fix_over_restore.py` 撤掉多回补的 9 条（见上表下的说明），
+`temp/d8_restore_eurus_independent.py` 找回基线之外丢的 1 条，**累计净回补 82 条记录 / 207 个条目**。
 
-> **收尾必做自检**（写进 SOP）：每次 `merge --apply` 之后跑一次
-> `python temp/d8_benchmark_loss_forensics.py`，要求输出「缩水条目数 0」。
+回补后复检（与 HEAD 逐条比对）：非 `benchmarks` 字段改动 0、数组缩水 0、主键重复数与回补前持平 163、
+`arena_elo` 多 `is_primary` 仍只有早于事故的 `alibaba:qwen-3-8-max` 一条、门禁 940 条 ERROR 0 / WARN 689。
+全历史取证复扫现报 **1 条缩水**，即上表登记过的 `nvidia:llama-nemotron-ultra-253b` 合法升级 —— 属预期例外，不是未修完。
+
+> **遗留：跨 schema 重复。** 主键 `(benchmark, config)` 认不出 legacy `name` 写法的条目（一律算 `("None","None")`），
+> 所以同名同测量的两条会并存。实测 207 条里（多出的那 1 条落进的是空数组，不可能撞）只有 5 条与 HEAD 同名、
+> 2 条名与分都撞
+> （如 `openai:gpt-5-2-2025-12-11-xhigh:base` 的 GPQA Diamond 0.914：T1 直连 epoch.ai 一条 + T3 经 token.app 转述一条）。
+> 两条各自带完整来源，**刻意不自动删**——去重口径属于「同名基准冲突取谁」的拍板项，已进待办队列，
+> 与全库 1291 条 legacy `name` 写法条目的归一化是同一个问题。
+
+> **收尾必做自检**（写进 SOP）：每次 `merge --apply` 或回补之后跑两条，都要看结果而不是只看退出码：
+>
+> 1. `python temp/d8_benchmark_loss_forensics.py` —— 要求「缩水条目数 0」；
+>    非 0 时逐条判定是破坏还是**合法 schema 升级**，属后者的登记进 §18 例外清单（现仅 1 条：`nvidia:llama-nemotron-ultra-253b`）；
+> 2. `python temp/d8_check_restore_conflicts.py <写入前的 ref>` —— 把新增条目按「查无同名 / 同名同分 / 同名不同分」分类。
+>    同名同分是纯重复嫌疑，同名不同分是真实的测量冲突；两者都不自动处置，只列清单等拍板。
 
 ---
 
@@ -635,3 +663,4 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
   - **本轮战绩**：接手时剩余 26 个模型，4 波共采集 **16 批 19 个模型**（k2-think / sailor-7b-chat / fugaku-llm / eurus-2-7b-prime / seed-diffusion-preview / omni-epic / sahabat-ai / teuken-7b / rwkv-5-7b / rwkv-6-3b / metamath-70b / metamath-7b / index-1-9b / jinshi / brain2qwerty / digivio / rnnsearch-50 / neural-lm / nplm），全部 ERROR=0，合并 0 冲突，每波单独 commit+push。**全库 305/305 批次 submitted，702/702 模型入主库，0 缺失，主库 950 条 ERROR 0。**
 - 2026-08-29 v1.7（用户发起的**全库整改轮**，不采集、只修质量与仓库卫生）：新增 §15（三处文档与代码不符）、§16（schema 转正 3 字段 + `pricing.confidence` 升 ERROR + 规则 4.2 + 文案契约通则）、§17（「存疑」记录隔离档机制）。数据侧 D1-D6 六批整改，脚本一律放 `temp/`（gitignore）且每步带「改动条数必须等于预期」和「逐条前后跑 `check_record`，不得新增 ERROR」两道保险。仓库侧清死脚本、删可再生 HF 缓存、失效名册改名加弃用说明。**主库 950 → 940 条，ERROR 0 / WARN 689 / 结构漂移 0。**
 - 2026-08-29 v1.8（整改轮 D7 + 合并安全取证）：新增 **§16.6**（门禁规则 4.3「无价即无币种」，323 条 `currency` 归一为 null，根因是 prompt.md 字段说明写着「默认 USD」）、**§13 空数组危险标注**、**§18**（本轮最严重发现：`85b9fae` 的补合并用 `--on-array replace` 静默抹掉 81 条记录 / 215 个已采集跑分条目；含三条本可早发现的线索、取证方法、恢复脚本现状）。给 `model_data_tool.py` 的 replace 分支加了**空数组保护**并新增 `--allow-empty-replace` 显式放行位。顺带修 `incoming/models/_m_context.md` 里写死的 `meta.collected_at = "2026-08-25"`（照抄会让全库采集时间戳失真）。
+- 2026-08-30 v1.9（D8 跑分回补执行完毕）：§18 的恢复脚本 `--apply` 已跑，并用 `temp/d8_fix_over_restore.py` 撤掉多回补的 9 条 legacy `self_reported`（该记录的数组变短实为合法 schema 升级，不是损失）；回补后复跑全历史取证又发现 1 条早于恢复基线丢失的 T1 条目（单一基线看不见它），由 `temp/d8_restore_eurus_independent.py` 找回。**累计净回补 82 条记录 / 207 个条目**，全库 `independent>0` 从 22% 升到 33.8%，取证复扫仅剩 1 条已登记的合法升级例外。§18 表格补第三种口径、收尾自检补 `temp/d8_check_restore_conflicts.py`（跨 schema 同名/同分冲突扫描），并开出一个新待拍板项：同名基准冲突取哪一条 + 全库 1291 条 legacy `name` 写法条目是否归一化。

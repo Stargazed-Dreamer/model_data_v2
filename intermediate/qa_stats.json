@@ -1,6 +1,6 @@
 {
-  "total": 950,
-  "roster_n": 702,
+  "total": 940,
+  "roster_n": 692,
   "legacy_n": 248,
   "dims": [
     {
@@ -8,8 +8,8 @@
       "path": "basic_info.release_date",
       "desc": "YYYY-MM-DD 或 YYYY-MM",
       "roster": {
-        "filled": 702,
-        "total": 702,
+        "filled": 692,
+        "total": 692,
         "pct": 100.0
       },
       "legacy": {
@@ -24,80 +24,80 @@
       "path": "basic_info.positioning",
       "desc": "受控词表六值，非空数组",
       "roster": {
-        "filled": 628,
-        "total": 702,
-        "pct": 89.5
+        "filled": 625,
+        "total": 692,
+        "pct": 90.3
       },
       "legacy": {
         "filled": 203,
         "total": 248,
         "pct": 81.9
       },
-      "delta": 7.6
+      "delta": 8.4
     },
     {
       "dim": "开放权重",
       "path": "basic_info.access.open_weights",
       "desc": "三态布尔",
       "roster": {
-        "filled": 665,
-        "total": 702,
-        "pct": 94.7
+        "filled": 658,
+        "total": 692,
+        "pct": 95.1
       },
       "legacy": {
         "filled": 216,
         "total": 248,
         "pct": 87.1
       },
-      "delta": 7.6
+      "delta": 8.0
     },
     {
       "dim": "API 可用",
       "path": "basic_info.access.api",
       "desc": "三态布尔",
       "roster": {
-        "filled": 647,
-        "total": 702,
-        "pct": 92.2
+        "filled": 640,
+        "total": 692,
+        "pct": 92.5
       },
       "legacy": {
         "filled": 212,
         "total": 248,
         "pct": 85.5
       },
-      "delta": 6.7
+      "delta": 7.0
     },
     {
       "dim": "本地部署",
       "path": "basic_info.access.local_deployment",
       "desc": "三态布尔",
       "roster": {
-        "filled": 620,
-        "total": 702,
-        "pct": 88.3
+        "filled": 618,
+        "total": 692,
+        "pct": 89.3
       },
       "legacy": {
         "filled": 187,
         "total": 248,
         "pct": 75.4
       },
-      "delta": 12.9
+      "delta": 13.9
     },
     {
       "dim": "总参数量",
       "path": "architecture.total_params_b",
       "desc": "B 为单位",
       "roster": {
-        "filled": 523,
-        "total": 702,
-        "pct": 74.5
+        "filled": 514,
+        "total": 692,
+        "pct": 74.3
       },
       "legacy": {
         "filled": 139,
         "total": 248,
         "pct": 56.0
       },
-      "delta": 18.5
+      "delta": 18.3
     },
     {
       "dim": "激活参数量",
@@ -105,31 +105,31 @@
       "desc": "MoE 模型",
       "roster": {
         "filled": 346,
-        "total": 702,
-        "pct": 49.3
+        "total": 692,
+        "pct": 50.0
       },
       "legacy": {
-        "filled": 119,
+        "filled": 120,
         "total": 248,
-        "pct": 48.0
+        "pct": 48.4
       },
-      "delta": 1.3
+      "delta": 1.6
     },
     {
       "dim": "上下文窗口",
       "path": "architecture.context_window_tokens",
       "desc": "标称值",
       "roster": {
-        "filled": 470,
-        "total": 702,
-        "pct": 67.0
+        "filled": 468,
+        "total": 692,
+        "pct": 67.6
       },
       "legacy": {
         "filled": 241,
         "total": 248,
         "pct": 97.2
       },
-      "delta": -30.2
+      "delta": -29.6
     },
     {
       "dim": "有效上下文",
@@ -137,15 +137,15 @@
       "desc": "实测值",
       "roster": {
         "filled": 119,
-        "total": 702,
-        "pct": 17.0
+        "total": 692,
+        "pct": 17.2
       },
       "legacy": {
         "filled": 89,
         "total": 248,
         "pct": 35.9
       },
-      "delta": -18.9
+      "delta": -18.7
     },
     {
       "dim": "知识截止",
@@ -153,135 +153,135 @@
       "desc": "YYYY-MM-DD",
       "roster": {
         "filled": 115,
-        "total": 702,
-        "pct": 16.4
+        "total": 692,
+        "pct": 16.6
       },
       "legacy": {
         "filled": 63,
         "total": 248,
         "pct": 25.4
       },
-      "delta": -9.0
+      "delta": -8.8
     },
     {
       "dim": "多模态输入",
       "path": "modality.input",
       "desc": "除 text 外任一项非 null",
       "roster": {
-        "filled": 580,
-        "total": 702,
-        "pct": 82.6
+        "filled": 578,
+        "total": 692,
+        "pct": 83.5
       },
       "legacy": {
         "filled": 234,
         "total": 248,
         "pct": 94.4
       },
-      "delta": -11.8
+      "delta": -10.9
     },
     {
       "dim": "原生多模态",
       "path": "modality.native_multimodal",
       "desc": "任一项非 null",
       "roster": {
-        "filled": 560,
-        "total": 702,
-        "pct": 79.8
+        "filled": 558,
+        "total": 692,
+        "pct": 80.6
       },
       "legacy": {
         "filled": 221,
         "total": 248,
         "pct": 89.1
       },
-      "delta": -9.3
+      "delta": -8.5
     },
     {
       "dim": "自报跑分",
       "path": "benchmarks.self_reported",
       "desc": "非空数组",
       "roster": {
-        "filled": 393,
-        "total": 702,
-        "pct": 56.0
+        "filled": 391,
+        "total": 692,
+        "pct": 56.5
       },
       "legacy": {
         "filled": 164,
         "total": 248,
         "pct": 66.1
       },
-      "delta": -10.1
+      "delta": -9.6
     },
     {
       "dim": "独立评测",
       "path": "benchmarks.independent",
       "desc": "非空数组",
       "roster": {
-        "filled": 128,
-        "total": 702,
-        "pct": 18.2
+        "filled": 196,
+        "total": 692,
+        "pct": 28.3
       },
       "legacy": {
         "filled": 122,
         "total": 248,
         "pct": 49.2
       },
-      "delta": -31.0
+      "delta": -20.9
     },
     {
       "dim": "Arena Elo",
       "path": "benchmarks.arena_elo",
       "desc": "非空数组",
       "roster": {
-        "filled": 45,
-        "total": 702,
-        "pct": 6.4
+        "filled": 54,
+        "total": 692,
+        "pct": 7.8
       },
       "legacy": {
         "filled": 118,
         "total": 248,
         "pct": 47.6
       },
-      "delta": -41.2
+      "delta": -39.8
     },
     {
       "dim": "定价-输入",
       "path": "pricing.input",
       "desc": "USD/M tokens",
       "roster": {
-        "filled": 155,
-        "total": 702,
-        "pct": 22.1
+        "filled": 148,
+        "total": 692,
+        "pct": 21.4
       },
       "legacy": {
         "filled": 147,
         "total": 248,
         "pct": 59.3
       },
-      "delta": -37.2
+      "delta": -37.9
     },
     {
       "dim": "定价-输出",
       "path": "pricing.output",
       "desc": "USD/M tokens",
       "roster": {
-        "filled": 142,
-        "total": 702,
-        "pct": 20.2
+        "filled": 135,
+        "total": 692,
+        "pct": 19.5
       },
       "legacy": {
         "filled": 145,
         "total": 248,
         "pct": 58.5
       },
-      "delta": -38.3
+      "delta": -39.0
     },
     {
       "dim": "定价-生效日",
       "path": "pricing.effective_date",
       "desc": "精确到日",
       "roster": {
-        "filled": 702,
-        "total": 702,
+        "filled": 692,
+        "total": 692,
         "pct": 100.0
       },
       "legacy": {
@@ -296,8 +296,8 @@
       "path": "meta.source_urls",
       "desc": "非空数组",
       "roster": {
-        "filled": 700,
-        "total": 702,
+        "filled": 690,
+        "total": 692,
         "pct": 99.7
       },
       "legacy": {
@@ -312,8 +312,8 @@
       "path": "meta.collected_at",
       "desc": "YYYY-MM-DD",
       "roster": {
-        "filled": 702,
-        "total": 702,
+        "filled": 692,
+        "total": 692,
         "pct": 100.0
       },
       "legacy": {
@@ -328,26 +328,25 @@
     "verification_status": {
       "待验证": 866,
       "已验证": 54,
-      "已过期": 20,
-      "存疑": 10
+      "已过期": 20
     },
     "dishonest_verified": [],
     "collected_at": {
       "2026-08-24": 82,
       "2026-08-25": 2,
       "2026-08-26": 193,
-      "2026-08-27": 163,
-      "2026-08-28": 359,
-      "2026-08-29": 151
+      "2026-08-27": 162,
+      "2026-08-28": 354,
+      "2026-08-29": 147
     },
     "placeholder_notes": {
-      "count": 53,
-      "total": 950,
-      "pct": 5.6,
+      "count": 52,
+      "total": 940,
+      "pct": 5.5,
       "by_group": {
         "roster": {
-          "count": 52,
-          "total": 702,
+          "count": 51,
+          "total": 692,
           "pct": 7.4
         },
         "legacy": {
@@ -356,23 +355,23 @@
           "pct": 0.4
         }
       },
-      "confirmed_absent": 243
+      "confirmed_absent": 241
     },
     "pricing_by_kind": {
       "roster/商业API": {
         "pricing_filled": 96,
-        "total": 191,
-        "pct": 50.3
+        "total": 188,
+        "pct": 51.1
       },
       "roster/开源权重": {
-        "pricing_filled": 51,
-        "total": 406,
-        "pct": 12.6
+        "pricing_filled": 44,
+        "total": 403,
+        "pct": 10.9
       },
       "roster/未知/混合": {
         "pricing_filled": 8,
-        "total": 105,
-        "pct": 7.6
+        "total": 101,
+        "pct": 7.9
       },
       "legacy/商业API": {
         "pricing_filled": 72,
@@ -391,41 +390,37 @@
       }
     },
     "confidence": {
-      "null": 1111,
+      "null": 1102,
       "T0": 122,
       "T0-自报": 1546,
-      "T0-自报-转述": 799,
-      "T1": 1145,
+      "T0-自报-转述": 793,
+      "T1": 1352,
       "T2": 13,
       "T3": 725,
       "T4": 6,
-      "pricing:N/A": 1,
-      "pricing:T0": 783,
+      "pricing:T0": 782,
       "pricing:T0-自报": 6,
-      "pricing:T0-自报-转述": 17,
+      "pricing:T0-自报-转述": 15,
       "pricing:T1": 7,
-      "pricing:T2": 8,
-      "pricing:T3": 114,
-      "pricing:T4": 2,
-      "pricing:high": 1,
-      "pricing:中": 2,
-      "pricing:低": 1
+      "pricing:T2": 7,
+      "pricing:T3": 109,
+      "pricing:T4": 6
     },
     "source_type": {
-      "null": 791,
-      "独立评测平台": 635,
-      "LMArena 镜像(DataLearner)，原始来源 LM Arena (arena.ai 被 Cloudflare 拦截，采用公开镜像)": 442,
+      "独立评测平台": 812,
+      "null": 782,
+      "LMArena 镜像(DataLearner)，原始来源 LM Arena (arena.ai 被 Cloudflare 拦截，采用公开镜像)": 471,
       "T0-自报": 379,
       "行业媒体聚合官方发布（自报分转述）": 268,
-      "pricing:开源权重模型核对（无官方 API 价）": 244,
+      "pricing:开源权重模型核对（无官方 API 价）": 248,
       "行业媒体聚合官方发布": 208,
       "T0-自报-转述": 200,
       "官方技术报告（自报）": 198,
       "官方 Model Card（自报）": 198,
-      "pricing:官方定价页": 143,
+      "pricing:官方定价页": 146,
       "官方技术报告": 115,
-      "pricing:官方定价页核对（无公开定价）": 105,
-      "pricing:官方定价页核对（已下架）": 94,
+      "pricing:官方定价页核对（无公开定价）": 101,
+      "pricing:官方定价页核对（已下架）": 93,
       "第三方登记站": 86,
       "官方自报": 78,
       "T0 官方自报": 76,
@@ -468,9 +463,8 @@
       "PyLate 官方文档自报": 14,
       "T0 官方一手（自报）": 14,
       "自报": 14,
-      "pricing:媒体转述": 12,
+      "独立评测平台(Artificial Analysis)": 13,
       "官方GitHub README(对比表)": 12,
-      "独立评测平台(Artificial Analysis)": 12,
       "T0 官方 Model Card 自报": 12,
       "官方 blog（自报）": 12,
       "官方 Model Card 自报（BF16 基线，FP8 同源权重，经 scnet.cn 镜像转述）": 12,
@@ -484,10 +478,10 @@
       "官方Model Card（自报）": 11,
       "官方技术报告+HF Model Card（自报）": 11,
       "官方公告-自报": 11,
+      "pricing:媒体转述": 10,
       "官方自报-媒体转述": 10,
       "T0 官方一手自报（官方原文直采）": 10,
       "Google 官方论文自报（arXiv 2210.11416 Table 4）": 10,
-      "pricing:official": 10,
       "官方模型卡自报（T0 直采）": 10,
       "官方技术博客": 10,
       "Mistral 官方技术报告自报（arXiv:2401.04088 Table 2）": 10,
@@ -501,6 +495,7 @@
       "官方博客自报对照表": 9,
       "vendor_self_reported": 9,
       "pricing:行业媒体聚合官方发布（自报分转述）": 9,
+      "pricing:official": 9,
       "第三方评测聚合": 9,
       "官方 NVIDIA Developer Blog（自报）": 9,
       "第三方聚合站转述 Stanford CRFM HELM 独立评测": 9,
@@ -529,7 +524,6 @@
       "官方自报-发布公告": 6,
       "官方 ModelScope 模型卡（R1 技术报告 arXiv:2501.12948 同源自报）": 6,
       "官方技术报告+GitHub README（自报）": 6,
-      "官方模型卡自报（instruct 变体代理）": 6,
       "官方技术报告（厂商自报）": 6,
       "第三方独立评测转述": 6,
       "官方 Model Card 自报（Open LLM Leaderboard 评测回写）": 6,
@@ -548,7 +542,6 @@
       "T0-自报-技术报告": 5,
       "论文自报转述": 5,
       "pricing:开源权重自托管（官方未提供商业化 API 计费价）": 5,
-      "pricing:T0": 5,
       "第三方独立评测（Epoch AI AI Benchmarking Hub 数据，经 token.app 聚合转述）": 5,
       "官方自报-转述(codingfleet 引 OpenAI GPT-5.6 scorecard)": 5,
       "官方自报-HF Model Card 直采": 5,
@@ -575,7 +568,6 @@
       "pricing:官方GitHub README": 3,
       "官方GitHub README(Long CoT表)": 3,
       "LMArena": 3,
-      "pricing:行业媒体聚合": 3,
       "pricing:开源权重模型（Apache 2.0）": 3,
       "官方System Card": 3,
       "行业媒体聚合自报-转述": 3,
@@ -589,6 +581,7 @@
       "官方产品页": 3,
       "pricing:官方产品页": 3,
       "T2-第三方": 3,
+      "pricing:T0": 3,
       "pricing:开源权重自托管，无按 token 计费（官方模型卡/官方发布转述）": 3,
       "官方 Model Card 自报（经 ModelScope 镜像访问，HuggingFace 直连不可达）": 3,
       "官方技术报告（自报-转述）": 3,
@@ -601,6 +594,7 @@
       "行业媒体转述（官方自报）": 3,
       "官方 Model Card（自报，引用 Artificial Analysis）": 3,
       "自报-转述": 2,
+      "pricing:行业媒体聚合": 2,
       "官方发布博客(自报)": 2,
       "pricing:开源权重模型，无公开 API 定价": 2,
       "pricing:内部模型核对（无公开 API 价)": 2,
@@ -619,7 +613,6 @@
       "T0 官方一手-自报": 2,
       "官方博客（自报）": 2,
       "官方 HuggingFace 模型卡自报": 2,
-      "pricing:T0-自报": 2,
       "HuggingFace 官方模型卡自报": 2,
       "研究论文-自报": 2,
       "arXiv 论文实验段自报（第三方转述）": 2,
@@ -639,7 +632,6 @@
       "T0 官方自报（model card 评测表，Audio）": 2,
       "pricing:T2 HuggingFace": 2,
       "自报-论文转述": 2,
-      "pricing:开源权重（无API定价）": 2,
       "独立评测平台聚合": 2,
       "T1 机构新闻发布": 2,
       "T2 学术会议展示转述": 2,
@@ -701,25 +693,22 @@
       "行业媒体聚合官方发布-转述": 1,
       "行业媒体聚合第三方榜单（转述）": 1,
       "pricing:官方定价页（IBM Watsonx）": 1,
-      "pricing:官方定价页（未列出该模型）": 1,
       "pricing:third_party": 1,
       "pricing:T1 官方文档转述": 1,
       "pricing:占位记录（科研机构模型未公开定价）": 1,
-      "pricing:T3-媒体转述": 1,
+      "pricing:媒体转述（网易号，非一手来源）": 1,
       "自报-GPT-4评分（首发版v0，非v1.3独立）": 1,
       "pricing:无官方API定价": 1,
       "T0 自报（论文摘要）": 1,
       "pricing:开源权重（Llama 2 Community License）免费可商用，Meta 无官方 token 计费 API": 1,
-      "pricing:NVIDIA 官方 model hub 列第三方托管商(Deep Infra)报价": 1,
       "第三方推理平台聚合": 1,
-      "pricing:第三方推理平台聚合": 1,
       "pricing:开源权重（无官方 API 托管定价）": 1,
       "第三方推理聚合平台 AutoExacto 实测": 1,
-      "pricing:第三方推理聚合平台（开源权重无官方 API 定价）": 1,
       "pricing:研究论文（非商业模型，无定价）": 1,
       "pricing:T0 官方一手（论文 + 官方博客）": 1,
       "pricing:开源权重模型（MIT）": 1,
-      "pricing:第三方转述(待官方核验)": 1,
+      "pricing:第三方站点转述（非一手来源）": 1,
+      "pricing:官方发布页（CNY 原价按 1USD=7.20 折算）": 1,
       "pricing:官方定价页核对（已被迭代版本替代）": 1,
       "pricing:官方定价页核对（模型已退役，现行页无标价）": 1,
       "官方公告自报": 1,
@@ -731,7 +720,6 @@
       "pricing:开源模型核对（无官方 API 价）": 1,
       "官方博客自报-经聚合站转述": 1,
       "独立评测机构Artificial Analysis Intelligence Index": 1,
-      "pricing:独立评测聚合": 1,
       "pricing:官方发布页": 1,
       "pricing:开源权重，无 token 定价": 1,
       "第三方独立评测机构 Artificial Analysis": 1,
@@ -770,6 +758,8 @@
       "pricing:官方报道转述": 1,
       "pricing:开源权重模型核对（无官方 token API 定价）": 1,
       "pricing:开源权重模型（无官方 TII 托管 API 定价）": 1,
+      "pricing:UGC 博客转述（非一手来源，腾讯云官方刊例价已无此项）": 1,
+      "pricing:UGC 自媒体转述（非一手来源，混元刊例价已迁至 TokenHub）": 1,
       "T0 官方自报（model card 评测表，bash-only harness）": 1,
       "T0 官方自报（model card 评测表，best harness）": 1,
       "T0 官方自报（model card 评测表，Vision）": 1,
@@ -784,20 +774,20 @@
       "pricing:未公开": 1,
       "pricing:无公开定价": 1,
       "pricing:无公开定价（Google 内部研究模型，从未开放付费 API）": 1,
-      "pricing:无公开定价源（研究型/机构内部部署模型）": 1,
       "pricing:T4 占位（未检索到奇元 3.0 一手或媒体来源）": 1,
       "LMSYS 官方博客自报（v1.1 转述自 v0 评测）": 1,
-      "pricing:T0-自报-转述": 1,
+      "pricing:百科转述（非一手来源，官方定价域不可直访）": 1,
       "pricing:T3": 1,
       "pricing:行业媒体转述官方发布（华尔街见闻李开复专访）": 1,
       "pricing:官方 API 平台文档": 1,
       "pricing:政府监管备案": 1,
       "pricing:官方发布会权威媒体转述": 1,
+      "pricing:行业媒体聚合（非一手来源）": 1,
       "官方发布公告（自报）-媒体转述": 1,
       "pricing:官方技术博客（自报）": 1,
       "pricing:行业媒体转述（官方自报）": 1,
       "pricing:官方技术博客自报": 1,
-      "pricing:媒体转述（搜狐/腾讯云托管 API 价）": 1,
+      "pricing:媒体转述（搜狐；官方页未直访）": 1,
       "pricing:官方 Model Card（自报）": 1,
       "pricing:官方开放平台定价页（搜索结果摘要）": 1,
       "官方 Model Card（自报，引用官方榜单）": 1,
@@ -806,17 +796,17 @@
       "官方文档自报": 1
     },
     "pricing_currency": {
-      "USD": 302
+      "USD": 295
     },
     "effective_date": {
-      "to_day": 854,
-      "with_value": 942
+      "to_day": 844,
+      "with_value": 932
     },
-    "gate_tail": "校验完成：950 条，ERROR 0 项（涉及 0 条记录），WARN 678 项",
+    "gate_tail": "校验完成：940 条，ERROR 0 项（涉及 0 条记录），WARN 689 项",
     "gate": {
-      "records": 950,
+      "records": 940,
       "error": 0,
-      "warn": 678
+      "warn": 689
     }
   }
 }
