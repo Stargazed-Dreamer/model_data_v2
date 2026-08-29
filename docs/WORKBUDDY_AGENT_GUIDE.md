@@ -368,6 +368,41 @@ python scripts/model_data_tool.py merge \
 
 ---
 
+### 15. 【2026-08-29 复核新增】三个会被文档误导的地方
+
+**15.1 门禁不检查「多余的顶层键」——上文 §14 表里那行「门禁报顶层键数量不对」是不成立的**
+
+`validate_model_data.py` 的顶层检查只有这一句：
+
+```python
+for k in TOP_KEYS:
+    if k not in rec:                      # 只问「必备键在不在」
+        errors.append(f"缺顶层必备键 `{k}`")
+```
+
+它**不问「有没有多余的键」**，也完全不校验嵌套层的键名。所以把 `positioning`/`context_window`/`access` 写到顶层，门禁照样 ERROR 0。
+
+实测漏网的 2 条：`google:gemini-1-0-pro-001:base`、`nvidia:llama-nemotron-ultra-253b:base`
+——后者的 `positioning=["旗舰","推理增强"]`、`context_window`、`deployment` 全卡在顶层，
+按 schema 路径（`basic_info.positioning`）读出来是 null，**数据真实存在但对下游不可见**。
+另有 21 条（2.2%）含非规范嵌套键（`basic_info.name`/`developer`、`architecture.parameters_total` 等）。
+
+> 2026-08-29 已给门禁补上这两项检查，**级别为 WARN**（不改动既有 ERROR 验收口径）。
+
+**15.2 `intermediate/roster.jsonl` 不是采集名册**
+
+它是阶段 0 的 v1 差异清单（506 行），从未随 M 型扩容更新，702 条里有 444 条不在其中。
+现已改名 `roster_v1diff_DEPRECATED.*` 并加了横幅。**名册唯一权威 = `docs/batch_claim_ledger.jsonl`** 的 `models[].model_id` 去重。
+
+踩过的坑：用 roster 比对「骨架残留」得到 80 条（错），用 ledger 得到 26 条（对）。
+
+**15.3 「ERROR 0」的正确读法**
+
+它表示「**无已检项违规**」，不表示 schema 干净、也不表示数据齐全。同理 `model_id 存在于主库` 是恒真判据（骨架早已预填，见 §13），
+判断是否真的入库完成，**只能看 `meta.collected_at` 是否已离开骨架快照日 `2026-08-24`**。
+
+---
+
 ## 11. 并发上限（429）的处理
 
 派发 subagent 采集时可能撞上平台级并发上限，报错形如 `429 queue.userLimit.title` 或 `429 queue.waiting.title`。**这是账号/平台维度的限制，与项目配置无关，立刻重试通常仍失败。**

@@ -12,6 +12,8 @@ validate_model_data.py —— 记录级校验器（P5 修复，执行细则 #11 
             score 越界、日期格式错误、model_id 非三段式、source_urls 内嵌换行）
   WARN   —— 执行细则要求但历史数据普遍未满足的项（未披露参数量的 notes 声明、
             上下文标称/有效标注、降级采集声明），供增量采集时避免、合并前评估
+            2026-08-29 新增两类：①多余的顶层键（数据卡在 schema 外，下游按路径读为
+            null）；②嵌套块内的非规范键名（命名漂移，聚合统计会漏计）
 
 用法：
   python validate_model_data.py <file.jsonl> [--report <out.md>]
@@ -27,6 +29,28 @@ SCHEMA_VERSION = "1.1"
 
 TOP_KEYS = ["schema_version", "model_id", "basic_info", "architecture",
             "benchmarks", "pricing", "modality", "meta"]
+
+# 规范键白名单。权威来源 = incoming/models/_samples/ 下的样板文件（M 型 subagent 照抄的对象），
+# 取两个样例的并集（google 样例结构最全）。
+SCHEMA_BLOCK_KEYS = {
+    "basic_info": {"full_name", "version", "vendor", "release_date",
+                   "positioning", "access", "notes"},
+    "architecture": {"total_params_b", "active_params_b", "architecture_type",
+                     "context_window_tokens", "context_window_effective_tokens",
+                     "knowledge_cutoff", "notes"},
+    "benchmarks": {"self_reported", "independent", "arena_elo"},
+    "pricing": {"currency", "unit", "input", "output", "cached_input", "cache_write",
+                "batch_input", "batch_output", "free_tier", "promotions", "long_context",
+                "effective_date", "source_url", "source_type", "confidence", "notes"},
+    "modality": {"input", "output", "native_multimodal"},
+    "meta": {"collected_at", "verified_at", "verification_status", "source_urls", "notes"},
+}
+SUB_BLOCK_KEYS = {
+    "basic_info.access": {"open_weights", "api", "local_deployment", "notes"},
+    "pricing.free_tier": {"available", "rpm", "rpd", "tpm", "notes"},
+    "pricing.long_context": {"threshold_tokens", "input", "output",
+                             "cached_input", "notes"},
+}
 PRICING_MUST_KEYS = ["cached_input", "cache_write", "batch_input", "batch_output"]
 POSITIONING_ENUM = {"旗舰", "中端", "轻量", "推理增强", "多模态", "工具调用增强"}
 CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"}
@@ -40,6 +64,35 @@ MODALITY_BOOL_SECTIONS = {
     "native_multimodal": ["input_image", "input_audio", "input_video",
                           "output_image", "output_audio", "notes"],
 }
+
+
+def schema_drift_warnings(rec):
+    """结构漂移检查：多余顶层键 + 嵌套块非规范键名。均记 WARN，不影响 ERROR 验收口径。"""
+    out = []
+    extra_top = set(rec) - set(TOP_KEYS)
+    if extra_top:
+        out.append("存在多余顶层键 %s —— 这些键在 schema 之外，下游按规范路径读取会得到 null"
+                   % ", ".join(sorted(f"`{k}`" for k in extra_top)))
+
+    def cmp_block(path, block, allow):
+        if not isinstance(block, dict):
+            return
+        bad = set(block) - allow
+        if bad:
+            out.append("%s 含非规范键 %s（命名漂移，聚合统计会漏计）"
+                       % (path, ", ".join(sorted(f"`{k}`" for k in bad))))
+
+    for blk, allow in SCHEMA_BLOCK_KEYS.items():
+        cmp_block(blk, rec.get(blk), allow)
+
+    bi = rec.get("basic_info")
+    if isinstance(bi, dict):
+        cmp_block("basic_info.access", bi.get("access"), SUB_BLOCK_KEYS["basic_info.access"])
+    pr = rec.get("pricing")
+    if isinstance(pr, dict):
+        for sub in ("free_tier", "long_context"):
+            cmp_block(f"pricing.{sub}", pr.get(sub), SUB_BLOCK_KEYS[f"pricing.{sub}"])
+    return out
 
 
 def check_record(rec):
@@ -57,6 +110,9 @@ def check_record(rec):
     parts = str(mid).split(":")
     if len(parts) != 3 or not all(parts):
         errors.append(f"model_id 非三段式 `vendor:family:variant`：{mid!r}")
+
+    # 0.1 结构漂移（多余顶层键 / 非规范键名）
+    warns.extend(schema_drift_warnings(rec))
 
     # 1. 参数量未披露 → null + notes 声明
     arch = rec.get("architecture") or {}
