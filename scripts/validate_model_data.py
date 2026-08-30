@@ -11,7 +11,9 @@ validate_model_data.py —— 记录级校验器（P5 修复，执行细则 #11 
             positioning 非数组或越界、confidence 与 source_type 不自洽、
             score 越界、日期格式错误、model_id 非三段式、source_urls 内嵌换行）
   WARN   —— 执行细则要求但历史数据普遍未满足的项（未披露参数量的 notes 声明、
-            上下文标称/有效标注、降级采集声明），供增量采集时避免、合并前评估
+            上下文有效值大于标称值、降级采集声明），供增量采集时避免、合并前评估
+            2026-08-30 上下文口径修订：不再检查「有效上下文须注明独立测试方法」「为空须标
+            待测」——该规矩与全库实际背离（208 条填值里 173 条抄标称），已废止，只留倒挂一条
             2026-08-29 新增两类：①多余的顶层键（数据卡在 schema 外，下游按路径读为
             null）；②嵌套块内的非规范键名（命名漂移，聚合统计会漏计）
             2026-08-30 跑分条目再加两项：6.1 缺 canonical 主键（写法漂移 → 合并主键算成空值 → 去重失效）；
@@ -181,12 +183,12 @@ def check_record(rec):
     if tp is None and ap is None and not NOT_DISCLOSED_RE.search(anotes):
         warns.append("参数量全空但 architecture.notes 未声明「（官方）未披露」或「待补」")
 
-    # 2. 上下文标称 / 有效
+    # 2. 上下文标称 / 有效：2026-08-30 起不再要求「有效值须有独立实测出处」
+    #    （执行细则 §2 口径修订，旧规矩下 173 条抄标称 + 127 条 WARN 已证明规矩与现实背离）
     cw, cwe = arch.get("context_window_tokens"), arch.get("context_window_effective_tokens")
-    if cw is not None and cwe is None and "标称" not in anotes and "待测" not in anotes:
-        warns.append("有标称上下文但有效上下文为空且 notes 未标「标称值，有效上下文待测」")
-    if cwe is not None and "测试" not in anotes and "T1" not in anotes:
-        warns.append("填了有效上下文但 notes 未注明独立测试方法与来源")
+    if cw is not None and cwe is not None and cwe > cw:
+        warns.append(f"有效上下文 {cwe} 大于标称上下文 {cw}"
+                     "—— 疑似把厂商「可扩展窗口」填进了有效栏，最大值应归位到 context_window_tokens")
 
     # 3. 多模态三态：值必须是 true / false / null（类型检查）
     mod = rec.get("modality") or {}

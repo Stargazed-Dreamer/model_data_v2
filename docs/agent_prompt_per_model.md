@@ -66,7 +66,7 @@
 
 **定价 > 多模态 > 自报跑分 > 上下文窗口 > 退役/定位信息**。Arena / 独立跑分由平台 agent 统一采集，你**不必**填 `benchmarks.arena_elo` / `benchmarks.independent`（留空数组即可），专注上面五项。
 
-> `architecture`、`pricing` 的 `notes` 很关键：未披露参数量必须写「官方未披露参数量」；有效上下文未测写「标称值，有效上下文待测」；定价缺缓存/批量价写说明。这些 notes 是下游判断"为什么是 null"的依据。
+> `architecture`、`pricing` 的 `notes` 很关键：未披露参数量必须写「官方未披露参数量」；上下文两个窗口都要填——`context_window_tokens` 填官方给的最大可支持长度（给了「原生 X / 扩展 Y」的填 Y 并把 X 写进 notes），`context_window_effective_tokens` **不要求独立实测**，有官方值/自报值就填并在 notes 注明出处，实在没有任何依据才留 null，且**永远不得大于标称值**；定价缺缓存/批量价写说明。这些 notes 是下游判断"这个数从哪来"的依据。
 
 ## 输出
 

@@ -135,7 +135,7 @@
 - **知识截止日期不透明**：厂商经常不公开，或公开后又通过联网搜索/工具调用绕过。  
 - **绕过方法**：  
   - MoE 模型必须同时采集总参数量和激活参数量，在 `architecture` 对象中分别记录 `total_params_b` 和 `active_params_b`。  
-  - 上下文窗口必须区分 `context_window_tokens`（标称值）和 `context_window_effective_tokens`（有效上下文，未经独立测试则为 `null`）。  
+  - 上下文窗口必须区分 `context_window_tokens`（标称值）和 `context_window_effective_tokens`（实际可用值）。有效值**不要求独立第三方实测**，厂商标称/自报/社区实测都可填，出处写进 `notes`；无任何依据才填 `null`。有效值不得大于标称值。  
   - 知识截止日期查技术报告附录，或从官方 FAQ 中提取；若未披露填 `null`，并在 `notes` 说明“知识截止日期未披露”。
 
 ---
@@ -375,7 +375,7 @@
 - `active_params_b`：激活参数量，单位十亿/B。MoE 模型必填。  
 - `architecture_type`：枚举 `"Dense" / "MoE" / "Hybrid" / "Unknown"`。  
 - `context_window_tokens`：标称上下文窗口，单位 token。  
-- `context_window_effective_tokens`：有效上下文窗口；未经独立测试则为 `null`。  
+- `context_window_effective_tokens`：实际可用上下文窗口，单位 token。不要求独立第三方实测，但必须在 `notes` 注明数字来源；无任何依据则为 `null`。不得大于 `context_window_tokens`。  
 - `max_output_tokens`：官方声明的单次最大输出 token 数（整数），与上下文窗口是不同字段，勿混填。官方未给出则为 `null`。  
 - `reasoning_model`：布尔，是否为推理型/思考型模型（有独立思考链/推理档位）。厂商未声明则为 `null`，勿按「能力强」臆断。  
 - `knowledge_cutoff`：训练数据时间边界，如 `"2026-01"`。未知填 `null`。  
