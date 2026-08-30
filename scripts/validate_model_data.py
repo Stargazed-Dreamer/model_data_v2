@@ -14,6 +14,8 @@ validate_model_data.py —— 记录级校验器（P5 修复，执行细则 #11 
             上下文标称/有效标注、降级采集声明），供增量采集时避免、合并前评估
             2026-08-29 新增两类：①多余的顶层键（数据卡在 schema 外，下游按路径读为
             null）；②嵌套块内的非规范键名（命名漂移，聚合统计会漏计）
+            2026-08-30 跑分条目再加两项：6.1 缺 canonical 主键（写法漂移 → 合并主键算成空值 → 去重失效）；
+            6.2 合并主键撞车（同 (benchmark, config) 挂着多个条目 → 分数不同时机器无从裁决取哪一条）
 
 用法：
   python validate_model_data.py <file.jsonl> [--report <out.md>]
@@ -73,6 +75,8 @@ RELAY_MARK = "转述"
 # 跑分条目里出现过的非 canonical 基准名键（D9 清了 `name`，D10 清了其余三种写法）。
 # arena_elo 另有一个坑：写成 `benchmark` 也算非 canonical，它的主键是 `sub_benchmark`。
 BENCH_NAME_ALIASES = ("name", "metric_name", "benchmark_name")
+# 合并去重主键的第二段（与 model_data_tool.MergeStrategy 的 array_key_* 保持一致）
+BENCH_SUBKEY = {"self_reported": "config", "independent": "config", "arena_elo": "date"}
 
 
 def _bench_name(item, canonical_key):
@@ -88,6 +92,27 @@ MODALITY_BOOL_SECTIONS = {
     "native_multimodal": ["input_image", "input_audio", "input_video",
                           "output_image", "output_audio", "notes"],
 }
+
+
+def _dup_measurements(items, name_key, sub_key):
+    """按**合并去重主键** (name_key, sub_key) 给跑分条目分组。
+
+    产出 [(基准名, 副键值, 组内第二条的下标, [组内全部分数], 分数是否全同)]，只保留 ≥2 条的组。
+    主键相同而分数不同 = 机器无从裁决取哪一条；主键与分数都相同 = 同一次测量记了两遍。
+    两种都会静默并存进最终数据，所以由规则 6.2 报出来（口径见指南 §20）。
+    """
+    buckets = {}
+    for i, it in enumerate(items or []):
+        if not isinstance(it, dict) or it.get(name_key) is None:
+            continue
+        # 用 str() 兜住罕见的非哈希值（config 写成 dict/list 时不至于让门禁整个崩掉）
+        buckets.setdefault((str(it[name_key]), str(it.get(sub_key))), []).append((i, it.get("score")))
+    out = []
+    for (nm, sub), rows in sorted(buckets.items(), key=lambda kv: str(kv[0])):
+        if len(rows) >= 2:
+            scores = [r[1] for r in rows]
+            out.append((nm, sub, rows[1][0], scores, len({str(s) for s in scores}) == 1))
+    return out
 
 
 def schema_drift_warnings(rec):
@@ -255,6 +280,22 @@ def check_record(rec):
             errors.append(f"{tag} 缺 score")
         if not item.get("date"):
             errors.append(f"{tag} 缺快照 date")
+
+    # 6.2 合并主键撞车（D11）：同一 (benchmark, config) 挂着多条条目 —— 合并时去重无从裁决。
+    #     分数不同 = 真冲突，得靠 config/score_type/基准名把「不同测量」分开；
+    #     分数也相同 = 同一条记了两遍，删其一。主键算得出才会撞，所以这条只在写法 canonical 时才有意义。
+    for section in ("self_reported", "independent"):
+        for nm, cfg, second_i, scores, same in _dup_measurements(bench.get(section), "benchmark", BENCH_SUBKEY[section]):
+            tag = f"benchmarks.{section}[{second_i}]({nm})"
+            if same:
+                warns.append(f"{tag} 与同数组另一条目主键与分数全同（config={cfg!r}）—— 同一次测量记了两遍，合并会留双份")
+            else:
+                warns.append(f"{tag} 与同数组其他条目主键相同（config={cfg!r}）却挂着 {len(scores)} 个不同分数 "
+                             f"{sorted({str(s) for s in scores})} —— 去重无从裁决，须用 config/score_type/基准名区分子项")
+    for nm, dt, second_i, scores, _same in _dup_measurements(bench.get("arena_elo"), "sub_benchmark", "date"):
+        tag = f"benchmarks.arena_elo[{second_i}]({nm})"
+        warns.append(f"{tag} 与同数组其他条目主键相同（date={dt!r}）却挂着 {len(scores)} 个分数 "
+                     f"{sorted({str(s) for s in scores})} —— 同一子榜同一快照记了多份")
 
     # 7. 日期格式
     rd = (rec.get("basic_info") or {}).get("release_date")

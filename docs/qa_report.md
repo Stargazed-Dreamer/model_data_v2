@@ -5,10 +5,10 @@
 > 依据：`multi_agent_plan.md` §5「阶段 3 · 质检与验收」、`COLLECTION_PLAN_v2.md` §6 验收标准、`WORKBUDDY_AGENT_GUIDE.md`
 > 统计口径脚本：`scripts/qa_stats.py`（填充率）、`scripts/diff_incoming_db.py`（差异/冲突）
 
-> **【同日补记 2026-08-29 · 整改轮 D1–D7】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意七处时效性：
+> **【同日补记 2026-08-29 起 · 整改轮 D1–D11】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意八处时效性：
 > 1. §1 的 **ERROR 0 是在旧门禁下取得的**——旧门禁不查 `pricing.confidence` 枚举、不查 `knowledge_cutoff` 格式、
 >    不查 `source_type` 与价格值是否自相矛盾，也不查「无价却填了币种」。四项补齐后，当前主库仍为
->    **ERROR 0 / WARN 689 / 结构漂移 0**。
+>    **ERROR 0 / WARN 689 / 结构漂移 0**（D11 之后为 **WARN 703**，多出的 14 条是 E 档待复测清单，见第 8 点）。
 > 2. §3.2 第 2 点与 §5-6 关于「开源权重却有定价」的判定**已被推翻**，红线 5 同日改按
 >    「厂商有无自有官方 API 刊例价」判定，详见 `multi_platform_subagent_guide.md` §5 红线 5 与 `WORKBUDDY_AGENT_GUIDE.md` §16。
 > 3. 门禁现行口径以 `scripts/validate_model_data.py` 为准，**本文与规范文档都只是它的说明，不是判据本身**。
@@ -30,11 +30,21 @@
 >    这不是格式问题：合并去重主键对这类行永远算出 `("None","None")`，同一次测量会静默并存两份
 >    （D8 回补撞出的 5 条同名冲突即由此来）。两轮全部机械改名为 canonical 主键
 >    （前两个数组 → `benchmark`，**`arena_elo` → `sub_benchmark`**），改后反向核对逐字节可还原、值零改动，
->    现库 **ERROR 0 / WARN 689**、**缺 canonical 主键 0**。
+>    现库 **ERROR 0 / WARN 689**（D11 起为 **703**，见第 8 点）、**缺 canonical 主键 0**。
 >    规则 6.1 按「**先清数据、再收紧检查**」的顺序在 D10 之后扩成「缺 canonical 主键即报」，
 >    负对照用两个改前备份实测 **746 = 689 + 57**、**2039 = 689 + 1293 + 57**。
->    仍待拍板的是**同名基准分数冲突**：全库精确主键重复 **22 个数组 / 39 组**（35 组同名不同分、4 组同名同分），
->    另有 **7 组** 同基准同分只因 `config` 写了不同来源名而并存（见 §6.2）。
+>    归一时揭出的**同名基准分数冲突**（全库精确主键重复 22 个数组 / 39 组）已在同日 **D11 结案**，见第 8 点。
+> 8. **39 组主键撞车已结案（D11），WARN 基线 689 → 703**：先逐条摊开量化，发现主要毛病**不是「两个来源分数打架」**
+>    而是**主键不足以标识一次测量**——38/39 组内 `confidence` 完全相同（「取高 confidence」只能裁决 1 组），
+>    35 组同名不同分里 **34 组整组只有一个 `source_url`**。按「notes 能否复原区别」分五档处置：
+>    A 档 15 组把 notes 里写明的评测设置填进 `config`、B 档 5 组把 `score_type` 口径追加进 `config`、
+>    C 档 1 组（`sber:fred-t5-xl` RSG 的 10 条子任务）拆进 `benchmark` 名、D 档 4 组纯重复删后到的一条、
+>    **E 档 14 组 notes 也分不出谁是谁 → 不动，由新规则 6.2 报出来当待复测清单**（9 组集中在
+>    `microsoft-nvidia:megatron-turing-nlg-530b`，要分开只能回原表重读，属重采范围）。
+>    全库 `score` 零改动，条目 5659 → 5655。本轮同时**第一次写下 `config` 的语义边界**（见指南 §20）。
+>    负对照三份备份：D9 前 **2067** = 689 + 1350(6.1) + 28(6.2)、D11 前 **728** = 689 + 39、现库 **703** = 689 + 14。
+>    **仍待拍板**：7 组因 `config` 写了来源名而并存的近似重复（违反本轮新定的 `config` 口径）；
+>    以及是否把合并主键扩成 `(benchmark, score_type, config)` 以根治 B 档。详见指南 §20。
 
 ---
 
@@ -56,7 +66,8 @@
 | schema | 全部 1.1 |
 | 重复 model_id | 0 |
 
-> **整改后现值（读表时替换使用）**：主库 **940 条**（花名册 692 + v1 遗留 248）、ERROR **0**、WARN **689**、
+> **整改后现值（读表时替换使用）**：主库 **940 条**（花名册 692 + v1 遗留 248）、ERROR **0**、WARN **703**
+> （D1–D10 期间为 689，D11 新增规则 6.2 照出 14 组待复测）、
 > 结构漂移 0；另有 10 条存疑记录移出主库、原样存 `docs/unconfirmed_models.jsonl`。见文首补记第 4 点。
 
 ### WARN 678 的构成（按类型）
@@ -226,7 +237,8 @@ python scripts/model_data_tool.py merge \
    > GPQA Diamond 0.914 同时存在 T1 直连与 T3 转述两条）。两条都带完整来源，未自动删。
    > 其根因（非 canonical 写法条目主键认不出）**已由 D9 + D10 全部消除**（`name` 1293 条 + 其余三种写法 57 条，
    > 现库缺 canonical 主键 0），见 banner 第 7 点；
-   > 归一后全库精确主键重复为 **22 个数组 / 39 组**（D9 改动记录内 6 个）。「同名基准分数冲突取哪一条」单独拍板。
+   > 归一后全库精确主键重复为 **22 个数组 / 39 组**（D9 改动记录内 6 个）。「同名基准分数冲突取哪一条」单独拍板
+   > —— **已由同日 D11 结案**：实际构成是主键粒度不足而非来源打架，25 组机械修可分、14 组留作待复测，见 §6.2 与指南 §20。
    > 反方向的失效也存在：上述 GPQA Diamond 两条如今靠 `config`（一条 `null`、一条 `"xhigh"`）错开，
    > 精确主键**不再报重复**——`config` 留空与填值不等价时，去重会漏；实测全库另有 **7 组** 同基准同分、
    > 只因 `config` 写了不同来源名而并存（如 `alibaba:qwen2-5-max` 的 GPQA Diamond 0.587 ×2，
@@ -351,7 +363,10 @@ technology-innovation-institute:falcon-arabic
 | ✅ **本轮补合并造成的跑分条目丢失（D8 已回补结案）** | `85b9fae` 用 `--on-array replace` 把 81 条记录 / 215 个**已采集**跑分条目覆盖成空（independent 177 / arena_elo 29 / self_reported 9），丢的是前几轮人工成果而非骨架填充值 | 见 §3.2 第 4 点与指南 §18。工具已加空数组保护（默认不覆盖，需 `--allow-empty-replace` 显式放行）并经 `temp/d8_verify_empty_array_guard.py` 验证；恢复脚本 `temp/d8_restore_benchmarks.py --apply` 已执行，再由 `temp/d8_fix_over_restore.py` 撤回 9 条属合法升级的 legacy `self_reported`、`temp/d8_restore_eurus_independent.py` 找回 1 条早于恢复基线丢失的条目，**累计净回补 82 条 / 207 个条目**，复检 940 条 ERROR 0。遗留项转为「同名基准冲突与 1293 条 legacy `name` 条目归一化口径」（后者已由 D9 + D10 全清，见下两行；全库清单改用 `temp/d9_residual_scan.py`） |
 | ✅ **`benchmarks` 条目四种非 canonical 写法（D9 + D10 已全清）** | legacy 只有 `name` 的条目 1293 条（self_reported 1241 / independent 50 / arena_elo 2，涉及 156 条记录），另有 `benchmark_name` 30 / `metric_name` 23 / `arena_elo` 误用 `benchmark` 4（57 条 / 11 记录）。合并去重主键对这类行永远算出 `("None","None")`，同一次测量会静默并存两份 —— 不是格式问题，是**去重失效** | 全部改名为 canonical 主键（前两个数组 `benchmark`、`arena_elo` 用 `sub_benchmark`）；`temp/d9_normalize_benchmark_keys.py` 与 `temp/d10_normalize_benchmark_keys2.py` 都以「反向改名必须与原文逐字节相等」为验收，写盘后再对 `git show HEAD` 复核全部可还原、值零改动；现库**缺 canonical 主键 0**。规则 6.1 按「先清数据、再收紧检查」在 D10 后扩成「缺 canonical 主键即报」，负对照用改前备份实测 **1982 = 689+1293**（D9 时窄口径）、**746 = 689+57**（D10 前）、**2039 = 689+1293+57**（D9 前 + 全写法版）。详见指南 §19 |
 | ~~剩余 3 种非 canonical 写法未归一（57 条 / 11 记录）~~ **已处置（D10）** | D9 按 `"name" in item` 圈范围，漏掉 `benchmark_name` 30 条（8 记录）、`metric_name` 23 条（2 记录）、`arena_elo` 误用 `benchmark` 4 条（1 记录）；**当时的规则 6.1 只看 `name`，对这 57 条完全沉默** | 已按 D9 同法归一（另加「同时锁记录数 11 与条目数 57」「主键重复数组数改前改后对照 22 → 22」两道保险）。教训：**归一化脚本的匹配条件就是它的盲区**，残留数必须独立跑全库。剩 8 条同时带 `benchmark` 与 `name` 的冗余条目（6 条同值、2 条不同值）canonical 主键已在、不影响去重，**刻意未动** |
-| 🔴 **同名基准分数冲突（全库 22 数组 / 39 组，待拍板）** | 精确主键 `(benchmark, config)` 重复：同名不同分 35 组、同名同分 4 组。典型是同一基准挂 3 个分数而 `config` 全 `null`（`alibaba:qwen3-coder-480b-a35b` SWE-bench Verified 0.658/0.67/0.696）。反向还有 **7 组** 同基准同分、只因 `config` 写了不同来源名而并存（`config` 被同时当评测配置和来源标注用） | 条目均带完整来源，**未自动删**。需定口径：取高 confidence / 按 `score_type`、`config` 细分保留 / 标 `conflict` 待复测，且要顺带定 `config` 的语义边界。清单：`temp/d9_residual_scan.py`（D9 改动记录内的 6 个数组可用 `temp/d8_check_restore_conflicts.py` 对照） |
+| ✅ **同名基准主键撞车 39 组（D11 已结案）** | 先逐条摊开量化再定口径：38/39 组内 `confidence` 全同 → 「取高 confidence」只能裁决 1 组；35 组同名不同分里 34 组整组只有一个 `source_url` → **主要毛病是主键不足以标识一次测量，不是两个来源打架**（极端例：`sber:fred-t5-xl` 一条 RSG 挂 10 个子任务，子任务名只在 `notes` 里） | 按「notes 能否复原区别」分五档：A 15 组把 notes 写明的评测设置填进 `config`、B 5 组把 `score_type` 口径追加进 `config`、C 1 组把子任务拆进 `benchmark` 名、D 4 组纯重复删后到的一条、E 14 组不动（见下一行）。`temp/d11_resolve_benchmark_conflicts.py` 计划表逐条带 `(期望基准名, 期望分数)` 自校验位置，验收 = 反向还原与 `git HEAD` 逐字节相等 + 全库 `score` 零改动 + 条目 5659→5655。**顺带第一次写下 `config` 的语义边界**（指南 §20） |
+| 🔴 **E 档 14 组待复测（D11 未动，属重采范畴）** | `megatron-turing-nlg-530b` 9 组（每基准 3 个分数、notes 只有公共描述，分不清哪列是哪个 shot）、`exaone-deep-2-4b` 2 组、`multi-token-prediction-7b` 2 组、`aya-expanse-32b` 1 组（一条 notes 未写对手） | **不猜**。由门禁新规则 6.2（WARN）自动维护这份清单，现库 14 条命中即全部 E 档；要收口只能回原表重读。清单可复跑 `temp/d9_residual_scan.py` |
+| 🔴 **7 组近似重复：`config` 里写了来源名（待拍板）** | 同基准同分、只因 `config` 一个写 `default（benched.ai）` 一个写 `default（llmbase）` 而并存（如 `alibaba:qwen2-5-max` 的 GPQA Diamond 0.587）。这正是 D11 定的 `config` 口径所**禁止**的写法 | 剥离来源名会让这 7 组退化成「主键与分数全同」的纯重复 → 可按 D 档合并，但会少掉一条 `source_url` 交叉印证。合并口径与是否保留多来源，待拍板 |
+| 🔴 **合并主键是否扩成 `(benchmark, score_type, config)`（待拍板）** | B 档 5 组的根治办法。现在 `score_type` 写对了却不在主键里，只能把同一信息冗余进 `config` 顶住 | 改 `array_key_default` 会影响此后所有批次的去重语义，属独立拍板项；未动 |
 | 主库 positioning 空值 | 补合并后花名册填充率 89.5%，剩余多属确无适用标签 | 抽样复核即可 |
 | 可视化发布 | `viz/viz_index.html` 需按最终库重新生成 | 合并定版后执行 |
 | 交付 push | 主库已定版待推 | 用 `C:\Program Files\Git\cmd\git`（system credential.helper=manager，静默通过） |

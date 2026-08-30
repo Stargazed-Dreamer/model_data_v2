@@ -439,10 +439,15 @@
 ```
 
 **`self_reported` 和 `independent` 数组中的每个对象必须包含：**  
-- `benchmark`：字符串，榜单名称，如 `"MMLU-Pro"`、`"GPQA Diamond"`、`"SWE-bench Verified"`、`"AIME 2025"`、`"MMMU"`、`"C-Eval"`、`"LiveCodeBench"`。  
+- `benchmark`：字符串，榜单名称，如 `"MMLU-Pro"`、`"GPQA Diamond"`、`"SWE-bench Verified"`、`"AIME 2025"`、`"MMMU"`、`"C-Eval"`、`"LiveCodeBench"`。
+  **同一基准的多个子任务须各成一条并把子任务写进名字**（如 `"Russian SuperGLUE (RSG) – MuSeRC"`），不要挤在同名条目里。
 - `score`：数字或字符串，优先数字，0-1 小数；若百分制需在 `notes` 说明。  
 - `score_type`：字符串，如 `"accuracy"`、`"pass@1"`、`"其他"`。  
-- `config`：字符串，如 `"0-shot"`、`"few-shot"`、`"CoT"`、`"default"`、`"自定义 prompt"`。  
+- `config`：字符串，如 `"0-shot"`、`"few-shot"`、`"CoT"`、`"default"`、`"自定义 prompt"`。
+  **`benchmark` + `config` 是合并去重主键**，两者的组合必须足以唯一标识一次测量：
+  同一基准并存多个测量时（shot 数不同 / prompting 方法不同 / 脚手架或 turn 预算不同 / 单次 vs 投票 / pass@k 不同 /
+  一条记录里有多个发布变体），**必须把区别写进 `config`**，留空会撞车。
+  **禁止把来源名写进 `config`**（如 `"default（benched.ai）"`）—— 来源是 `source_url` / `source_type` 的职责。
 - `date`：评测发布日期或快照日期。  
 - `source_url`：来源链接。  
 - `source_type`：来源类型，如 `"官方技术报告"`、`"独立评测平台"`。  

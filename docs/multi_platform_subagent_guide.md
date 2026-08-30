@@ -239,6 +239,11 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
      **禁止 `name` / `benchmark_name` / `metric_name`**（`arena_elo` 也不得写 `benchmark`）；
      2026-08-30 的 D9 + D10 已把存量的 1293 + 57 条非 canonical 写法全部归一（门禁规则 6.1 现对任何缺 canonical 主键的条目报 WARN）；
      合并去重主键分别是 `(benchmark, config)` 与 `(sub_benchmark, date)`，认不出非 canonical 写法，同一次测量会静默并存两份
+   - **主键必须能唯一标识一次测量**：同一基准并存多个测量时（shot 数 / prompting 方法 / 脚手架与 turn 预算 /
+     单次 vs 投票 / pass@k / 一条记录里的多个发布变体），**区别必须写进 `config`**，全留 `null` 就会撞车、合并时无从裁决；
+     同一基准的**子任务**各成一条并把子任务写进 `benchmark` 名（如 `Russian SuperGLUE (RSG) – MuSeRC`）。
+     **`config` 里禁止写来源名**（如 `default（benched.ai）`）—— 来源是 `source_url` / `source_type` 的活。
+     门禁规则 6.2 会对「同 `(benchmark, config)` 挂着多个不同分数」报 WARN（口径见 `WORKBUDDY_AGENT_GUIDE.md` §20）
 4. **跑分 score 一律 0-1 小数**（百分制 ÷100 并在 notes 注明"原值 X 分，÷100 转小数"）；非百分制跑分（如 Elo / Perplexity）按红线置 score=null，原始值保留在 notes
 5. **定价 null 的判定基准 = 厂商有无自有官方 API 刊例价**（2026-08-29 修订）。
    - 厂商自己运营 API 并公布刊例价 → **无论是否开源权重**，按官方定价页正常填，`confidence="T0"`
