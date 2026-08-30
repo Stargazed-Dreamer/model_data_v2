@@ -4,6 +4,10 @@
 > 执行时间：2026-08-29
 > 依据：`multi_agent_plan.md` §5「阶段 3 · 质检与验收」、`COLLECTION_PLAN_v2.md` §6 验收标准、`WORKBUDDY_AGENT_GUIDE.md`
 > 统计口径脚本：`scripts/qa_stats.py`（填充率）、`scripts/diff_incoming_db.py`（差异/冲突）
+>
+> **⚠ 文中 `temp/*.py` 指针不入库**：`.gitignore` 排除了 `/temp/`，那些是 D7–D12 各轮整改的本机一次性脚本，
+> 克隆仓库看不到它们（拍板于 2026-08-30，与 `WORKBUDDY_AGENT_GUIDE.md` 开头同一声明）。
+> 判据、负对照数字与验收结论都写在正文里，复核请按这些做；常驻工具只有 `scripts/` 下那几个。
 
 > **【同日补记 2026-08-29 起 · 整改轮 D1–D12】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意九处时效性：
 > 1. §1 的 **ERROR 0 是在旧门禁下取得的**——旧门禁不查 `pricing.confidence` 枚举、不查 `knowledge_cutoff` 格式、

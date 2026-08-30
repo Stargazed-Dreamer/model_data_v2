@@ -4,6 +4,9 @@
 > **定位**：是 [`multi_platform_subagent_guide.md`](./multi_platform_subagent_guide.md)（跨平台通用规范）的**平台补丁**。通用规范里的认领协议、文件命名、12 条红线、验收 checklist 全部继续有效，本文档只补充 WorkBuddy 环境特有的坑和必须额外执行的动作。
 > **冲突时**：以本文档为准（因为它记录的是本平台实测过的环境事实）。
 > **建立**：2026-08-28，基于 workbuddy-01 烂尾事故复盘 + 本机 git 弹窗问题。
+> **⚠ 文中 `temp/*.py` 指针不入库**：`.gitignore` 第 6 行排除了 `/temp/`，那 14 个脚本是 D7–D12 各轮整改的**本机一次性产物**，
+> 克隆本仓库的人找不到它们，这是已知且刻意保留的状态（拍板于 2026-08-30）。它们的**判据、负对照数字和验收结论全部写在了正文里**，
+> 复核请按这些做，不要按文件名找脚本；需要重做同类整改时，照正文口径新写一个即可。可复用的常驻工具只有 `scripts/` 下那几个。
 
 ---
 
@@ -27,6 +30,9 @@ git add -f incoming/models/<batch_id>__*.jsonl
 python scripts/model_data_tool.py merge --file model_data_v2.jsonl --incoming <f> \
   --on-null take_source --on-both source_wins --on-array replace --on-schema upgrade \
   --tie-breaker keep_target --apply
+#    ↑ ⚠ replace 语义上等于「来源数组为空就清空目标」，本事故见 §18；工具已默认拦截，
+#      只有显式 --allow-empty-replace 才放行。**跑分数组（benchmarks.*）的合并必须用
+#      union_by_key + §18 第 5 点那串主键**，不要用 replace。
 
 # ⑥ 作业顺序：先收尾自己平台上未提交的批次，再认领新批次
 # ⑦ 每批完成后立即 push，不要攒着 —— 烂尾比慢更严重
@@ -899,3 +905,4 @@ D11 收尾时留了个待拍板项：「**7 组**近似重复 —— 同基准�
   - **另记**：`docs/unconfirmed_models.jsonl`（D6 隔离档）里 15 条 legacy `name` 条目**刻意不归一**（归档价值在与搬出时逐字节一致），登记为规则 6.1 的唯一已知豁免，见 §19 末与 §17.1。
 - 2026-08-30 v2.2（整改轮 D11：39 组主键撞车结案）：新增 **§20**。先量化再定口径，推翻了「两个来源分数打架」的设想 —— **38/39 组内 `confidence` 全同**（「取高 confidence」只能裁决 1 组、`date` 0 组、`source_type` 1 组），**35 组同名不同分里 34 组整组只有一个 `source_url`** → 真实毛病是**主键不足以标识一次测量**。按「notes 能否复原区别」分五档处置：A 15 组填 `config`、B 5 组把 `score_type` 口径追加进 `config`、C 1 组（RSG 10 条子任务）拆进 `benchmark` 名、D 4 组纯重复删后到的一条、**E 14 组不动，交门禁新规则 6.2 报出来当待复测清单**。`temp/d11_resolve_benchmark_conflicts.py` 计划表逐条带 `(期望基准名, 期望分数)` 自校验位置；验收 = 反向还原与 `git HEAD` 逐字节相等 + 独立复核全库 `score` diff 0 + 条目 5659→5655 + 改动记录 18/编辑 56/删除 4 全部等于预期。**首次写下 `config` 的语义边界**（三类合法内容 + 禁止写来源名 + 「基准+配置+score_type+date 足以唯一标识一次测量」），三处采集文档同日补齐。规则 6.2 负对照三份备份：**2067 = 689+1350+28**（D9 前）、**728 = 689+39**（D11 前）、现库 **703 = 689+14** —— `其他` 一段全程 689 未动。**WARN 验收基线自本步起为 703。** 未拍板的两项已登记：7 组 `config` 写来源名的近似重复、合并主键是否扩成 `(benchmark, score_type, config)`。
 - 2026-08-30 v2.3（整改轮 D12 + D12b：来源名迁出 `config`，新增 `source_site`）：新增 **§21**。D11 登记的「7 组」经独立复扫实为 **92 条条目 / 21 条记录**（判定法：`config` 括号段只要出现在**本条自己的** `source_url` 主机名/路径或 `source_type` 里就算来源名，避免「有括号的英文段」这种启发式误伤 314 条合法配置）。处置：`independent` 数组新增 `source_site` 字段并纳入合并主键，`config` 只留评测配置。`temp/d12_add_source_site.py` 迁 **88 条 / 19 记录**；随后发现该判定的结构性盲区 —— `Artificial Analysis（镜像站）` 一族来源名永远不等于自己的主机名，`temp/d12b_artificial_analysis.py` 补迁 **59 条 / 14 记录**（57 条带镜像站名，镜像属「读取路径」不是「测量身份」→ `source_site` 写_origin_、镜像写进 `notes`）。两轮合计净改动 **145 条条目 / 23 条记录，全部落在 `independent`**（`config` 145 + 新增 `source_site` 145 + `notes` 追加 1），`score` 改动 **0**，记录 940→940、条目 5655→5655。验收同前两轮回向还原逐字节相等（两轮各自反转自校验通过）。**顺带改正 D11 自身的一处文档错误**：§20 把合并主键写成 `(benchmark, config)`，实际 SOP 一直是 `--array-key benchmark config date`（`arena_elo` 为 `sub_benchmark,date`），已补 `date` 并在 §18 新增第 5 点把权威主键字符串钉死；门禁规则 6.2 的分段键同步改成 `BENCH_SUBKEY`（`self_reported`=`config,date`、`independent`=`config,source_site,date`、`arena_elo`=`date`）。代价与收益都量化后如实登记：拆来源后**同一基准跨源并存不再被主键吞掉**，规则 6.2 照出 **3 组新的 Artificial Analysis 双镜像并存**（2 组分数互相矛盾、1 组两镜像读值一致的真重复），精确主键重复组数 14 → **17**，**WARN 基线 703 → 706**；`score_type` 加进主键对残留组消解数实测 **0**，故未扩（B 档另论）。未新增「`config` 含来源名」门禁规则：可行启发式要么误伤要么需手工维护站点黑名单，收益不抵维护成本。**新基线：940 条 / ERROR 0 / WARN 706 / 结构漂移 0 / 精确主键重复 17 组。**
+- 2026-08-30 v2.4（文档口径收尾，无数据改动）：① TL;DR 第 ⑤ 条的合并命令补上 `--on-array replace` 警示（§18 事故的语义根源）并把跑分数组的正确合并口径指向 §18 第 5 点的主键；② 长期挂着的「文中 33 处引用的 14 个 `temp/*.py` 被 `.gitignore` 排除、克隆后指针悬空」经拍板按**只加声明、不动文件**处置 —— 两份文档抬头各写一条「`temp/*.py` 不入库，复核以正文记录的判据与负对照数字为准」，脚本仍留在本机。
