@@ -211,7 +211,12 @@ def check_record(rec):
     bench = rec.get("benchmarks") or {}
     for section in ("self_reported", "independent"):
         for i, item in enumerate(bench.get(section) or []):
-            tag = f"benchmarks.{section}[{i}]({item.get('benchmark', '?')})"
+            tag = f"benchmarks.{section}[{i}]({item.get('benchmark') or item.get('name', '?')})"
+            # 6.1 legacy `name` 写法（2026-08-30 D9 已把存量的 1293 条归一为 benchmark）。
+            #     两套写法并存的代价不是不好看，是**去重失效**：合并主键 (benchmark, config)
+            #     对 legacy 行一律算 ("None","None")，同一次测量会静默并存两份（见指南 §18）。
+            if "benchmark" not in item and "name" in item:
+                warns.append(f"{tag} 缺 benchmark 键、只有 name —— legacy 写法，会被合并主键当成空值导致去重失效")
             score = item.get("score")
             if score is not None and not (0 <= score <= 1):
                 errors.append(f"{tag} score={score} 越界，应为 0–1 小数（百分制须除以 100）")
@@ -226,7 +231,10 @@ def check_record(rec):
             if section == "self_reported" and conf in ("T0", "T0-自报", "T0-自报-转述") and "自报" not in (stype or ""):
                 warns.append(f"{tag} 自报分 source_type={stype!r} 建议体现「自报」属性")
     for i, item in enumerate(bench.get("arena_elo") or []):
-        tag = f"benchmarks.arena_elo[{i}]({item.get('sub_benchmark', '?')})"
+        tag = f"benchmarks.arena_elo[{i}]({item.get('sub_benchmark') or item.get('name', '?')})"
+        # 同 6.1：arena_elo 的 canonical 主键是 sub_benchmark，不是 benchmark
+        if "sub_benchmark" not in item and "name" in item:
+            warns.append(f"{tag} 缺 sub_benchmark 键、只有 name —— legacy 写法，会被合并主键当成空值导致去重失效")
         if item.get("score") is None:
             errors.append(f"{tag} 缺 score")
         if not item.get("date"):

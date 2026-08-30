@@ -235,6 +235,10 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 1. **查不到 = null**，严禁 false/0/空串冒充"没查到"
 2. **不伪造 T0**：直接来自官方源的标 `T0` 或 `T0-自报`；经媒体转述的官方数据标 `T3`，source_type="行业媒体聚合官方发布"
 3. **每个 benchmarks.* 条目必须带 source_url**
+   - **条目键名**：`self_reported` / `independent` 的基准名只写 `benchmark`，`arena_elo` 只写 `sub_benchmark`，
+     **禁止 `name` / `benchmark_name` / `metric_name`**（`arena_elo` 也不得写 `benchmark`）；
+     2026-08-30 的 D9 只把存量的 1293 条 `name` 写法归一（门禁规则 6.1 现对 `name` 报 WARN），另有 57 条老写法未归一，别照抄；
+     合并去重主键分别是 `(benchmark, config)` 与 `(sub_benchmark, date)`，认不出非 canonical 写法，同一次测量会静默并存两份
 4. **跑分 score 一律 0-1 小数**（百分制 ÷100 并在 notes 注明"原值 X 分，÷100 转小数"）；非百分制跑分（如 Elo / Perplexity）按红线置 score=null，原始值保留在 notes
 5. **定价 null 的判定基准 = 厂商有无自有官方 API 刊例价**（2026-08-29 修订）。
    - 厂商自己运营 API 并公布刊例价 → **无论是否开源权重**，按官方定价页正常填，`confidence="T0"`

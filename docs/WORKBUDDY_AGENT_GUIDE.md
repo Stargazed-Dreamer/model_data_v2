@@ -603,15 +603,84 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 > 所以同名同测量的两条会并存。实测 207 条里（多出的那 1 条落进的是空数组，不可能撞）只有 5 条与 HEAD 同名、
 > 2 条名与分都撞
 > （如 `openai:gpt-5-2-2025-12-11-xhigh:base` 的 GPQA Diamond 0.914：T1 直连 epoch.ai 一条 + T3 经 token.app 转述一条）。
-> 两条各自带完整来源，**刻意不自动删**——去重口径属于「同名基准冲突取谁」的拍板项，已进待办队列，
-> 与全库 1291 条 legacy `name` 写法条目的归一化是同一个问题。
+> 两条各自带完整来源，**刻意不自动删**——去重口径属于「同名基准冲突取谁」的拍板项，已进待办队列。
+> 造成本类撞车（主键认不出 legacy 写法）的根因已由 **§19 的 D9 归一化部分消除**（仅 `name` 一种写法，
+> 尚余 57 条），剩下的才是真实测量冲突
+> （D9 改动记录内 6 个数组；全库独立复扫 22 个数组 / 39 组，见 §19 末段）。
 
-> **收尾必做自检**（写进 SOP）：每次 `merge --apply` 或回补之后跑两条，都要看结果而不是只看退出码：
+> **收尾必做自检**（写进 SOP）：每次 `merge --apply` 或回补之后跑三条，都要看结果而不是只看退出码：
 >
 > 1. `python temp/d8_benchmark_loss_forensics.py` —— 要求「缩水条目数 0」；
 >    非 0 时逐条判定是破坏还是**合法 schema 升级**，属后者的登记进 §18 例外清单（现仅 1 条：`nvidia:llama-nemotron-ultra-253b`）；
 > 2. `python temp/d8_check_restore_conflicts.py <写入前的 ref>` —— 把新增条目按「查无同名 / 同名同分 / 同名不同分」分类。
 >    同名同分是纯重复嫌疑，同名不同分是真实的测量冲突；两者都不自动处置，只列清单等拍板。
+> 3. `python temp/d9_residual_scan.py` —— **全库**三个口径：缺 canonical 主键的条目（任何写法）、
+>    精确主键重复、`config` 语义混用造成的近似重复。必须独立跑：前两条命令都只覆盖「本次改动范围」，
+>    而复扫 D9 才发现全库重复是 22 个数组、不是脚本自报的 6 个。
+
+---
+
+### 19. 【D9】`benchmarks` 条目多种写法并存：不是格式问题，是去重失效
+
+**事实（先量后写）**：主库跑分条目一直有四种 schema 并存 ——
+
+| 写法 | 条数 | 分布 | 本步处置 |
+|---|---|---|---|
+| legacy：只有 `name` | **1293** | self_reported 1241 / independent 50 / **arena_elo 2** | ✅ 已归一 |
+| canonical：`benchmark`（arena_elo 为 `sub_benchmark`） | 3799 | 其余记录 | 不动 |
+| `benchmark_name` | 30 | self_reported 29（8 条记录）+ independent 1 | ⬜ **D9 范围外，未处理** |
+| `metric_name` | 23 | self_reported，仅 2 条记录 | ⬜ **同上** |
+| `arena_elo` 误用 `benchmark` | 4 | `google:gemini-exp:1114` 一条记录 | ⬜ **同上** |
+| 同时带 `benchmark` 与 `name` | 8 | self_reported（6 条两键同值、2 条不同值） | ⬜ 主键已在，去重不失效，仅冗余 |
+
+受影响记录 156 条。legacy 行**不带** `mode` 键（`mode` 是 §18 里 nemotron 那 9 条特有的写法），
+所以本步是纯改名，不含语义映射。
+
+> **范围声明（写盘后复查才知道的）**：D9 的拍板原文是「legacy `name` 写法全量归一」，脚本因此按 `"name" in item` 圈定范围，
+> 上表后四行**从未进入范围**，也就一直留着 57 个条目（11 条记录）主键算不出、去重照样失效。
+> 更糟的是**规则 6.1 只查 `name`，对这 57 条完全沉默** —— 「归一后门禁 WARN 没涨」不等于「写法已统一」。
+> 教训：**归一化脚本的匹配条件就是它的盲区**，收尾必须另跑一次「缺 canonical 主键的全部条目」的独立计数，
+> 不能拿脚本自己的命中数当残留数。
+
+**为什么必须修**：两套写法并存的代价不是「不好看」，是**合并与去重静默失效**——
+合并主键 `(benchmark, config)` 对 legacy 行永远算出 `("None","None")`，
+于是同一次测量可以并存两份而不被任何检查发现。D8 回补时撞出来的那 5 条就是这么来的。
+
+**拍板与做法**（2026-08-30 用户拍板「全量机械归一」）：`temp/d9_normalize_benchmark_keys.py`，三条硬约束：
+
+1. **可逆**：按记录下来的位置把主键换回 `name`，结果必须与原始行逐字节相等。
+   这才是本步真正的验收 —— 写盘后又用 `git show HEAD` 反向核对一遍，156 行全部还原成功、值零改动。
+2. **键序保持**：在原位置改名，不追加到末尾，否则 diff 里全是无关抖动。
+3. 逐条前后 `check_record` 不得新增 ERROR；整体重序列化前先证明 940 行序列化风格一致。
+
+**踩到的坑**：一开始按「一律换成 `benchmark`」写，预期 1291 条却数出 1293 ——
+差的 2 条在 `arena_elo`，而 **`arena_elo` 的 canonical 主键是 `sub_benchmark` 不是 `benchmark`**。
+是数量对不上逼出了这个细节；若当时把预期改成 1293 收工，就会静默留下 2 条键名写错、门禁又查不出的记录。
+**归一化脚本的目标键必须按数组分别定义；条数对不上绝不能用「改预期数」来消音。**
+
+**防回归**：门禁新增规则 6.1（WARN）—— 条目缺本数组主键、只有 `name` 即报。
+负对照实测：拿归一前的备份跑门禁得 **WARN 1982 = 689 + 1293**，逐条命中；
+归一后现库仍是 689，说明这条规则只在 legacy 写法存在时才开口，不会长期刷噪声。
+> 规则暂只覆盖 `name`。要扩成「缺 canonical 主键即报」必须**等上表那 57 条也归一之后**再扩——
+> 先扩规则会让 WARN 凭空多 57 条，把 689 这个贯穿 D1–D9 的验收基线冲花，反而看不清后续整改有没有引入新问题。
+> 顺序应当是「先清数据、再收紧检查」，而不是反过来用新增 WARN 给存量数据留档。
+
+**归一化揭出的新问题**：改名后 6 个 `self_reported` 数组出现真实的 `(benchmark, config)` 重复
+—— 此前被 `("None","None")` 掩盖。**同名基准分数冲突取哪一条**是独立拍板项，本次未自动删。
+
+> 这个 6 只是 **D9 脚本改动范围内的数**（脚本只在它改过的 156 条记录里查重）。全库独立复扫是
+> **22 个数组 / 39 组重复键**：35 组同名不同分、4 组同名同分。典型的如同一基准挂着 3 个分数而 `config` 全为 `null`
+> （`alibaba:qwen3-coder-480b-a35b` 的 SWE-bench Verified 0.658/0.67/0.696、
+> `deepseek-…:deepseekmath-7b` 的 MATH 0.362/0.517/0.609）——多数更像**该用 `config`/`date`/`notes` 区分的不同测量**，
+> 而不是「同一次测量记了两遍」。这又是一次「拿脚本自己的命中数当全库残留数」，与上面范围声明是同一个毛病：
+> **查重要求独立跑一遍全库，不能复用归一化脚本的中间结果。**
+> 独立复扫脚本：`temp/d9_residual_scan.py`，一次给三个口径 —— 缺 canonical 主键的条目（57）、
+> 精确主键重复（22 数组 / 39 组）、以及**反方向**的近似重复：**7 组** 同基准、分数一模一样、
+> 只因 `config` 里写了不同来源名而并存（`alibaba:qwen2-5-max` 的 GPQA Diamond 0.587，
+> config 为 `default（benched.ai）` 与 `default（llmbase）`；§18 那对 T1/T3 的 GPQA Diamond 0.914
+> 也是靠 `config` `null` vs `"xhigh"` 错开的）。
+> 也就是说 `config` 现在同时被当成**评测配置**和**来源标注**用，语义不统一时去重两个方向都会失效：
+> 该合的（同一次测量记两家转述）合不上，不该合的（airline / retail 两个子集）看着像重复。
 
 ---
 
@@ -663,4 +732,6 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
   - **本轮战绩**：接手时剩余 26 个模型，4 波共采集 **16 批 19 个模型**（k2-think / sailor-7b-chat / fugaku-llm / eurus-2-7b-prime / seed-diffusion-preview / omni-epic / sahabat-ai / teuken-7b / rwkv-5-7b / rwkv-6-3b / metamath-70b / metamath-7b / index-1-9b / jinshi / brain2qwerty / digivio / rnnsearch-50 / neural-lm / nplm），全部 ERROR=0，合并 0 冲突，每波单独 commit+push。**全库 305/305 批次 submitted，702/702 模型入主库，0 缺失，主库 950 条 ERROR 0。**
 - 2026-08-29 v1.7（用户发起的**全库整改轮**，不采集、只修质量与仓库卫生）：新增 §15（三处文档与代码不符）、§16（schema 转正 3 字段 + `pricing.confidence` 升 ERROR + 规则 4.2 + 文案契约通则）、§17（「存疑」记录隔离档机制）。数据侧 D1-D6 六批整改，脚本一律放 `temp/`（gitignore）且每步带「改动条数必须等于预期」和「逐条前后跑 `check_record`，不得新增 ERROR」两道保险。仓库侧清死脚本、删可再生 HF 缓存、失效名册改名加弃用说明。**主库 950 → 940 条，ERROR 0 / WARN 689 / 结构漂移 0。**
 - 2026-08-29 v1.8（整改轮 D7 + 合并安全取证）：新增 **§16.6**（门禁规则 4.3「无价即无币种」，323 条 `currency` 归一为 null，根因是 prompt.md 字段说明写着「默认 USD」）、**§13 空数组危险标注**、**§18**（本轮最严重发现：`85b9fae` 的补合并用 `--on-array replace` 静默抹掉 81 条记录 / 215 个已采集跑分条目；含三条本可早发现的线索、取证方法、恢复脚本现状）。给 `model_data_tool.py` 的 replace 分支加了**空数组保护**并新增 `--allow-empty-replace` 显式放行位。顺带修 `incoming/models/_m_context.md` 里写死的 `meta.collected_at = "2026-08-25"`（照抄会让全库采集时间戳失真）。
-- 2026-08-30 v1.9（D8 跑分回补执行完毕）：§18 的恢复脚本 `--apply` 已跑，并用 `temp/d8_fix_over_restore.py` 撤掉多回补的 9 条 legacy `self_reported`（该记录的数组变短实为合法 schema 升级，不是损失）；回补后复跑全历史取证又发现 1 条早于恢复基线丢失的 T1 条目（单一基线看不见它），由 `temp/d8_restore_eurus_independent.py` 找回。**累计净回补 82 条记录 / 207 个条目**，全库 `independent>0` 从 22% 升到 33.8%，取证复扫仅剩 1 条已登记的合法升级例外。§18 表格补第三种口径、收尾自检补 `temp/d8_check_restore_conflicts.py`（跨 schema 同名/同分冲突扫描），并开出一个新待拍板项：同名基准冲突取哪一条 + 全库 1291 条 legacy `name` 写法条目是否归一化。
+- 2026-08-30 v1.9（D8 跑分回补执行完毕）：§18 的恢复脚本 `--apply` 已跑，并用 `temp/d8_fix_over_restore.py` 撤掉多回补的 9 条 legacy `self_reported`（该记录的数组变短实为合法 schema 升级，不是损失）；回补后复跑全历史取证又发现 1 条早于恢复基线丢失的 T1 条目（单一基线看不见它），由 `temp/d8_restore_eurus_independent.py` 找回。**累计净回补 82 条记录 / 207 个条目**，全库 `independent>0` 从 22% 升到 33.8%，取证复扫仅剩 1 条已登记的合法升级例外。§18 表格补第三种口径、收尾自检补 `temp/d8_check_restore_conflicts.py`（跨 schema 同名/同分冲突扫描），并开出一个新待拍板项：同名基准冲突取哪一条 + 全库 1293 条 legacy `name` 写法条目是否归一化（该项已由 v2.0 完成）。
+- 2026-08-30 v2.0（整改轮 D9：`benchmarks` 条目 schema 归一）：新增 **§19**。全库 1293 条 legacy `name` 写法条目（self_reported 1241 / independent 50 / arena_elo 2，涉及 156 条记录）机械归一为 canonical 主键 —— 前两个数组换 `benchmark`、`arena_elo` 换 `sub_benchmark`。改完用 `git show HEAD` 反向归一核对，156 行全部逐字节还原、值零改动；门禁新增规则 6.1 防回归，负对照用归一前备份实测 WARN 1982 = 689 + 1293。归一后揭出 6 个 `self_reported` 数组存在真实 `(benchmark, config)` 重复，转入「同名基准分数冲突取哪一条」待拍板队列。**主库 940 条 ERROR 0 / WARN 689 不变。**
+  - **写盘后复查修正两处口径**（都记进 §19）：① D9 按 `"name" in item` 圈范围，所以另有 **57 条（11 条记录）** 用 `benchmark_name` / `metric_name` / `arena_elo` 误用 `benchmark`，主键照样算不出、规则 6.1 照样沉默，**未归一**；② 主键重复只在改动记录内数出 6 个数组，**全库独立复扫是 22 个数组 / 39 组**（35 组同名不同分、4 组同名同分）。教训：归一化脚本的匹配条件就是它的盲区，残留数与冲突数必须独立跑全库。

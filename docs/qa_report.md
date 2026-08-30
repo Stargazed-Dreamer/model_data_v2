@@ -5,7 +5,7 @@
 > 依据：`multi_agent_plan.md` §5「阶段 3 · 质检与验收」、`COLLECTION_PLAN_v2.md` §6 验收标准、`WORKBUDDY_AGENT_GUIDE.md`
 > 统计口径脚本：`scripts/qa_stats.py`（填充率）、`scripts/diff_incoming_db.py`（差异/冲突）
 
-> **【同日补记 2026-08-29 · 整改轮 D1–D7】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意六处时效性：
+> **【同日补记 2026-08-29 · 整改轮 D1–D7】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意七处时效性：
 > 1. §1 的 **ERROR 0 是在旧门禁下取得的**——旧门禁不查 `pricing.confidence` 枚举、不查 `knowledge_cutoff` 格式、
 >    不查 `source_type` 与价格值是否自相矛盾，也不查「无价却填了币种」。四项补齐后，当前主库仍为
 >    **ERROR 0 / WARN 689 / 结构漂移 0**。
@@ -24,6 +24,16 @@
 > 6. **`pricing.currency` 口径已拍板并归一（D7）**：无价即无币种，六价键全 null 的 323 条已统一为 `null`，
 >    门禁新增规则 4.3 防回归；§6.2 里「currency 口径未定」一行已结。根因是 `prompt.md` 原文写着
 >    「`currency` 默认 `"USD"`」，该字段说明与三处采集侧文档同日一并改正。
+> 7. **`benchmarks` 条目写法部分归一（D9）**：主库原本四种 schema 并存 —— legacy 只有 `name` 的条目
+>    **1293 条**（self_reported 1241 / independent 50 / arena_elo 2，涉及 156 条记录）。
+>    这不是格式问题：合并去重主键对 legacy 行永远算出 `("None","None")`，同一次测量会静默并存两份
+>    （D8 回补撞出的 5 条同名冲突即由此来）。这 1293 条已全部机械改名为 canonical 主键
+>    （前两个数组 → `benchmark`，**`arena_elo` → `sub_benchmark`**），改后反向核对 156 行逐字节可还原、值零改动，
+>    门禁新增规则 6.1（WARN）防回归，记录数与 **ERROR 0 / WARN 689** 均不变。
+>    **但 D9 只覆盖 `name` 一种写法**：另有 **57 条（11 条记录）** 用 `benchmark_name` / `metric_name` /
+>    `arena_elo` 误用 `benchmark`，主键照样算不出、规则 6.1 也查不到，**仍未处理**。
+>    归一后暴露的同名主键重复也**不是 6 而是全库 22 个数组 / 39 组**（35 组同名不同分、4 组同名同分），
+>    属「同名基准分数冲突取哪一条」，**仍是待拍板项**（见 §6.2）。
 
 ---
 
@@ -212,8 +222,14 @@ python scripts/model_data_tool.py merge \
    > 回补后 `independent>0` 全库 22% → **33.8%**。
    > **新开待拍板项**：主键 `(benchmark, config)` 认不出 legacy `name` 写法，回补后 207 条里有
    > 2 条与既有条目同名同分、3 条同名不同分（例如 `openai:gpt-5-2-2025-12-11-xhigh:base` 的
-   > GPQA Diamond 0.914 同时存在 T1 直连与 T3 转述两条）。两条都带完整来源，未自动删，
-   > 需与「全库 1291 条 legacy `name` 条目是否归一化」一并定口径。
+   > GPQA Diamond 0.914 同时存在 T1 直连与 T3 转述两条）。两条都带完整来源，未自动删。
+   > 其根因（全库 1293 条 legacy `name` 写法条目、主键认不出）**由 D9 部分消除**（仅覆盖 `name` 一种写法，
+   > 另有 57 条 `benchmark_name` / `metric_name` / `arena_elo` 误用 `benchmark` 未处理），见 banner 第 7 点；
+   > 归一后全库精确主键重复为 **22 个数组 / 39 组**（D9 改动记录内 6 个）。「同名基准分数冲突取哪一条」单独拍板。
+   > 反方向的失效也存在：上述 GPQA Diamond 两条如今靠 `config`（一条 `null`、一条 `"xhigh"`）错开，
+   > 精确主键**不再报重复**——`config` 留空与填值不等价时，去重会漏；实测全库另有 **7 组** 同基准同分、
+   > 只因 `config` 写了不同来源名而并存（如 `alibaba:qwen2-5-max` 的 GPQA Diamond 0.587 ×2，
+   > config 分别是 `default（benched.ai）` 与 `default（llmbase）`）。三类口径都可用 `temp/d9_residual_scan.py` 复跑。
 
 ### 3.3 占位符 notes 的口径修正
 
@@ -331,7 +347,10 @@ technology-innovation-institute:falcon-arabic
 | 定价矛盾待核实 3 条 | `muse-spark-1-1` / `muse-spark-1-2` / `mai-code-1-flash`：标签称无官方价、值却挂着 UGC 转述价 | 需回厂商官方价目页逐条核实后定方向（属重采范畴，待拍板） |
 | ~~采集人标 `存疑` 的 10 条~~ **已处置（D6）** | `meta.verification_status == "存疑"` 逐条复核均查无立得住的依据，经用户拍板**全部移出主库**（950 → 940），原样存 `docs/unconfirmed_models.jsonl`，4 个对应采集文件移入 `incoming/models/_quarantine/` | 已结。这 10 个 model_id 不再计入花名册完成率（692/702 + 隔离 10），**不得当「漏采」重派**；重新入库须先拿到官方证据，流程见 `WORKBUDDY_AGENT_GUIDE.md` §17.5 |
 | ~~`pricing.currency` 口径未定~~ **已拍板并归一（D7）** | 六价键全 null 的 645 条里 USD 323 / null 318 / 连 unit 也 null 4，接近对半。**根因是 `prompt.md` 字段说明原文写「`currency` 默认 `"USD"`」**——照文档写就会产出「有币种无价格」的记录 | 已按「无价即无币种」把 323 条归一为 null，门禁新增规则 4.3 防回归，采集侧三处文档同日改正。`unit` 保持 `per_million_tokens` 不动（量纲声明，不携带「已核实」语义） |
-| ✅ **本轮补合并造成的跑分条目丢失（D8 已回补结案）** | `85b9fae` 用 `--on-array replace` 把 81 条记录 / 215 个**已采集**跑分条目覆盖成空（independent 177 / arena_elo 29 / self_reported 9），丢的是前几轮人工成果而非骨架填充值 | 见 §3.2 第 4 点与指南 §18。工具已加空数组保护（默认不覆盖，需 `--allow-empty-replace` 显式放行）并经 `temp/d8_verify_empty_array_guard.py` 验证；恢复脚本 `temp/d8_restore_benchmarks.py --apply` 已执行，再由 `temp/d8_fix_over_restore.py` 撤回 9 条属合法升级的 legacy `self_reported`、`temp/d8_restore_eurus_independent.py` 找回 1 条早于恢复基线丢失的条目，**累计净回补 82 条 / 207 个条目**，复检 940 条 ERROR 0。遗留项转为「同名基准冲突与 1291 条 legacy `name` 条目归一化口径」，由 `temp/d8_check_restore_conflicts.py` 出清单 |
+| ✅ **本轮补合并造成的跑分条目丢失（D8 已回补结案）** | `85b9fae` 用 `--on-array replace` 把 81 条记录 / 215 个**已采集**跑分条目覆盖成空（independent 177 / arena_elo 29 / self_reported 9），丢的是前几轮人工成果而非骨架填充值 | 见 §3.2 第 4 点与指南 §18。工具已加空数组保护（默认不覆盖，需 `--allow-empty-replace` 显式放行）并经 `temp/d8_verify_empty_array_guard.py` 验证；恢复脚本 `temp/d8_restore_benchmarks.py --apply` 已执行，再由 `temp/d8_fix_over_restore.py` 撤回 9 条属合法升级的 legacy `self_reported`、`temp/d8_restore_eurus_independent.py` 找回 1 条早于恢复基线丢失的条目，**累计净回补 82 条 / 207 个条目**，复检 940 条 ERROR 0。遗留项转为「同名基准冲突与 1293 条 legacy `name` 条目归一化口径」（后者已由 D9 部分完成，见下两行；全库清单改用 `temp/d9_residual_scan.py`） |
+| ✅ **`benchmarks` 条目 schema 归一（D9，部分完成）** | legacy 只有 `name` 的条目 1293 条（self_reported 1241 / independent 50 / arena_elo 2，涉及 156 条记录）。合并去重主键对这类行永远算出 `("None","None")`，同一次测量会静默并存两份 —— 不是格式问题，是**去重失效** | 这 1293 条已全部改名为 canonical 主键（前两个数组 `benchmark`、`arena_elo` 用 `sub_benchmark`）；`temp/d9_normalize_benchmark_keys.py` 以「反向改名必须与原文逐字节相等」为验收，写盘后再对 `git show HEAD` 复核 156 行全部可还原、值零改动；门禁新增规则 6.1（WARN），负对照用归一前备份实测 WARN 1982 = 689 + 1293。详见指南 §19 |
+| 🔴 **剩余 3 种非 canonical 写法未归一（57 条 / 11 记录，待拍板）** | D9 按 `"name" in item` 圈范围，漏掉 `benchmark_name` 30 条（8 记录）、`metric_name` 23 条（2 记录）、`arena_elo` 误用 `benchmark` 4 条（1 记录）；另有 8 条同时带 `benchmark` 与 `name`（6 条同值、2 条不同值）。**规则 6.1 只看 `name`，对这 57 条完全沉默** | 主键照样算不出、去重照样失效，性质与 D9 相同。`benchmark_name`→`benchmark`、`arena_elo` 的 `benchmark`→`sub_benchmark` 可机械改名；`metric_name` 语义上是「指标名」，是否等同于基准名需逐条看一眼。**建议先归一数据、再把规则 6.1 扩成「缺 canonical 主键即报」**（顺序反了会凭空多 57 条 WARN，冲花 689 基线）。清单：`temp/d9_residual_scan.py` |
+| 🔴 **同名基准分数冲突（全库 22 数组 / 39 组，待拍板）** | 精确主键 `(benchmark, config)` 重复：同名不同分 35 组、同名同分 4 组。典型是同一基准挂 3 个分数而 `config` 全 `null`（`alibaba:qwen3-coder-480b-a35b` SWE-bench Verified 0.658/0.67/0.696）。反向还有 **7 组** 同基准同分、只因 `config` 写了不同来源名而并存（`config` 被同时当评测配置和来源标注用） | 条目均带完整来源，**未自动删**。需定口径：取高 confidence / 按 `score_type`、`config` 细分保留 / 标 `conflict` 待复测，且要顺带定 `config` 的语义边界。清单：`temp/d9_residual_scan.py`（D9 改动记录内的 6 个数组可用 `temp/d8_check_restore_conflicts.py` 对照） |
 | 主库 positioning 空值 | 补合并后花名册填充率 89.5%，剩余多属确无适用标签 | 抽样复核即可 |
 | 可视化发布 | `viz/viz_index.html` 需按最终库重新生成 | 合并定版后执行 |
 | 交付 push | 主库已定版待推 | 用 `C:\Program Files\Git\cmd\git`（system credential.helper=manager，静默通过） |
