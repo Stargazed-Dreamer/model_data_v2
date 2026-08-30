@@ -163,7 +163,7 @@ model_data_tool.py merge \
   --on-both conflict \
   --on-array union_by_key \
   --array-key benchmark config date \
-  --array-key-override benchmarks.arena_elo:sub_benchmark,date \
+  --array-key-override benchmarks.arena_elo:sub_benchmark,date benchmarks.independent:benchmark,config,source_site,date \
   --on-schema upgrade
 ```
 

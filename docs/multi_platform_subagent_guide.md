@@ -238,12 +238,13 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
    - **条目键名**：`self_reported` / `independent` 的基准名只写 `benchmark`，`arena_elo` 只写 `sub_benchmark`，
      **禁止 `name` / `benchmark_name` / `metric_name`**（`arena_elo` 也不得写 `benchmark`）；
      2026-08-30 的 D9 + D10 已把存量的 1293 + 57 条非 canonical 写法全部归一（门禁规则 6.1 现对任何缺 canonical 主键的条目报 WARN）；
-     合并去重主键分别是 `(benchmark, config)` 与 `(sub_benchmark, date)`，认不出非 canonical 写法，同一次测量会静默并存两份
+     合并去重主键分别是 `(benchmark, config, date)` 与 `(sub_benchmark, date)`，认不出非 canonical 写法，同一次测量会静默并存两份
    - **主键必须能唯一标识一次测量**：同一基准并存多个测量时（shot 数 / prompting 方法 / 脚手架与 turn 预算 /
      单次 vs 投票 / pass@k / 一条记录里的多个发布变体），**区别必须写进 `config`**，全留 `null` 就会撞车、合并时无从裁决；
      同一基准的**子任务**各成一条并把子任务写进 `benchmark` 名（如 `Russian SuperGLUE (RSG) – MuSeRC`）。
-     **`config` 里禁止写来源名**（如 `default（benched.ai）`）—— 来源是 `source_url` / `source_type` 的活。
-     门禁规则 6.2 会对「同 `(benchmark, config)` 挂着多个不同分数」报 WARN（口径见 `WORKBUDDY_AGENT_GUIDE.md` §20）
+     **`config` 里禁止写来源名**（如 `default（benched.ai）`）—— 来源站填 `source_site`（仅 `independent` 用，
+     `independent` 的主键是 `(benchmark, config, source_site, date)`；`self_reported` 不填，来源由 `source_url` / `source_type` 表达）。
+     门禁规则 6.2 会对「同主键挂着多个不同分数」报 WARN（口径见 `WORKBUDDY_AGENT_GUIDE.md` §20、§21）
 4. **跑分 score 一律 0-1 小数**（百分制 ÷100 并在 notes 注明"原值 X 分，÷100 转小数"）；非百分制跑分（如 Elo / Perplexity）按红线置 score=null，原始值保留在 notes
 5. **定价 null 的判定基准 = 厂商有无自有官方 API 刊例价**（2026-08-29 修订）。
    - 厂商自己运营 API 并公布刊例价 → **无论是否开源权重**，按官方定价页正常填，`confidence="T0"`
@@ -290,7 +291,7 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 - 文件命名：`<batch_id>__<sanitized_model_id>.jsonl`，含 batch_id 前缀
 - 已通过单文件门禁 ERROR=0（合并 agent 仍需全库门禁复核）
 - 认领表 `<REPO>/docs/batch_claim_ledger.jsonl` 中 status=`submitted` 的批次就是要合并的；status=`failed` 的需要重跑
-- 合并工具：`python <REPO>/scripts/model_data_tool.py merge --file <REPO>/model_data_v2.jsonl --incoming <file> --on-null take_source --on-both conflict --on-both-override meta.collected_at:source_wins --on-array union_by_key --array-key benchmark config date --array-key-override benchmarks.arena_elo:sub_benchmark,date --on-schema upgrade --apply`
+- 合并工具：`python <REPO>/scripts/model_data_tool.py merge --file <REPO>/model_data_v2.jsonl --incoming <file> --on-null take_source --on-both conflict --on-both-override meta.collected_at:source_wins --on-array union_by_key --array-key benchmark config date --array-key-override benchmarks.arena_elo:sub_benchmark,date benchmarks.independent:benchmark,config,source_site,date --on-schema upgrade --apply`
 - 合并顺序：按 batch_id 字母序，同 batch_id 内按文件名字母序
 - 全库门禁：`python <REPO>/scripts/validate_model_data.py <REPO>/model_data_v2.jsonl --report <path.md>`
 - 错漏重跑：对 status=`failed` 或合并后 fill_score 仍极低的模型，重新派发 subagent 采集

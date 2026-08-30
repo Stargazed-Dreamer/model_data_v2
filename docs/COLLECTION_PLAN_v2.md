@@ -84,7 +84,7 @@ python model_data_tool.py merge \
   --on-null take_source --on-both conflict \
   --on-array union_by_key \
   --array-key benchmark config date \
-  --array-key-override benchmarks.arena_elo:sub_benchmark,date \
+  --array-key-override benchmarks.arena_elo:sub_benchmark,date benchmarks.independent:benchmark,config,source_site,date \
   --on-schema upgrade --apply
 
 # 批量合并某厂商目录下所有单模型文件（建议按 vendor 分批，便于回滚）
@@ -92,7 +92,7 @@ for f in incoming/models/<vendor>/*.jsonl; do
   python model_data_tool.py merge --file model_data_v2.jsonl --incoming "$f" \
     --on-null take_source --on-both conflict \
     --on-array union_by_key --array-key benchmark config date \
-    --array-key-override benchmarks.arena_elo:sub_benchmark,date \
+    --array-key-override benchmarks.arena_elo:sub_benchmark,date benchmarks.independent:benchmark,config,source_site,date \
     --on-schema upgrade --apply
 done
 ```

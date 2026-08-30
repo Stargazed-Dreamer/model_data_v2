@@ -36,7 +36,8 @@ strat = MergeStrategy(
     recency_field="meta.collected_at",            # 依据这条日期判定"谁更新"
     on_array=ArrayRule.UNION_BY_KEY,              # 数组按主键合并
     array_key_default=["benchmark","config","date"],
-    array_key_overrides={"benchmarks.arena_elo": ["sub_benchmark","date"]},
+    array_key_overrides={"benchmarks.arena_elo": ["sub_benchmark","date"],
+                         "benchmarks.independent": ["benchmark","config","source_site","date"]},
     on_schema=SchemaRule.UPGRADE,                 # schema 较旧则升级并规范化结构
 )
 incoming = ModelDataStore("agent_b_output.jsonl").records_as_list()

@@ -444,13 +444,18 @@
 - `score`：数字或字符串，优先数字，0-1 小数；若百分制需在 `notes` 说明。  
 - `score_type`：字符串，如 `"accuracy"`、`"pass@1"`、`"其他"`。  
 - `config`：字符串，如 `"0-shot"`、`"few-shot"`、`"CoT"`、`"default"`、`"自定义 prompt"`。
-  **`benchmark` + `config` 是合并去重主键**，两者的组合必须足以唯一标识一次测量：
+  **合并去重主键**是 `benchmark` + `config` + `date`（`independent` 再加 `source_site`），
+  这组键必须足以唯一标识一次测量：
   同一基准并存多个测量时（shot 数不同 / prompting 方法不同 / 脚手架或 turn 预算不同 / 单次 vs 投票 / pass@k 不同 /
   一条记录里有多个发布变体），**必须把区别写进 `config`**，留空会撞车。
-  **禁止把来源名写进 `config`**（如 `"default（benched.ai）"`）—— 来源是 `source_url` / `source_type` 的职责。
+  **禁止把来源名写进 `config`**（如 `"default（benched.ai）"`）—— 来源站用 `source_site` 记。
 - `date`：评测发布日期或快照日期。  
 - `source_url`：来源链接。  
 - `source_type`：来源类型，如 `"官方技术报告"`、`"独立评测平台"`。  
+- `source_site`：**仅 `independent` 使用**。字符串，记这条独立评测出自哪个站，如 `"evals.report"`、
+  `"Artificial Analysis"`、`"benched.ai"`。同一基准被多个站各测一次是本表的正常形态，
+  `source_site` 就是区分这些测量的主键段 —— 少了它，不同站的分数会被当成「同一次测量记了两遍」而被合并吃掉。
+  `self_reported` 不填（来源就是厂商自己，由 `source_type` / `source_url` 表达）。
 - `confidence`：可信度等级，可选 `"T0"`、`"T0-自报"`、`"T0-自报-转述"`、`"T1"`、`"T2"`、`"T3"`、`"T4"`（新增 `T0-自报-转述` 见决策 2）。  
 - `notes`：补充说明。  
 - `independent` 对象额外包含 `gap_to_self_reported`：独立评测分 - 厂商自报分，用于污染/调优检测。
@@ -464,7 +469,7 @@
 
 **键名规则（硬性）**：`self_reported` / `independent` 条目的基准名字段必须写 `benchmark`；`arena_elo` 条目必须写 `sub_benchmark`；**禁止 `name` / `benchmark_name` / `metric_name` 等任何其它写法**（`arena_elo` 也不得写 `benchmark`）。  
 - 例：~~`{"name": "GPQA Diamond", "score": 0.82}`~~ → `{"benchmark": "GPQA Diamond", "score": 0.82}`（2026-08-30 分两轮把存量的 1293 + 57 条非 canonical 写法全部归一，门禁规则 6.1 现对**任何**缺 canonical 主键的条目报 WARN）。  
-- 代价不是格式问题而是去重失效：合并去重主键 `self_reported` / `independent` 为 `(benchmark, config)`、`arena_elo` 为 `(sub_benchmark, date)`，非 canonical 行读成空键，同一次测量会静默并存两份。  
+- 代价不是格式问题而是去重失效：合并去重主键 `self_reported` 为 `(benchmark, config, date)`、`independent` 为 `(benchmark, config, source_site, date)`、`arena_elo` 为 `(sub_benchmark, date)`，非 canonical 行读成空键，同一次测量会静默并存两份。  
 
 **注意**：如果某个模型没有某类跑分，对应数组可为空 `[]`；`arena_elo` 可为空数组 `[]`（无子榜数据时）或 `null`（完全无 Arena 数据时）。
 

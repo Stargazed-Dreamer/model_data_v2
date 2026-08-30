@@ -619,9 +619,12 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 > 3. `python temp/d9_residual_scan.py` —— **全库**三个口径：缺 canonical 主键的条目（任何写法）、
 >    精确主键重复、`config` 语义混用造成的近似重复。必须独立跑：前两条命令都只覆盖「本次改动范围」，
 >    而复扫 D9 才发现全库重复是 22 个数组、不是脚本自报的 6 个。
->    **D11 之后加一条判据**：精确主键重复组数必须**等于 14**（E 档待复测清单，见 §20）。
->    多出任何一组，都说明这次改动把两个不同测量压到了同一个 `(benchmark, config)` 上——合并时无法裁决取哪条。
-> 4. 门禁 `WARN` 现值应为 **703**（= D1–D10 的 689 + 规则 6.2 的 14）。规则 6.2 命中数一涨，就是新增了主键撞车。
+>    **D11 之后加一条判据**：精确主键重复组数必须**等于 17**（14 组 E 档 + 3 组 AA 双镜像分歧，见 §20、§21）。
+>    多出任何一组，都说明这次改动把两个不同测量压到了同一个合并主键上——合并时无法裁决取哪条。
+> 4. 门禁 `WARN` 现值应为 **706**（= D1–D10 的 689 + 规则 6.2 的 17）。规则 6.2 命中数一涨，就是新增了主键撞车。
+> 5. **合并主键的唯一权威写法**（三处文档曾各写一份、D11 那份还漏了 `date`，故在此收口）：
+>    `--array-key benchmark config date` + `--array-key-override benchmarks.arena_elo:sub_benchmark,date benchmarks.independent:benchmark,config,source_site,date`。
+>    少写 `source_site` 会让 `independent` 里不同第三方站的同名基准互相覆盖（D12 前会吃掉 33 行）。
 
 ---
 
@@ -681,7 +684,7 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 **规则 6.1 的唯一已知豁免**：`docs/unconfirmed_models.jsonl`（D6 隔离档）仍留着 **15 条** legacy `name` 条目，
 拿门禁跑这个文件会照样报出来（该文件现为 ERROR 0 / WARN 23 = 15 + 8 条规则 4.3 的 currency）。
 **这是刻意的**：归档的作用是「与搬出主库时逐字节一致」，归一它就不是同一份证据了（见 §17.1）。
-689 这个基线只统计主库，隔离档不计入（**D11 起主库基线为 703**，见 §20）；但**回流主库前必须先过归一脚本**，否则等于把 D9/D10 已结案的问题重新引进来。
+689 这个基线只统计主库，隔离档不计入（主库基线 **D11 起 703、D12 起 706**，见 §20、§21）；但**回流主库前必须先过归一脚本**，否则等于把 D9/D10 已结案的问题重新引进来。
 
 **归一化揭出的新问题**：改名后 6 个 `self_reported` 数组出现真实的 `(benchmark, config)` 重复
 —— 此前被 `("None","None")` 掩盖。**同名基准分数冲突取哪一条**是独立拍板项，本次未自动删。
@@ -745,16 +748,24 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 1. `config` 装**影响分数可比性的评测设置**，允许三类：① 常规评测配置（shot 数 / prompting 方法 / 脚手架与 turn 预算 / 解码与投票策略）；
    ② **被测变体标识**——仅用于「一条记录聚合了多个发布变体」的情形（如 SimPO 那条同时挂 Llama-3-8B v0.1 / v0.2 / gemma-2-9b-it）；
    ③ **指标口径标识**——仅用于 `score_type` 已写明但主键不含它的场合。
-2. **禁止把来源名写进 `config`**（那是 `source_url` / `source_type` 的活）。存量违反的 **7 组**近似重复
-   就是这条规则的产物，尚未处置，见 qa_report 待拍板项。
-3. 判据是「`benchmark` + `config` + `score_type` + `date` 合起来足以唯一标识一次测量」；不够就补，别留着让去重失效。
+2. **禁止把来源名写进 `config`** —— 来源站的正身是 `source_site`（D12 新增，见 §21）。
+   D11 写下这条时只有一句「来源是 `source_url` / `source_type` 的活」，等于把来源名赶到无处可放，
+   而 `independent` 数组确实需要按来源区分测量 —— 存量的 **88 个条目 / 19 条记录**已在 D12 迁出。
+3. 判据是「`benchmark` + `config` + `date`（`independent` 再加 `source_site`；必要时靠 `score_type` 或基准名承载口径）
+   合起来足以唯一标识一次测量」；不够就补，别留着让去重失效。
 
-> **没有顺手改合并主键**是有意为之：把 `array_key_default` 扩成 `(benchmark, score_type, config)` 才是 B 档的根治办法，
-> 但那会改全局 merge 语义、影响此后所有批次的去重行为，属独立拍板项（D12）。B 档先用「`config` 追加口径标识」顶住，
+> **没有顺手改合并主键**是当时有意为之：把 `array_key_default` 扩成 `(benchmark, score_type, config)` 才是 B 档的根治办法，
+> 但那会改全局 merge 语义、影响此后所有批次的去重行为，属独立拍板项。B 档先用「`config` 追加口径标识」顶住，
 > 代价是 `config` 里有 5 组信息与 `score_type` 冗余。
+> **后记（D12 同日）**：实测「主键加 `score_type`」对残留 14 组的消解数是 **0**，这条已按实测关掉、不再拍板；
+> 真正扩了主键的是 `independent` 的 `source_site`（同一问题在 88 个条目上的另一种表现，见 §21）。
 
-**防回归**：门禁新增规则 6.2（WARN）—— 同 `(benchmark, config)`（`arena_elo` 为 `(sub_benchmark, date)`）
-挂着 ≥2 条时，分数不同报「去重无从裁决」、分数也相同报「同一次测量记了两遍」。
+**防回归**：门禁新增规则 6.2（WARN）—— 同一**合并去重主键**（`self_reported` 为 `(benchmark, config, date)`，
+`independent` 为 `(benchmark, config, source_site, date)`，`arena_elo` 为 `(sub_benchmark, date)`，
+与 §18 的 SOP 合并命令逐段一致）挂着 ≥2 条时，分数不同报「去重无从裁决」、分数也相同报「同一次测量记了两遍」。
+> D11 当时把这段主键记成只含 `(benchmark, config)`，漏了 SOP 里的 `date`。对现存这 14 组无影响
+> （它们全在 `self_reported` 且成员一律没有 `date`），但若哪天撞上的两条日期不同，粗键就会误报成「合并会丢」，
+> 而实际合并根本不会碰它们。D12 已把 `BENCH_SUBKEY` 与 SOP 对齐。
 沿用 §19 的顺序：**先清数据（A/B/C/D 25 组）再收紧检查**，规则只对剩下 14 组 E 档开口。
 三份备份上的负对照（`其他` = D1–D10 那 689 条基线，三段全程不动，可用来确认新规则没有误伤）：
 
@@ -762,10 +773,74 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 |---|---|---|---|---|
 | D9 改前 `d9bak` | 1350 | 28 | 689 | **2067** |
 | D11 改前 `d11bak` | 0 | 39 | 689 | **728** |
-| 现库 | 0 | 14 | 689 | **703** ← 新基线 |
+| D11 改后 | 0 | 14 | 689 | **703** |
+| D12 改后（现库） | 0 | 17 | 689 | **706** ← 新基线 |
 
 > **D11 之后的 WARN 验收基线是 703，不再是 689。** 其中 14 条就是 E 档待复测清单本身，
 > 由门禁自动维护——不再往数据里写 `conflict` 标记键，清单可随改随生，不会烂在数据里。
+> （**同日 D12b 把基线推到 706 / 17 组**，多出的 3 组见 §21，性质与 E 档相同。）
+
+---
+
+### 21. 【D12 + D12b】`config` 里塞来源名不是脏数据，是主键缺了一段
+
+D11 收尾时留了个待拍板项：「**7 组**近似重复 —— 同基准、分数一模一样，只因 `config` 写了不同来源名而并存，
+剥掉来源名即可合并」。本轮先量了这个「7 组」。
+
+**量的结果推翻了这个说法**（`temp/d12_source_in_config.py`，只读）。判据不能用「括号里有字母就算来源名」——
+那样命中 314 条目 / 79 记录，全是误伤（`default`、`pass@1`、`Avg@64 + selector` 都是合法配置）。
+改用**自证式判定**（括号里的内容必须能在**本条目自己的** `source_url` 主机名 / `source_type` 里找到）后：
+
+| 口径 | 数 |
+|---|---|
+| `config` 写了来源名的条目 | **92 个 / 21 条记录**（不是 7 组） |
+| 剥掉来源名后撞主键的组 | 33（6 组分数全同 + 27 组分数有差） |
+| 按真实 SOP 主键会静默丢掉的行 | **33 行**（按 D11 记的粗键是 51 行；27 组里有 18 组靠 `date` 不同才侥幸不撞） |
+
+而那 27 组「分数有差」根本不是冲突：`anthropic:claude-3-7-sonnet` 的 GPQA Diamond 挂着
+0.6604 / 0.848 / 0.785，分别来自独立评测平台、serenitiesai、evals.report —— **不同第三方站各测一次，
+正是 `independent` 数组存在的意义**。所以「剥掉来源名再合并」方向是反的，它会删掉多来源交叉验证本身。
+
+**真问题**：一次独立测量的身份天然含「谁测的」，而 `(benchmark, config, date)` 里没有这一段。
+采集者往 `config` 塞站点名，是因为没有别的键能放 —— D11 定下「禁止把来源名写进 `config`」却只给了
+「来源交给 `source_url` / `source_type`」，那两个字段是**逐条目**的、不参与主键，等于把信息赶到无法承载身份的地方。
+
+**处置（用户拍板 = 扩主键 + 新增字段）**：
+
+1. 跑分条目新增 **`source_site`**（仅 `independent` 用；`self_reported` 的来源就是厂商自己，无需此字段）。
+2. `benchmarks.independent` 的合并主键扩为 **`(benchmark, config, source_site, date)`**，
+   三处文档的 SOP 合并命令与 `model_data_tool` 示例同日跟改（少写这段会让不同站的同名基准互相覆盖）。
+3. 门禁 `BENCH_SUBKEY` 同步，并顺手修掉 D11 记错的主键（漏了 `date`，见 §20 的更正块）。
+4. **D12 迁 88 条 / 19 记录**：`default（serenitiesai）` → `config="default"` + `source_site="serenitiesai"`；
+   计划表逐条带 `(期望基准名, 期望分数)` 自校验位置，`temp/d12_plan.txt`。
+5. **D12b 补迁 59 条 / 14 记录**：`Artificial Analysis（llm-registry）` 这一族。
+   它们**必然过不了自证式判据** —— `source_url` 一律指向 `artificialanalysis.ai`，括号里写的是**实际读到的镜像站**
+   （AA 的站在本机被 Cloudflare 拦）。同一毛病，另一半。**镜像站是读取路径、不是测量身份**，
+   所以 `source_site` 记出处 `Artificial Analysis`、`config` 归 `default`、镜像站落 `notes`。
+   实测 57 条带镜像名的条目里 **56 条的 notes 早就写了镜像站**，只有 1 条需要补写 —— 采集质量在这件事上帮了大忙。
+   同轮审计排掉 1 条：`nvidia:nemotron-3-nano-30b-a3b` 的
+   `config="Artificial Analysis Intelligence Index v3.0, post-trained variant"` 只是**以站名开头的真实评测描述**，
+   拍平成 `default` 就是销毁信息 → 留在原地，判据是「括号外必须只剩站点名本身」。
+6. 收尾又扫了一遍「整个 config 恰好等于某个主机名」的条目（防第三种形态），
+   命中 5 条：2 条已在 D12b 计划内、3 条是本机比对把 CJK 剥成 `cursor` 造成的误报。**无第三种形态。**
+
+**代价（已量化并接受）**：`anthropic:claude-opus-4-5:20251101` 有 **3 组**「同一次 AA 测量被两个镜像各抄一次」
+（GPQA Diamond 0.81 vs 0.87、MMLU-Pro 0.889 vs 0.9 是**两份互相矛盾的转写**；SWE-bench Verified 0.809 vs 0.809
+是**两条镜像读值一致的真重复**）。
+`source_site` 记出处后这三组主键相同 → 规则 6.2 报出来，**同主键组 14 → 17、WARN 703 → 706**。
+分歧的 2 组本该由复测定谁对；同分那组删任一条都不丢分数，但会少一条独立读取路径的印证，故**一并留给复测、不手动裁决**。
+靠把镜像名塞进主键来「避开冲突」只是把同一个病往下挪一层。**新的验收基线：WARN 706、同主键组 17。**
+
+> **没有为「`config` 又被人塞来源名」加门禁规则**。想加过（判据：剥掉括号后同键、raw config 却不同），
+> 但合法配置里本来就带括号（`HELM classic（355 条评测样本）`、`GPT-5.6 Sol (max)`、
+> `Artificial Analysis Intelligence Index v3.0, post-trained variant`），任何「括号即来源名」的启发式
+> 都会误伤这些；换成站点黑名单则要靠人维护清单。现在 `source_site` 已是主键的一段，
+> 新数据真撞车时 6.2 会自己开口，这条检查的边际价值不如它的误报成本。
+
+**验收**：记录 940 / 跑分条目 5655 全程不变；与 `git HEAD` 逐条比对，字段级差异只有
+`config` 145 处 + `source_site` 145 处新增 + `notes` 1 处追加，**`score` 改动 0**；
+`source_site` 只出现在 `independent`（145 条）；两步迁移各自断言「反转后与改前逐字节相同」。
+脚本：`temp/d12_add_source_site.py`、`temp/d12b_artificial_analysis.py`（都支持 dry-run 出计划表）。
 
 ---
 
@@ -823,3 +898,4 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 - 2026-08-30 v2.1（整改轮 D10：把 D9 漏掉的三种写法也归一，并按顺序扩规则 6.1）：`temp/d10_normalize_benchmark_keys2.py` 归一 **57 条 / 11 记录**（`benchmark_name` 30、`metric_name` 23、`arena_elo` 误用 `benchmark` 4），验收同 D9（逐条反向还原逐字节相等、同时锁记录数与条目数、逐条 `check_record` 不新增 ERROR），另加「改前/改后主键重复数组数」对照（22 → 22，未凭空造新冲突）。数据清干净后才把**规则 6.1 扩成「缺 canonical 主键即报」**，负对照用两个改前备份实测 **746 = 689 + 57**（D10 前）与 **2039 = 689 + 1293 + 57**（D9 前），现库回到 **940 条 ERROR 0 / WARN 689、缺 canonical 主键 0**。剩 8 条同时带 `benchmark` 与 `name` 的冗余条目主键已在、不影响去重，未动。
   - **另记**：`docs/unconfirmed_models.jsonl`（D6 隔离档）里 15 条 legacy `name` 条目**刻意不归一**（归档价值在与搬出时逐字节一致），登记为规则 6.1 的唯一已知豁免，见 §19 末与 §17.1。
 - 2026-08-30 v2.2（整改轮 D11：39 组主键撞车结案）：新增 **§20**。先量化再定口径，推翻了「两个来源分数打架」的设想 —— **38/39 组内 `confidence` 全同**（「取高 confidence」只能裁决 1 组、`date` 0 组、`source_type` 1 组），**35 组同名不同分里 34 组整组只有一个 `source_url`** → 真实毛病是**主键不足以标识一次测量**。按「notes 能否复原区别」分五档处置：A 15 组填 `config`、B 5 组把 `score_type` 口径追加进 `config`、C 1 组（RSG 10 条子任务）拆进 `benchmark` 名、D 4 组纯重复删后到的一条、**E 14 组不动，交门禁新规则 6.2 报出来当待复测清单**。`temp/d11_resolve_benchmark_conflicts.py` 计划表逐条带 `(期望基准名, 期望分数)` 自校验位置；验收 = 反向还原与 `git HEAD` 逐字节相等 + 独立复核全库 `score` diff 0 + 条目 5659→5655 + 改动记录 18/编辑 56/删除 4 全部等于预期。**首次写下 `config` 的语义边界**（三类合法内容 + 禁止写来源名 + 「基准+配置+score_type+date 足以唯一标识一次测量」），三处采集文档同日补齐。规则 6.2 负对照三份备份：**2067 = 689+1350+28**（D9 前）、**728 = 689+39**（D11 前）、现库 **703 = 689+14** —— `其他` 一段全程 689 未动。**WARN 验收基线自本步起为 703。** 未拍板的两项已登记：7 组 `config` 写来源名的近似重复、合并主键是否扩成 `(benchmark, score_type, config)`。
+- 2026-08-30 v2.3（整改轮 D12 + D12b：来源名迁出 `config`，新增 `source_site`）：新增 **§21**。D11 登记的「7 组」经独立复扫实为 **92 条条目 / 21 条记录**（判定法：`config` 括号段只要出现在**本条自己的** `source_url` 主机名/路径或 `source_type` 里就算来源名，避免「有括号的英文段」这种启发式误伤 314 条合法配置）。处置：`independent` 数组新增 `source_site` 字段并纳入合并主键，`config` 只留评测配置。`temp/d12_add_source_site.py` 迁 **88 条 / 19 记录**；随后发现该判定的结构性盲区 —— `Artificial Analysis（镜像站）` 一族来源名永远不等于自己的主机名，`temp/d12b_artificial_analysis.py` 补迁 **59 条 / 14 记录**（57 条带镜像站名，镜像属「读取路径」不是「测量身份」→ `source_site` 写_origin_、镜像写进 `notes`）。两轮合计净改动 **145 条条目 / 23 条记录，全部落在 `independent`**（`config` 145 + 新增 `source_site` 145 + `notes` 追加 1），`score` 改动 **0**，记录 940→940、条目 5655→5655。验收同前两轮回向还原逐字节相等（两轮各自反转自校验通过）。**顺带改正 D11 自身的一处文档错误**：§20 把合并主键写成 `(benchmark, config)`，实际 SOP 一直是 `--array-key benchmark config date`（`arena_elo` 为 `sub_benchmark,date`），已补 `date` 并在 §18 新增第 5 点把权威主键字符串钉死；门禁规则 6.2 的分段键同步改成 `BENCH_SUBKEY`（`self_reported`=`config,date`、`independent`=`config,source_site,date`、`arena_elo`=`date`）。代价与收益都量化后如实登记：拆来源后**同一基准跨源并存不再被主键吞掉**，规则 6.2 照出 **3 组新的 Artificial Analysis 双镜像并存**（2 组分数互相矛盾、1 组两镜像读值一致的真重复），精确主键重复组数 14 → **17**，**WARN 基线 703 → 706**；`score_type` 加进主键对残留组消解数实测 **0**，故未扩（B 档另论）。未新增「`config` 含来源名」门禁规则：可行启发式要么误伤要么需手工维护站点黑名单，收益不抵维护成本。**新基线：940 条 / ERROR 0 / WARN 706 / 结构漂移 0 / 精确主键重复 17 组。**

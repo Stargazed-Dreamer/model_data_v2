@@ -5,10 +5,10 @@
 > 依据：`multi_agent_plan.md` §5「阶段 3 · 质检与验收」、`COLLECTION_PLAN_v2.md` §6 验收标准、`WORKBUDDY_AGENT_GUIDE.md`
 > 统计口径脚本：`scripts/qa_stats.py`（填充率）、`scripts/diff_incoming_db.py`（差异/冲突）
 
-> **【同日补记 2026-08-29 起 · 整改轮 D1–D11】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意八处时效性：
+> **【同日补记 2026-08-29 起 · 整改轮 D1–D12】** 本报告的质检结论之后，同日又跑了一轮整改，读本文时注意九处时效性：
 > 1. §1 的 **ERROR 0 是在旧门禁下取得的**——旧门禁不查 `pricing.confidence` 枚举、不查 `knowledge_cutoff` 格式、
 >    不查 `source_type` 与价格值是否自相矛盾，也不查「无价却填了币种」。四项补齐后，当前主库仍为
->    **ERROR 0 / WARN 689 / 结构漂移 0**（D11 之后为 **WARN 703**，多出的 14 条是 E 档待复测清单，见第 8 点）。
+>    **ERROR 0 / WARN 689 / 结构漂移 0**（D11 之后 **703**、D12 之后 **706**，多出的都是规则 6.2 照出的主键撞车待复测清单，见第 8、9 点）。
 > 2. §3.2 第 2 点与 §5-6 关于「开源权重却有定价」的判定**已被推翻**，红线 5 同日改按
 >    「厂商有无自有官方 API 刊例价」判定，详见 `multi_platform_subagent_guide.md` §5 红线 5 与 `WORKBUDDY_AGENT_GUIDE.md` §16。
 > 3. 门禁现行口径以 `scripts/validate_model_data.py` 为准，**本文与规范文档都只是它的说明，不是判据本身**。
@@ -30,7 +30,7 @@
 >    这不是格式问题：合并去重主键对这类行永远算出 `("None","None")`，同一次测量会静默并存两份
 >    （D8 回补撞出的 5 条同名冲突即由此来）。两轮全部机械改名为 canonical 主键
 >    （前两个数组 → `benchmark`，**`arena_elo` → `sub_benchmark`**），改后反向核对逐字节可还原、值零改动，
->    现库 **ERROR 0 / WARN 689**（D11 起为 **703**，见第 8 点）、**缺 canonical 主键 0**。
+>    现库 **ERROR 0 / WARN 689**（D11 起 **703**、D12 起 **706**，见第 8、9 点）、**缺 canonical 主键 0**。
 >    规则 6.1 按「**先清数据、再收紧检查**」的顺序在 D10 之后扩成「缺 canonical 主键即报」，
 >    负对照用两个改前备份实测 **746 = 689 + 57**、**2039 = 689 + 1293 + 57**。
 >    归一时揭出的**同名基准分数冲突**（全库精确主键重复 22 个数组 / 39 组）已在同日 **D11 结案**，见第 8 点。
@@ -43,8 +43,21 @@
 >    `microsoft-nvidia:megatron-turing-nlg-530b`，要分开只能回原表重读，属重采范围）。
 >    全库 `score` 零改动，条目 5659 → 5655。本轮同时**第一次写下 `config` 的语义边界**（见指南 §20）。
 >    负对照三份备份：D9 前 **2067** = 689 + 1350(6.1) + 28(6.2)、D11 前 **728** = 689 + 39、现库 **703** = 689 + 14。
->    **仍待拍板**：7 组因 `config` 写了来源名而并存的近似重复（违反本轮新定的 `config` 口径）；
->    以及是否把合并主键扩成 `(benchmark, score_type, config)` 以根治 B 档。详见指南 §20。
+>    **仍待拍板的两项均已在同日 D12 结案**（含本点里那两处口径修正：合并主键一直是 `(benchmark, config, date)`，
+>    本文与指南 §20 原文漏写了 `date`）：来源名已迁出 `config`、`independent` 主键已扩入新字段 `source_site`；
+>    `score_type` 是否进主键改为「已量化后否掉」。详见第 9 点与指南 §21。
+> 9. **`config` 写来源名已整改（D12 + D12b），WARN 基线 703 → 706**：第 8 点的「7 组」只是 residual 扫描里
+>    「同分、剥掉来源名即可合并」这一**子情形**，整个现象的范围是 **92 条条目 / 21 条记录**。判定法必须自证据化——
+>    `config` 的括号段只有出现在**本条自己的**
+>    `source_url` 主机名/路径或 `source_type` 里才算来源名；用「含括号的英文段」这种启发式会误伤 **314 条**合法配置。
+>    处置：`independent` 新增 `source_site` 字段并入合并主键（`benchmark, config, source_site, date`），`config` 只留评测设置；
+>    随后又发现该判定自身的结构性盲区 —— `Artificial Analysis（镜像站）` 一族的括号名永远不等于自己的主机名，
+>    第二遍补迁 **59 条 / 14 记录**（镜像属**读取路径**不是测量身份 → `source_site` 写站点本身、镜像站名写进 `notes`）。
+>    两轮净改动 **145 条条目 / 23 条记录，全部在 `independent`**（`config` 145 + 新增 `source_site` 145 + `notes` 追加 1），
+>    **`score` 改动 0**，记录 940→940、条目 5655→5655，两轮各自反向还原逐字节相等。
+>    **代价如实登记**：跨来源并存不再被主键吞掉后，规则 6.2 照出 3 组「同一次 AA 测量被两个镜像各抄一次」
+>    （GPQA 0.81 vs 0.87、MMLU-Pro 0.889 vs 0.9 是分歧，SWE-bench 0.809 vs 0.809 是同分真重复），
+>    精确主键重复组数 14 → **17**，WARN → **706**。这不是回归，是 E 档机制按设计工作。详见指南 §21。
 
 ---
 
@@ -66,9 +79,10 @@
 | schema | 全部 1.1 |
 | 重复 model_id | 0 |
 
-> **整改后现值（读表时替换使用）**：主库 **940 条**（花名册 692 + v1 遗留 248）、ERROR **0**、WARN **703**
-> （D1–D10 期间为 689，D11 新增规则 6.2 照出 14 组待复测）、
-> 结构漂移 0；另有 10 条存疑记录移出主库、原样存 `docs/unconfirmed_models.jsonl`。见文首补记第 4 点。
+> **整改后现值（读表时替换使用）**：主库 **940 条**（花名册 692 + v1 遗留 248）、ERROR **0**、WARN **706**
+> （D1–D10 期间为 689；D11 新增规则 6.2 照出 14 组待复测 → 703；D12 把来源名移出 `config` 后跨源并存显形，
+> 规则 6.2 命中增至 **17 组** → 706）、
+> 结构漂移 0；另有 10 条存疑记录移出主库、原样存 `docs/unconfirmed_models.jsonl`。见文首补记第 4、8、9 点。
 
 ### WARN 678 的构成（按类型）
 
@@ -232,7 +246,7 @@ python scripts/model_data_tool.py merge \
    > 另有 1 条 `independent` 早在恢复基线（943b6f2）之前就已丢失、按单一基线扫不出来，
    > 回补后复跑全历史取证才发现并一并找回 —— 这就是「回补完必须用全历史最大长度复扫」的理由。
    > 回补后 `independent>0` 全库 22% → **33.8%**。
-   > **新开待拍板项**：主键 `(benchmark, config)` 认不出 legacy `name` 写法，回补后 207 条里有
+   > **新开待拍板项**：主键 `(benchmark, config, date)` 认不出 legacy `name` 写法，回补后 207 条里有
    > 2 条与既有条目同名同分、3 条同名不同分（例如 `openai:gpt-5-2-2025-12-11-xhigh:base` 的
    > GPQA Diamond 0.914 同时存在 T1 直连与 T3 转述两条）。两条都带完整来源，未自动删。
    > 其根因（非 canonical 写法条目主键认不出）**已由 D9 + D10 全部消除**（`name` 1293 条 + 其余三种写法 57 条，
@@ -355,7 +369,7 @@ technology-innovation-institute:falcon-arabic
 
 | 项 | 说明 | 建议 |
 |---|---|---|
-| WARN 678 → **689** | 现值按规则实测构成：自报分 `source_type` 未含「自报」440、有效上下文缺测试方法说明 127、标称上下文缺「待测」标注 105、`knowledge_cutoff` 格式 9、参数量缺未披露声明 4、`source_type` 与价格值矛盾 3、缺 `source_url` 1 | 前三项占 97.5%，均属 notes 补写轮性质的采集工作；后三项为本轮新增检查照出的存量 |
+| WARN 678 → **689**（不含规则 6.2 的固定基线）→ 现值 **706** | 689 的实测构成：自报分 `source_type` 未含「自报」440、有效上下文缺测试方法说明 127、标称上下文缺「待测」标注 105、`knowledge_cutoff` 格式 9、参数量缺未披露声明 4、`source_type` 与价格值矛盾 3、缺 `source_url` 1。**这 689 条从 D9 到 D12 全程一字未动**，用作负对照的常量段；D11 加规则 6.2（14 组）→ 703、D12 拆来源后 17 组 → **706** | 前三项占 97.5%，均属 notes 补写轮性质的采集工作；后三项为本轮新增检查照出的存量。规则 6.2 那 17 条不是脏数据，是待复测清单本身 |
 | v1 遗留开源权重定价 | ~~131 条中 43 条有定价，疑似违规~~ **初判不成立，已撤销**：40 条本就有厂商官方刊例价 | **不得按旧红线 5 置 null**，见 §3.2 更正框 |
 | 定价矛盾待核实 3 条 | `muse-spark-1-1` / `muse-spark-1-2` / `mai-code-1-flash`：标签称无官方价、值却挂着 UGC 转述价 | 需回厂商官方价目页逐条核实后定方向（属重采范畴，待拍板） |
 | ~~采集人标 `存疑` 的 10 条~~ **已处置（D6）** | `meta.verification_status == "存疑"` 逐条复核均查无立得住的依据，经用户拍板**全部移出主库**（950 → 940），原样存 `docs/unconfirmed_models.jsonl`，4 个对应采集文件移入 `incoming/models/_quarantine/` | 已结。这 10 个 model_id 不再计入花名册完成率（692/702 + 隔离 10），**不得当「漏采」重派**；重新入库须先拿到官方证据，流程见 `WORKBUDDY_AGENT_GUIDE.md` §17.5 |
@@ -364,9 +378,9 @@ technology-innovation-institute:falcon-arabic
 | ✅ **`benchmarks` 条目四种非 canonical 写法（D9 + D10 已全清）** | legacy 只有 `name` 的条目 1293 条（self_reported 1241 / independent 50 / arena_elo 2，涉及 156 条记录），另有 `benchmark_name` 30 / `metric_name` 23 / `arena_elo` 误用 `benchmark` 4（57 条 / 11 记录）。合并去重主键对这类行永远算出 `("None","None")`，同一次测量会静默并存两份 —— 不是格式问题，是**去重失效** | 全部改名为 canonical 主键（前两个数组 `benchmark`、`arena_elo` 用 `sub_benchmark`）；`temp/d9_normalize_benchmark_keys.py` 与 `temp/d10_normalize_benchmark_keys2.py` 都以「反向改名必须与原文逐字节相等」为验收，写盘后再对 `git show HEAD` 复核全部可还原、值零改动；现库**缺 canonical 主键 0**。规则 6.1 按「先清数据、再收紧检查」在 D10 后扩成「缺 canonical 主键即报」，负对照用改前备份实测 **1982 = 689+1293**（D9 时窄口径）、**746 = 689+57**（D10 前）、**2039 = 689+1293+57**（D9 前 + 全写法版）。详见指南 §19 |
 | ~~剩余 3 种非 canonical 写法未归一（57 条 / 11 记录）~~ **已处置（D10）** | D9 按 `"name" in item` 圈范围，漏掉 `benchmark_name` 30 条（8 记录）、`metric_name` 23 条（2 记录）、`arena_elo` 误用 `benchmark` 4 条（1 记录）；**当时的规则 6.1 只看 `name`，对这 57 条完全沉默** | 已按 D9 同法归一（另加「同时锁记录数 11 与条目数 57」「主键重复数组数改前改后对照 22 → 22」两道保险）。教训：**归一化脚本的匹配条件就是它的盲区**，残留数必须独立跑全库。剩 8 条同时带 `benchmark` 与 `name` 的冗余条目（6 条同值、2 条不同值）canonical 主键已在、不影响去重，**刻意未动** |
 | ✅ **同名基准主键撞车 39 组（D11 已结案）** | 先逐条摊开量化再定口径：38/39 组内 `confidence` 全同 → 「取高 confidence」只能裁决 1 组；35 组同名不同分里 34 组整组只有一个 `source_url` → **主要毛病是主键不足以标识一次测量，不是两个来源打架**（极端例：`sber:fred-t5-xl` 一条 RSG 挂 10 个子任务，子任务名只在 `notes` 里） | 按「notes 能否复原区别」分五档：A 15 组把 notes 写明的评测设置填进 `config`、B 5 组把 `score_type` 口径追加进 `config`、C 1 组把子任务拆进 `benchmark` 名、D 4 组纯重复删后到的一条、E 14 组不动（见下一行）。`temp/d11_resolve_benchmark_conflicts.py` 计划表逐条带 `(期望基准名, 期望分数)` 自校验位置，验收 = 反向还原与 `git HEAD` 逐字节相等 + 全库 `score` 零改动 + 条目 5659→5655。**顺带第一次写下 `config` 的语义边界**（指南 §20） |
-| 🔴 **E 档 14 组待复测（D11 未动，属重采范畴）** | `megatron-turing-nlg-530b` 9 组（每基准 3 个分数、notes 只有公共描述，分不清哪列是哪个 shot）、`exaone-deep-2-4b` 2 组、`multi-token-prediction-7b` 2 组、`aya-expanse-32b` 1 组（一条 notes 未写对手） | **不猜**。由门禁新规则 6.2（WARN）自动维护这份清单，现库 14 条命中即全部 E 档；要收口只能回原表重读。清单可复跑 `temp/d9_residual_scan.py` |
-| 🔴 **7 组近似重复：`config` 里写了来源名（待拍板）** | 同基准同分、只因 `config` 一个写 `default（benched.ai）` 一个写 `default（llmbase）` 而并存（如 `alibaba:qwen2-5-max` 的 GPQA Diamond 0.587）。这正是 D11 定的 `config` 口径所**禁止**的写法 | 剥离来源名会让这 7 组退化成「主键与分数全同」的纯重复 → 可按 D 档合并，但会少掉一条 `source_url` 交叉印证。合并口径与是否保留多来源，待拍板 |
-| 🔴 **合并主键是否扩成 `(benchmark, score_type, config)`（待拍板）** | B 档 5 组的根治办法。现在 `score_type` 写对了却不在主键里，只能把同一信息冗余进 `config` 顶住 | 改 `array_key_default` 会影响此后所有批次的去重语义，属独立拍板项；未动 |
+| 🔴 **主键撞车待复测 17 组（D11 E 档 14 + D12 新增 3，属重采范畴）** | E 档 14 组：`megatron-turing-nlg-530b` 9 组（每基准 3 个分数、notes 只有公共描述，分不清哪列是哪个 shot）、`exaone-deep-2-4b` 2 组、`multi-token-prediction-7b` 2 组、`aya-expanse-32b` 1 组（一条 notes 未写对手）。**D12 又照出 3 组**（均在 `anthropic:claude-opus-4-5:20251101`）：同一次 Artificial Analysis 测量被两个镜像站各抄一次 —— GPQA Diamond 0.81/0.87、MMLU-Pro 0.889/0.9 是**分数分歧**，SWE-bench Verified 0.809/0.809 是**两镜像读值一致的真重复**。拆来源前它们被同一个 `config` 混在一起，拆开后才是真撞车 | **不猜**。由门禁规则 6.2（WARN）自动维护这份清单，现库 17 条命中即全部；要收口只能回原表重读。清单可复跑 `temp/d9_residual_scan.py` |
+| ✅ **`config` 写来源名 92 条 / 21 记录（D12 + D12b 已结案）** | ~~7 组近似重复：同基准同分、只因 `config` 一个写 `default（benched.ai）` 一个写 `default（llmbase）` 而并存~~ 本轮独立复扫发现范围被严重低估：**92 条 / 21 记录**，剥来源名后撞键的组有 33 个（仅 6 组同分、**27 组分数有差**）。那 27 组**不是冲突，是不同第三方站各测一次**——正是 `independent` 数组存在的意义 | 方向与「剥掉来源名再合并」**相反**：按用户拍板选 A 方案，`independent` **新增 `source_site` 字段并入合并主键**（`benchmark, config, source_site, date`），来源身份从 `config` 迁进 `source_site`，`config` 回归纯评测配置。净改动 145 条 / 23 记录、`score` 零改动、反向还原逐字节相等；代价是 6.2 命中 14 → 17（见上一行）。详见指南 §21 |
+| ✅ **合并主键是否扩成 `(benchmark, score_type, config)`（D12 量化后否决）** | ~~B 档 5 组的根治办法~~ 本轮先量后决：把 `score_type` 加进主键，对残留 14 组的消解数实测 **0**（组内 `score_type` 本就相同），只增加语义歧义 | **不改**。B 档靠 `config` 里写清口径顶住即可（D11 已填）。另正一处原文笔误：主键**不在 `model_data_tool.py` 里硬编码**（`MergeStrategy` 键字段默认空、全部由 CLI 传入），改键是改 SOP 命令而非改代码，权威字符串见指南 §18 第 5 点 |
 | 主库 positioning 空值 | 补合并后花名册填充率 89.5%，剩余多属确无适用标签 | 抽样复核即可 |
 | 可视化发布 | `viz/viz_index.html` 需按最终库重新生成 | 合并定版后执行 |
 | 交付 push | 主库已定版待推 | 用 `C:\Program Files\Git\cmd\git`（system credential.helper=manager，静默通过） |

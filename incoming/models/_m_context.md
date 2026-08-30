@@ -26,10 +26,11 @@
   禁止 `name` / `benchmark_name` / `metric_name`（`arena_elo` 也不得写 `benchmark`）——
   合并去重主键认不出非 canonical 写法，同一次测量会静默并存两份。
   存量的 1293 + 57 条老写法已在 2026-08-30 的 D9/D10 全部归一，门禁规则 6.1 现对任何非 canonical 写法报 WARN
-- **主键必须唯一标识一次测量**：`benchmark` + `config` 是合并去重主键。同一基准并存多个测量（shot 数 / prompting 方法 /
+- **主键必须唯一标识一次测量**：`benchmark` + `config` + `date` 是合并去重主键（`independent` 再加 `source_site`）。
+  同一基准并存多个测量（shot 数 / prompting 方法 /
   脚手架与 turn 预算 / 单次 vs 投票 / pass@k / 一条记录里的多个发布变体）时，**区别写进 `config`，别留 null**；
   子任务各成一条并写进 `benchmark` 名（如 `Russian SuperGLUE (RSG) – MuSeRC`）。
-  **`config` 里不要写来源名**（`default（benched.ai）` 这类），来源交给 `source_url` / `source_type`。
+  **`config` 里不要写来源名**（`default（benched.ai）` 这类）—— 来源站填 `source_site`（仅 `independent`，`self_reported` 不填）。
   撞车时门禁规则 6.2 会 WARN
 - meta.collected_at = **本次采集的当日日期** `"YYYY-MM-DD"`（不要照抄本文或样板里出现过的日期）；meta.verification_status = "待验证"
 - 禁止改动 model_data_v2.jsonl（合并由主 agent 统一执行）
