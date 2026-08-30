@@ -458,9 +458,8 @@
 - `source_url`、`source_type`、`confidence`、`notes`。
 
 **键名规则（硬性）**：`self_reported` / `independent` 条目的基准名字段必须写 `benchmark`；`arena_elo` 条目必须写 `sub_benchmark`；**禁止 `name` / `benchmark_name` / `metric_name` 等任何其它写法**（`arena_elo` 也不得写 `benchmark`）。  
-- 例：~~`{"name": "GPQA Diamond", "score": 0.82}`~~ → `{"benchmark": "GPQA Diamond", "score": 0.82}`（2026-08-30 已把存量的 1293 条 `name` 写法归一，门禁规则 6.1 现对 `name` 报 WARN）。  
+- 例：~~`{"name": "GPQA Diamond", "score": 0.82}`~~ → `{"benchmark": "GPQA Diamond", "score": 0.82}`（2026-08-30 分两轮把存量的 1293 + 57 条非 canonical 写法全部归一，门禁规则 6.1 现对**任何**缺 canonical 主键的条目报 WARN）。  
 - 代价不是格式问题而是去重失效：合并去重主键 `self_reported` / `independent` 为 `(benchmark, config)`、`arena_elo` 为 `(sub_benchmark, date)`，非 canonical 行读成空键，同一次测量会静默并存两份。  
-- 存量里另有 57 条 `benchmark_name` / `metric_name` / `arena_elo` 误用 `benchmark` 尚未归一（规则 6.1 暂查不到它们），**新采数据一律按上面的硬性写法，别照抄这些老条目**。  
 
 **注意**：如果某个模型没有某类跑分，对应数组可为空 `[]`；`arena_elo` 可为空数组 `[]`（无子榜数据时）或 `null`（完全无 Arena 数据时）。
 

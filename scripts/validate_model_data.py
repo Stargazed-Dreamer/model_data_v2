@@ -70,6 +70,17 @@ DATE_FULL_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # 已如实声明的记录误判成缺声明；不允许跨越句读，避免「未提及，…已披露」这类误通过。
 NOT_DISCLOSED_RE = re.compile(r"未[^\s，。；;、]{0,3}披露|待补")
 RELAY_MARK = "转述"
+# 跑分条目里出现过的非 canonical 基准名键（D9 清了 `name`，D10 清了其余三种写法）。
+# arena_elo 另有一个坑：写成 `benchmark` 也算非 canonical，它的主键是 `sub_benchmark`。
+BENCH_NAME_ALIASES = ("name", "metric_name", "benchmark_name")
+
+
+def _bench_name(item, canonical_key):
+    """取跑分条目的显示名用于报错定位：canonical 键 → 各种别名 → '?'。"""
+    for k in (canonical_key,) + BENCH_NAME_ALIASES + (("benchmark",) if canonical_key != "benchmark" else ()):
+        if item.get(k):
+            return item[k]
+    return "?"
 
 MODALITY_BOOL_SECTIONS = {
     "input": ["text", "image", "audio", "video", "pdf", "code", "web", "notes"],
@@ -211,12 +222,15 @@ def check_record(rec):
     bench = rec.get("benchmarks") or {}
     for section in ("self_reported", "independent"):
         for i, item in enumerate(bench.get(section) or []):
-            tag = f"benchmarks.{section}[{i}]({item.get('benchmark') or item.get('name', '?')})"
-            # 6.1 legacy `name` 写法（2026-08-30 D9 已把存量的 1293 条归一为 benchmark）。
-            #     两套写法并存的代价不是不好看，是**去重失效**：合并主键 (benchmark, config)
-            #     对 legacy 行一律算 ("None","None")，同一次测量会静默并存两份（见指南 §18）。
-            if "benchmark" not in item and "name" in item:
-                warns.append(f"{tag} 缺 benchmark 键、只有 name —— legacy 写法，会被合并主键当成空值导致去重失效")
+            nm = _bench_name(item, "benchmark")
+            tag = f"benchmarks.{section}[{i}]({nm})"
+            # 6.1 缺 canonical 主键（D9 归一 1293 条 `name`、D10 归一余下 57 条后扩到全写法）。
+            #     多种写法并存的代价不是不好看，是**去重失效**：合并主键 (benchmark, config)
+            #     对这类行一律算 ("None","None")，同一次测量会静默并存两份（见指南 §18 / §19）。
+            if "benchmark" not in item:
+                used = [k for k in BENCH_NAME_ALIASES if k in item]
+                warns.append(f"{tag} 缺 benchmark 主键（实际键：{sorted(item) if not used else used}）"
+                             f" —— 非 canonical 写法会被合并主键当成空值，导致去重失效")
             score = item.get("score")
             if score is not None and not (0 <= score <= 1):
                 errors.append(f"{tag} score={score} 越界，应为 0–1 小数（百分制须除以 100）")
@@ -231,10 +245,12 @@ def check_record(rec):
             if section == "self_reported" and conf in ("T0", "T0-自报", "T0-自报-转述") and "自报" not in (stype or ""):
                 warns.append(f"{tag} 自报分 source_type={stype!r} 建议体现「自报」属性")
     for i, item in enumerate(bench.get("arena_elo") or []):
-        tag = f"benchmarks.arena_elo[{i}]({item.get('sub_benchmark') or item.get('name', '?')})"
-        # 同 6.1：arena_elo 的 canonical 主键是 sub_benchmark，不是 benchmark
-        if "sub_benchmark" not in item and "name" in item:
-            warns.append(f"{tag} 缺 sub_benchmark 键、只有 name —— legacy 写法，会被合并主键当成空值导致去重失效")
+        tag = f"benchmarks.arena_elo[{i}]({_bench_name(item, 'sub_benchmark')})"
+        # 同 6.1：arena_elo 的 canonical 主键是 sub_benchmark，写成 benchmark 也算非 canonical
+        if "sub_benchmark" not in item:
+            used = [k for k in BENCH_NAME_ALIASES + ("benchmark",) if k in item]
+            warns.append(f"{tag} 缺 sub_benchmark 主键（实际键：{used or sorted(item)}）"
+                         f" —— 非 canonical 写法会被合并主键当成空值，导致去重失效")
         if item.get("score") is None:
             errors.append(f"{tag} 缺 score")
         if not item.get("date"):

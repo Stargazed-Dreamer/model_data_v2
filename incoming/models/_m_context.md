@@ -25,7 +25,7 @@
 - **benchmarks 条目键名**：`self_reported` / `independent` 的基准名只写 `benchmark`，`arena_elo` 只写 `sub_benchmark`，
   禁止 `name` / `benchmark_name` / `metric_name`（`arena_elo` 也不得写 `benchmark`）——
   合并去重主键认不出非 canonical 写法，同一次测量会静默并存两份。
-  存量里还有 57 条这类老写法尚未归一，**不要照抄它们**
+  存量的 1293 + 57 条老写法已在 2026-08-30 的 D9/D10 全部归一，门禁规则 6.1 现对任何非 canonical 写法报 WARN
 - meta.collected_at = **本次采集的当日日期** `"YYYY-MM-DD"`（不要照抄本文或样板里出现过的日期）；meta.verification_status = "待验证"
 - 禁止改动 model_data_v2.jsonl（合并由主 agent 统一执行）
 
