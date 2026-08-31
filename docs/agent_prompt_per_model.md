@@ -26,6 +26,7 @@
 8. **`meta.verification_status`** 诚实填写：`待验证` / `已验证`(须带 `verified_at`) / `存疑` / `已过期`；**不得无 `verified_at` 却标"已验证"**。
 9. **降级采集**（官方域不可访问）须在 `meta.notes` 声明「官方域沙盒不可访问，数据经媒体转述间接核实」。
 10. **只采模型本体**：若派发到手的 `{MODEL_ID}` 查下来其实是 agent 系统 / 训练框架 / 编排或推理基础设施 / 数据管线（厂商自己的表述里就说"系统""框架"而非"模型"），**不要硬填一条全 `null` 的记录**，停下来回报主 agent 按 `WORKBUDDY_AGENT_GUIDE.md` §23 的非范围处置走。
+11. **架构拆两栏填**（D15，2026-08-31）：`architecture.architecture_type` **只填稀疏性**四值 `Dense / MoE / Hybrid / Unknown`；主干结构另填 `architecture.backbone_type`（`Transformer` / `Transformer-Decoder` / `Transformer-Encoder` / `Transformer-Encoder-Decoder` / `Mamba-SSM` / `RNN-LinearAttention` / `Diffusion` / `CNN` / `MLP` / `Hybrid` / `Unknown`）。来源原话比枚举更具体时（如 `"Decoder-only Transformer (GQA, RoPE)"`），原话照抄进 `architecture.notes` 结尾的 `；原架构表述：「原话」`。**禁止反推**：不许凭模型名（叫 Llama 就写 Transformer）、不许抄同系列兄弟条目；本条自己的原文和备注都没明说，就填 `Unknown`。
 
 ## 记录结构（必须输出完整 schema 1.1，所有键出现，缺则显式 null）
 
@@ -39,7 +40,7 @@
     "notes": null
   },
   "architecture": {
-    "total_params_b": null, "active_params_b": null, "architecture_type": "Unknown",
+    "total_params_b": null, "active_params_b": null, "architecture_type": "Unknown", "backbone_type": "Unknown",
     "context_window_tokens": null, "context_window_effective_tokens": null,
     "knowledge_cutoff": null, "notes": null
   },

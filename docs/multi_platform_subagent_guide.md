@@ -137,6 +137,7 @@ git push
    - basic_info.positioning：数组（受控词表：旗舰/中端/轻量/推理增强/多模态/工具调用增强）
    - basic_info.release_date：YYYY-MM-DD
    - architecture.context_window_tokens / context_window_effective_tokens / knowledge_cutoff / total_params_b / active_params_b
+   - architecture.architecture_type（**只填稀疏性** Dense/MoE/Hybrid/Unknown）+ architecture.backbone_type（主干结构，见 §5 红线 14）
    - modality.input.{text,image,audio,video} / output.{text,image} / native_multimodal（布尔三态 true/false/null）
    - pricing：USD/M tokens（官方源 T0，媒体转述 T3）；**厂商无自有官方 API 刊例价时六价键全 null + notes 注明**（判定基准见下方「硬性红线」定价条目，不是「是否开源权重」）
    - access.{open_weights, api, local_deployment}
@@ -153,6 +154,7 @@ git push
   闭源但官方页查不到价用 `"官方定价页核对（无公开定价）"`，已下架用 `"官方定价页核对（已下架）"`。
   **严禁把第三方托管商报价（OpenRouter / NVIDIA hub / 云厂商转售）当官方价填进去。**
 - 每个 benchmarks.* 条目必须带 source_url
+- 架构两栏分开填（D15）：`architecture_type` 只写稀疏性（Dense/MoE/Hybrid/Unknown），主干写 `backbone_type`；原话更具体就照抄进 notes 的 `；原架构表述：「原话」`，不得凭模型名反推
 - meta.collected_at = "YYYY-MM-DD"（今天），meta.verification_status = "待验证"
 - 文件 = 单行压缩 JSON，schema 1.1，**8 个顶层键**（schema_version/model_id/basic_info/architecture/benchmarks/pricing/modality/meta），禁止删键，**禁止把 access 提为顶层键**（access 嵌套在 basic_info.access 内，见样板）
 - 禁止改动 model_data_v2.jsonl 主库（合并由主 agent 统一执行）
@@ -268,6 +270,10 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 13. **只采模型本体**（2026-08-31 拍板，D14）：agent 系统、训练/编排框架、推理基础设施、数据管线**不建条目**，即使厂商正式发布。
     发现派发错了，**回报主 agent 走 §23 非范围处置，不得硬填一条全 `null` 的记录**——这类记录占花名册名额、让完成率虚高，
     且没有任何一个字段是"这个模型"的属性。存量 7 条已移出至 `docs/non_model_records.jsonl`
+14. **架构拆两栏填**（2026-08-31 拍板，D15）：`architecture.architecture_type` 只填稀疏性 `Dense / MoE / Hybrid / Unknown`，
+    主干结构填 `architecture.backbone_type`（`Transformer` / `Transformer-Decoder` / `Transformer-Encoder` / `Transformer-Encoder-Decoder` /
+    `Mamba-SSM` / `RNN-LinearAttention` / `Diffusion` / `CNN` / `MLP` / `Hybrid` / `Unknown`）。原话比枚举具体时照抄进 notes 的 `；原架构表述：「原话」`。
+    **不得凭模型名或同系列兄弟条目反推骨干**，本条原文与备注都没明说就填 `Unknown`。越界由门禁规则 1.1 / 1.2 报 WARN
 
 ---
 

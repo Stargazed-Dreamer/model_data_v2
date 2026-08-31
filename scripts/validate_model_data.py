@@ -20,6 +20,8 @@ validate_model_data.py —— 记录级校验器（P5 修复，执行细则 #11 
             6.2 合并主键撞车（同一主键挂着多个条目 → 分数不同时机器无从裁决取哪一条）。
             主键与 SOP 合并命令一致：self_reported=(benchmark,config,date)，
             independent=(benchmark,config,source_site,date)（D12 新增 source_site），arena_elo=(sub_benchmark,date)
+            2026-08-31 D15 拆栏再加两项：1.1 `architecture_type` 越出稀疏性四值枚举、
+            1.2 `backbone_type` 越出主干结构枚举（拆栏前的自由文本写法正命中 1.1）
 
 用法：
   python validate_model_data.py <file.jsonl> [--report <out.md>]
@@ -45,7 +47,10 @@ TOP_KEYS = ["schema_version", "model_id", "basic_info", "architecture",
 SCHEMA_BLOCK_KEYS = {
     "basic_info": {"full_name", "version", "vendor", "release_date",
                    "positioning", "access", "license", "notes"},
+    # backbone_type 是 D15（2026-08-31）拆栏新增列：缺键 = 该条未参与拆栏（原值本就在
+    # 旧四值枚举内），不是错误；有键则必须落在 ARCH_BACKBONE_ENUM 内（规则 1.2）。
     "architecture": {"total_params_b", "active_params_b", "architecture_type",
+                     "backbone_type",
                      "context_window_tokens", "context_window_effective_tokens",
                      "max_output_tokens", "reasoning_model",
                      "knowledge_cutoff", "notes"},
@@ -69,6 +74,13 @@ ALL_PRICE_KEYS = ["input", "output"] + PRICING_MUST_KEYS
 NO_PRICE_CLAIMS = ("无官方 API 价", "无 API 定价", "无API定价", "无官方定价",
                    "无公开定价", "无独立 API 定价", "无 API 计费")
 POSITIONING_ENUM = {"旗舰", "中端", "轻量", "推理增强", "多模态", "工具调用增强"}
+# D15（2026-08-31 拍板「拆成两栏：稀疏性枚举 + 主干结构枚举」）：architecture_type 收窄成
+# 稀疏性四值，原来塞在一栏里的自由文本（"Decoder-only Transformer (GQA, RoPE)" 等 190 种写法）
+# 拆到 backbone_type。原文不丢，照抄进 architecture.notes 的「原架构表述」。
+ARCH_SPARSITY_ENUM = {"Dense", "MoE", "Hybrid", "Unknown"}
+ARCH_BACKBONE_ENUM = {"Transformer", "Transformer-Decoder", "Transformer-Encoder",
+                      "Transformer-Encoder-Decoder", "Mamba-SSM", "RNN-LinearAttention",
+                      "Diffusion", "CNN", "MLP", "Hybrid", "Unknown"}
 CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"}
 DATE_MD_RE = re.compile(r"^\d{4}-\d{2}$")
 DATE_FULL_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -182,6 +194,16 @@ def check_record(rec):
     anotes = arch.get("notes") or ""
     if tp is None and ap is None and not NOT_DISCLOSED_RE.search(anotes):
         warns.append("参数量全空但 architecture.notes 未声明「（官方）未披露」或「待补」")
+
+    # 1.1 / 1.2 架构两栏枚举越界（D15）。都是 WARN 不是 ERROR：存量归档副本（docs/*.jsonl
+    #     按行 byte-exact 留存）用的还是拆栏前的自由文本，判 ERROR 会让历史验收信号失真。
+    #     null / 缺键一律沉默——前者是「未披露」的正规写法，后者是「该条未参与拆栏」。
+    at, bt = arch.get("architecture_type"), arch.get("backbone_type")
+    if at is not None and at not in ARCH_SPARSITY_ENUM:
+        warns.append(f"architecture.architecture_type={at!r} 越出稀疏性枚举 "
+                     f"{sorted(ARCH_SPARSITY_ENUM)}（D15 起本栏只填稀疏性，主干写法归 backbone_type）")
+    if bt is not None and bt not in ARCH_BACKBONE_ENUM:
+        warns.append(f"architecture.backbone_type={bt!r} 越出主干结构枚举 {sorted(ARCH_BACKBONE_ENUM)}")
 
     # 2. 上下文标称 / 有效：2026-08-30 起不再要求「有效值须有独立实测出处」
     #    （执行细则 §2 口径修订，旧规矩下 173 条抄标称 + 127 条 WARN 已证明规矩与现实背离）

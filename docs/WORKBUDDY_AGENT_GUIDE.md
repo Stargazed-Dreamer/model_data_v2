@@ -634,6 +634,8 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 > 4. 门禁 `WARN` 现值应为 **469**（= 规则 6.2 的 17 + 其余 452；D13 废止两条「上下文须独立实测」类 WARN 前是 706，
 >    D14 移出 7 条非模型记录再去掉它们自身贡献的 5 条，见 §23）。
 >    规则 6.2 命中数一涨，就是新增了主键撞车；「有效上下文大于标称上下文」新增命中，就是有人把扩展窗口填错了栏（§22）。
+>    **D15 起再加一条判据**：规则 1.1 / 1.2（架构两栏枚举越界）命中数必须为 **0** ——
+>    非 0 说明有人把自由文本又写回了 `architecture_type`，或给 `backbone_type` 造了枚举外的值（见 §24）。
 > 5. **合并主键的唯一权威写法**（三处文档曾各写一份、D11 那份还漏了 `date`，故在此收口）：
 >    `--array-key benchmark config date` + `--array-key-override benchmarks.arena_elo:sub_benchmark,date benchmarks.independent:benchmark,config,source_site,date`。
 >    少写 `source_site` 会让 `independent` 里不同第三方站的同名基准互相覆盖（D12 前会吃掉 33 行）。
@@ -952,6 +954,78 @@ WARN 474 → **469**（归档那 7 条自身贡献 5 条，469 + 5 = 474 严丝�
 
 ---
 
+### 24. 【D15】一栏塞两种语义：`architecture_type` 拆成「稀疏性 + 主干结构」两栏
+
+**事实（先量后写）**：`architecture.architecture_type` 名义上是四值枚举，实际存了 **190 种自由写法**
+（D15 改前 933 条备份实测；越出旧枚举的有 **186 种 / 289 处**。§23 之前提到的 195 是 D14 前 940 条快照，被移出的
+7 条系统级记录自成一类写法）——
+`"Transformer (decoder-only, GQA, RoPE, RMSNorm, SwiGLU)"`、`"Hybrid Mamba2-Transformer (24 Mamba-2 + 4 self-attention + 28 MLP layers, sequential layer-wise mix)"`、
+`"Sparse MoE — MLA + MTP + 高稀疏比（256 路由专家 + 1 共享专家，每 token 激活 8 专家）"` 都挤在同一栏里。后果不是难看，是**这一栏根本没法聚合**：
+想统计「有多少 MoE 模型」，得先穷举这 190 种写法里哪些含 MoE 意思。
+拆栏范围 **300 条 = 越界 290 条（越出旧枚举的 289 条 + 值为 `null` 的 1 条）+ 恰好写作 `"Hybrid"` 的 10 条**
+（后者也在范围内，因为 `Hybrid` 在这批数据里
+同时被用来指「稀疏性混合」和「骨干混合」，是个语义撞车的值）。
+
+**两轮拍板**：第 15 轮「拆成两栏：稀疏性枚举 + 主干结构枚举」→ `architecture_type` 收窄为
+`Dense / MoE / Hybrid / Unknown`，新增 `architecture.backbone_type` 取
+`Transformer / Transformer-Decoder / Transformer-Encoder / Transformer-Encoder-Decoder / Mamba-SSM / RNN-LinearAttention / Diffusion / CNN / MLP / Hybrid / Unknown`。
+第 16 轮「借力本条备注，不许通识反推」→ 值文本判不动时**允许**读**同一条记录自己的** `architecture.notes` 里的明文声明，
+**禁止**用外部通识（名字里有 Llama 就判 Transformer）或参照同系列兄弟条目。
+两栏都要求**原文不丢**：值比枚举具体时，原话照抄进 notes 结尾的 `；原架构表述：「原话」`。
+
+**判定顺序（每条四步，任一步出值即止）**：
+① 读本条 `architecture_type` 原文（先剥否定表述）→ ② 判不动才读本条 `architecture.notes` →
+③ 裸 `"Hybrid"` 且本条备注定不了轴向时**定向为骨干轴 `Hybrid` + 稀疏性 `Unknown`**（本库采集者写 "Hybrid" 绝大多数指骨干混合，D11/D12 取证）→
+④ 三处都判不出 → 两栏 `Unknown`，原文进 notes 留证。另有 **5 条人工裁定表**（`OVERRIDE`），每条都必须写明是本条自己的哪句证据。
+
+**判据必须自带证据**：`temp/d15_split_architecture.py` 默认 dry-run，把 **87 条触发借力的记录连同命中词的 ±28 字上下文**
+全部打印出来逐条核对，并统计**被闸门挡掉的 39 处命中**。方向上刻意偏保守：**判不动就 `Unknown`**（少填可补，错填会误导聚合）。
+
+**这套闸门是一处一处误伤修出来的**（每一条都先有假阳性样本才加规则，别当通用先验抄）：
+- **否定剥离**：`非 MoE`、`not moe`、`MoE 未披露`、`非Transformer`；并列式 `非Dense/MoE/Transformer` 三个词都得剥，
+  只剥 `非 MoE` 会把中间的 `dense` 读成肯定声明。`non-MoE`（连字符英文）漏剥过一次，稠密模型被判成 MoE。
+- **词边界**：notes 是长篇散文，裸子串必误伤 —— `dense` 命中 `densely`；`\bexperts?\b` 把 Mixture-of-Depths 的
+  「expert-choice 路由」读成 MoE；裸 `attention` 把 "Lightning Attention" 读成第二骨干，凭空造出 `Hybrid`。
+- **`Dense(768→128)` 是全连接层记法**不是稀疏性声明；但括号后必须紧跟**数字**才算层记法，
+  否则把真声明 `Dense (non-MoE) decoder` 一起误杀（实测 `trillion-labs:tri-21b`）。
+- **限定语窗口要按子句切，不是按字符数**：`stepfun:step-1` 的「架构为密集 Transformer」被**上一子句**的
+  「未披露精确参数量」用 ±30 字窗口误挡；改成取命中所在子句（强句读切分 + ±40 字封顶）后正确。
+- **中文「密集 / 稠密」两种写法都在用**，只列 `稠密` 会漏。
+- **兄弟型号不算本条证据**：`ant-group:bailing-pro` 的备注写「后续 Ling-2.6-flash 已确认采用 MoE，但原始百灵 Pro 官方仅称 Transformer」——
+  这句的 MoE 归属**后继型号**，正是第 16 轮禁令要挡的那类。这类靠 `OVERRIDE` 单条钉死，不为一个样本改全局规则。
+- 同理被 `REJECT_WIN` 挡掉的：「是否为 MoE…未确认」「故不填 MoE 避免无源断言」「业界推测为 dense 但官方未明示」
+  「与 Transformer 的自注意力机制不同」「相较标准自回归解码」（拿标准做法作对照，不是声明本条骨干）。
+
+**结果与验收**：写盘 **299 条**（范围内 300 条减去 `xai:grok-3-mini` —— 它 `architecture_type` 本就是 `null`
+且备注明写「未公开架构细节」，不给它造 `"Unknown"`）。
+- 全库稀疏性栏：`Dense 324 / MoE 150 / Hybrid 1 / Unknown 457 / null 1`（933 条全部落在枚举内，兜底校验 0 越界）。
+- 主干栏：`Transformer-Decoder 120 / Transformer 84 / Unknown 31 / Hybrid 27 / RNN-LinearAttention 13 /
+  Transformer-Encoder 8 / Transformer-Encoder-Decoder 8 / Diffusion 3 / MLP 3 / Mamba-SSM 2`。
+- `backbone_type` 只写在参与拆栏的 299 条上（**缺键 = 该条未参与拆栏，不是错误**），键序紧跟 `architecture_type`。
+- 记录数 933 / 跑分项 5642 全程锁定；反向还原**逐字节**等于改前文件；备份 `model_data_v2.jsonl.d15bak-*` 与提交前 HEAD `md5` 相同。
+- 门禁：**改前 WARN 758 → 改后 469**。这 289 条差额正是新规则 1.1 命中「自由文本写法」的数量，
+  即新规则精确指向 D15 修掉的那个毛病；ERROR 全程 0。
+
+**新规则 1.1 / 1.2 为什么是 WARN 不是 ERROR**：`docs/non_model_records.jsonl` 等归档副本按**行 byte-exact** 留存，
+用的还是拆栏前的自由文本；判 ERROR 会让历史验收信号失真（§17.5 的归档同理）。
+**升 ERROR 的条件**：下一次采集周期结束、且新入库记录 1.1/1.2 命中为 0 时再升，别在拆栏当轮升。
+
+**遗留（没做，不是漏了）**：
+1. **633 条未参与拆栏** —— 它们的值本来就写作 `Dense`/`MoE`/`Unknown`，是合规的，但**主干信息为零**；
+   其中 373 条 `architecture_type="Unknown"` 若放开 notes 借力还能捞回一部分骨干，本轮刻意不做（范围只覆盖拍板时的 300 条）。
+2. **9 条两轴都 `Unknown`**（改后库实测）：`universite-de-technologie-de-compi-gne-cnrs-google:transe`（KG 嵌入）、
+   `massachusetts-institute-of-technology-mit:pandemonium`、`rock-ai-shanghai-stonehill-technology:yan`
+   （明说「摒弃 Transformer」，绝不能判成 Transformer）、`unknown:hierarchical-lm`、
+   `aircas-pcl:kongtian-lingmou-3-0`、`fmmu:pathorchestra`、`wuxi-sixiang-digital-intelligence-technology-co-ltd:jinshi`，
+   外加 §23 乙档保留的 `inspur:haiyue` 与 `xai:grok-4-heavy`。这 9 条原文里就没有骨干或稀疏性声明，**不是分类器漏判**，
+   原文已逐字留证在 notes。
+3. `backbone_type` 是**新键**，下游读主库的脚本要认这个键才有意义；本轮只改了采集侧口径（§字段字典 + 两份 subagent 任务书）。
+
+脚本：`temp/d15_split_architecture.py`（dry-run 出计划并打印逐条证据，`--apply` 才写盘）、
+`temp/d15_plan.txt`（过目用的判定表）、`temp/d15_changelog.txt`（300 行逐条 before→after 含证据串）。
+
+---
+
 ## 11. 并发上限（429）的处理
 
 派发 subagent 采集时可能撞上平台级并发上限，报错形如 `429 queue.userLimit.title` 或 `429 queue.waiting.title`。**这是账号/平台维度的限制，与项目配置无关，立刻重试通常仍失败。**
@@ -1010,3 +1084,4 @@ WARN 474 → **469**（归档那 7 条自身贡献 5 条，469 + 5 = 474 严丝�
 - 2026-08-30 v2.4（文档口径收尾，无数据改动）：① TL;DR 第 ⑤ 条的合并命令补上 `--on-array replace` 警示（§18 事故的语义根源）并把跑分数组的正确合并口径指向 §18 第 5 点的主键；② 长期挂着的「文中 33 处引用的 14 个 `temp/*.py` 被 `.gitignore` 排除、克隆后指针悬空」经拍板按**只加声明、不动文件**处置 —— 两份文档抬头各写一条「`temp/*.py` 不入库，复核以正文记录的判据与负对照数字为准」，脚本仍留在本机。
 - 2026-08-30 v2.5（整改轮 D13：上下文「须独立实测」口径废止）：新增 **§22**。`context_window_effective_tokens` 不再要求独立第三方实测 —— 该口径在仓库文档里查不到制定理由，且与全库实际背离（208 条填值里 173 条抄标称、只有 8 条符合设想），用户拍板**废止口径、173 条原样保留**。四份文档同日改写：`执行细则.md` §2（规则/示例/边界全部重写并留修订记录）、`prompt.md` 字段字典与「绕过方法」段、`agent_prompt_per_model.md` 采集任务书、本文 §14 踩点表。门禁删掉为该口径服务的两条 WARN（实测命中 127 + 105 = **232**，WARN 706 → 501），换成一条结构不变量 **「有效上下文大于标称上下文」即 WARN**；该检查随即照出 **27 条两栏填反**的记录（厂商「原生 X / 可扩展到 Y」被填成标称 X / 有效 Y），按方案 A 归位：大值进标称栏、有效栏置空、备注补归位说明，`deepseek:deepseek-v3:0324` **例外**（其大值 163,840 自证为 T3 三方转述，不可覆盖官方 T0 的 131,072 → 只清有效栏）。净改动 27 条记录（`context_window_effective_tokens` 27 / `context_window_tokens` 26 / `notes` 27），备注里 7 条 `context_window_*=` 字段-值绑定文字同步改名以免自相矛盾；记录 940→940、条目 5655→5655、`score` 零改动、有效上下文非空 208 → 181，反转逐字节复原为验收条件。**新基线：940 条 / ERROR 0 / WARN 474（= 457 + 规则 6.2 的 17）/ 结构漂移 0 / 精确主键重复 17 组。**
 - 2026-08-31 v2.6（整改轮 D14：主库范围收窄为「只记录模型」）：新增 **§23**。用户口径「数据库里不要训练框架什么的，我们只记录模型」——这是一条**从没写下来的范围假设**，之前从没被检验过，所以库里混进了 7 条自己声明不是模型的条目（agent 系统 / 训练系统 / 编排框架）。`temp/d14_nonmodel_scan2.py` 的判据**只认记录自己的自我声明**（`architecture_type` 或 `notes` 里明文写「不是模型」「agent 系统」「训练框架」等），第一版用「含框架/系统字样」的松口径扫出 **79 条命中，几乎全是误伤**（「训练框架 hai-llm」「非模型上下文上限」「专为代理式 AI 多智能体系统设计」「仅返回页面框架」），据此收紧为自我声明口径后 13 条命中、逐条人工裁决为 **7 删 + 3 留（乙档边界条目）+ 4 否**。处置：`temp/d14b_quarantine_nonmodel.py` 原样搬到 `docs/non_model_records.jsonl`，5 个对应采集文件移入 `incoming/models/_out_of_scope/`（与 §17 的 `存疑` 隔离档**是两套机制**，一个是质量存疑、一个是范围外）。验收：`md5(排序(主库 + 归档)) == md5(排序(改前备份))` 逐字节相等、两份文件分别跑门禁、记录 940→933 / 条目 5655→5642 / 花名册 692 → **685**（685 + 隔离 10 + 非模型 7 + 缺失 0 = 702）。**已声明的局限**：只删得掉「自己声明了不是模型」的条目，不自我声明的非模型要靠人工全库过一遍才能发现。§17.3 花名册口径同步重基线。**新基线：933 条 / ERROR 0 / WARN 469（= 452 + 规则 6.2 的 17）/ 结构漂移 0 / 精确主键重复 17 组。**
+- 2026-08-31 v2.7（整改轮 D15：`architecture_type` 拆成稀疏性 + 主干结构两栏）：新增 **§24**。第 15、16 两轮拍板 —— 一栏里塞了 **190 种自由写法**（既有稀疏性又有骨干，机器无法聚合），拆成 `architecture_type`（`Dense/MoE/Hybrid/Unknown`）+ 新栏 `architecture.backbone_type`（11 值枚举），判不动时**只许借力本条自己的 `architecture.notes` 明文声明、禁止通识反推**，原文照抄进 notes 的 `；原架构表述：「原话」`。范围 **300 条 = 越界 290（越出旧枚举 289 + 值 `null` 1）+ 纯 `"Hybrid"` 10**，实写 **299 条**（`xai:grok-3-mini` 原值本为 `null`，备注原文即「`architecture_type=null`：xAI 闭源未公开架构细节」→ 不给已自陈未披露的记录凭空造键，整条不动）。判定表先给用户逐条过目再动数据：87 条借力全部打印命中词 ±28 字上下文，39 处命中被闸门挡掉，5 条走人工裁定表。过程中修掉的判据缺陷各有样本：`non-MoE` 连字符否定漏剥、`Dense (non-MoE)` 被层记法闸门误杀、限定语窗口按 ±30 字符切会越界吞掉上一子句（stepfun:step-1）改为**按子句切**、中文「密集」与「稠密」两种写法、以及 `bailing-pro` 的 MoE 主语其实是后继型号 Ling-2.6-flash（兄弟型号声明不得算到本条头上）。门禁新增 **1.1 / 1.2** 两条枚举包含性检查，**刻意停在 WARN**：归档副本按行 byte-exact 留存、仍是拆栏前的自由文本，判 ERROR 会失真历史验收信号；升 ERROR 的条件写在 §24。验收：反向还原逐字节等于改前文件、备份 md5 与提交前 HEAD 相同、记录 933→933 / 条目 5642→5642 / `score` 零改动、键序 `backbone_type` 紧跟 `architecture_type` 全部 299 条无一例外、兜底校验两栏 0 越界；**WARN 改前 758 → 改后 469**（差额 289 正是新规则 1.1 在旧数据上的命中数），ERROR 全程 0，规则 1.1/1.2 现库命中 0。**基线数值不变：933 条 / ERROR 0 / WARN 469 / 结构漂移 0 / 精确主键重复 17 组。**已登记遗留：633 条未参与拆栏（值本就合规但**主干信息为零**，其中 373 条 `Unknown` 若放开 notes 借力可再捞一批，本轮按拍板范围不做）、9 条两轴皆 `Unknown`、`backbone_type` 尚无任何下游脚本消费。
