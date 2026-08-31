@@ -265,6 +265,9 @@ incoming/models/<batch_id>__<sanitized_model_id>.jsonl
 10. **禁止改动主库 `model_data_v2.jsonl`**（合并由合并 agent 统一执行）
 11. **禁止改动认领表 `batch_claim_ledger.jsonl` 中其他平台的批次**（只改自己 claim 的批次）
 12. **arxiv ID 必须先核对**：任务书给的 arxiv ID 可能是错的（如 Gemma 3 任务书给 2503.19711 实为无关论文，正确是 2503.19786）；subagent 经 WebFetch 直验后用正确 ID 并在 meta.notes 标注纠错
+13. **只采模型本体**（2026-08-31 拍板，D14）：agent 系统、训练/编排框架、推理基础设施、数据管线**不建条目**，即使厂商正式发布。
+    发现派发错了，**回报主 agent 走 §23 非范围处置，不得硬填一条全 `null` 的记录**——这类记录占花名册名额、让完成率虚高，
+    且没有任何一个字段是"这个模型"的属性。存量 7 条已移出至 `docs/non_model_records.jsonl`
 
 ---
 
