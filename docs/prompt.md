@@ -490,7 +490,13 @@
   "cache_write": 6.25,
   "batch_input": 2.5,
   "batch_output": 15.0,
-  "free_tier": null,
+  "free_tier": {
+    "available": true,
+    "rpm": null,
+    "rpd": null,
+    "tpm": null,
+    "notes": "新用户 50 万 token 免费额度（不过期，仅抵扣按 token 后付费在线推理费用）"
+  },
   "promotions": {
     "input": 4.0,
     "output": 20.0,
@@ -524,7 +530,24 @@
 - `batch_output`：批量输出价，如有。  
 - `promotions`：促销价对象或 `null`，含 `input`、`output`（促销期输入/输出价）、`ends_on`（ISO 8601 促销截止日）、`notes`（如“原 input 5.0 / output 30.0”）。无促销则 `null`。  
 - `long_context`：长上下文溢价对象或 `null`，含 `threshold_tokens`（触发溢价的 token 阈值）、`input_multiplier`、`output_multiplier`（超过阈值后输入/输出价乘数）、`notes`。无则 `null`。  
-- `free_tier`：免费额度描述，如 `"每月 100 万 token 免费"`，无则 `null`。  
+- `free_tier`：免费层**对象**或 `null`。**必须是对象，严禁写字符串或裸布尔**（D16 口径，见指南 §25）。
+  > 教训：本字段曾教会「如 `"每月 100 万 token 免费"`」的字符串写法，而门禁只在值为 dict 时才校验子键，
+  > 于是采集照文档写 → 门禁不报 → 漂移静默累积到 81 条（纯文字 52 + 裸布尔 29）才在 D16 被发现并归一。
+  > 现在门禁规则 4.4 会对非对象形状报 WARN，写完请自查。
+  - 键序固定为 `available, rpm, rpd, tpm, notes`。
+  - `available`：布尔或 `null`。语义是「**存在某条免费途径**」（官方 App / Web / 聊天页 / Playground /
+    新用户赠送额度 …任一），**不是「这个模型免费」**。因此它**不参与、也不得抵消价格判断**——
+    是否免费只看 `input` / `output` / `cached_input` / `batch_*` 等官方 API 定价键，
+    下游统计**不得**用 `available` 反推价格。`available=true` 时 `notes` **必须写清是哪条渠道**
+    （否则该键失去可核性）；判不动就填 `null`（偏差方向是少填，不是多填）。
+  - `rpm` / `rpd` / `tpm`：免费层的速率配额（每分钟请求数 / 每天请求数 / 每分钟 token 数），整数或 `null`。
+  - `notes`：免费渠道的说明原文或采集到的原句。
+  - 示例：`{"available": true, "rpm": null, "rpd": null, "tpm": null, "notes": "新用户开通百炼后 90 天内各模型有免费额度（以控制台为准）"}`
+  - **以下情形不算「存在免费渠道」**（按 D16 拍板口径）：
+    随付费订阅 / 计划内含的用量额度（渠道本身要付费）→ `null`；官方限速的 API 试用 key → `null`；
+    已过期、已随模型下线失效的渠道 → `false`；免费的是某项**计费项**（如缓存存储）而非使用额度 → `null`；
+    开源权重免费下载 / 自托管（属 `basic_info.access`，不是 API 免费层）→ `null`；
+    「免费版仅限其他型号」这类**排他**表述 → 本型号 `false`。
 - `effective_date`：价格生效日期，ISO 8601（OpenAI 类频繁变动须精确到日，采集 30 天后复核）。  
 - `source_url`：官方定价页链接（官方域不可访问时可为媒体 / 独立价格追踪链接，并在 `meta.notes` 声明，见决策 1）。  
 - `source_type`：`"官方定价页"`（不可达时记为媒体转述 / 独立价格追踪类，并在 `meta.notes` 声明）。  
@@ -711,7 +734,7 @@
 **示例输出片段**（仅一条记录）：
 
 ```jsonl
-{"schema_version":"1.1","model_id":"anthropic:claude-opus:4.7","basic_info":{"full_name":"Claude Opus 4.7","version":"4.7","vendor":"Anthropic","release_date":"2026-06","positioning":["旗舰","推理增强"],"access":{"open_weights":false,"api":true,"local_deployment":false,"notes":null}},"architecture":{"total_params_b":null,"active_params_b":null,"architecture_type":"Unknown","backbone_type":"Unknown","context_window_tokens":200000,"context_window_effective_tokens":null,"knowledge_cutoff":"2026-01","notes":"官方未披露参数量；标称 200K 上下文，有效上下文未测试"},"benchmarks":{"self_reported":[{"benchmark":"GPQA Diamond","score":0.82,"score_type":"accuracy","config":"0-shot CoT","date":"2026-06","source_url":"https://anthropic.com/claude-opus-4.7-technical-report","source_type":"官方技术报告","confidence":"T0-自报","notes":null}],"independent":[{"benchmark":"GPQA Diamond","score":0.78,"score_type":"accuracy","config":"default","date":"2026-07","source_url":"https://artificialanalysis.ai/","source_type":"独立评测平台","confidence":"T1","gap_to_self_reported":-0.04,"notes":"独立评测与自报差 4 个百分点，在可接受范围内"}],"arena_elo":[{"sub_benchmark":"text","score":1450,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":true,"notes":"主榜 text 快照日期 2026-08-20"},{"sub_benchmark":"coding","score":1520,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":false,"notes":"CodeArena 子榜，与 text 榜排名差异显著"}]},"pricing":{"currency":"USD","unit":"per_million_tokens","input":15.0,"output":75.0,"cached_input":1.5,"batch_input":7.5,"batch_output":37.5,"free_tier":null,"effective_date":"2026-08-01","source_url":"https://anthropic.com/pricing","source_type":"官方定价页","confidence":"T0","notes":"输入/输出价差 5 倍，使用时文本输出成本高"},"modality":{"input":{"text":true,"image":true,"audio":false,"video":true,"pdf":true,"code":true,"web":false,"notes":"PDF 输入经解析为图像，非原生 PDF 解析"},"output":{"text":true,"code":true,"image":false,"audio":false,"speech":false,"notes":null},"native_multimodal":{"input_image":true,"input_audio":false,"input_video":true,"output_image":false,"output_audio":false,"notes":"视频理解原生，图像原生；PDF 为工具链支持"}},"meta":{"collected_at":"2026-08-24","verified_at":"2026-08-24","verification_status":"已验证","source_urls":["https://anthropic.com/claude-opus-4.7-technical-report","https://anthropic.com/pricing"],"notes":null}}
+{"schema_version":"1.1","model_id":"anthropic:claude-opus:4.7","basic_info":{"full_name":"Claude Opus 4.7","version":"4.7","vendor":"Anthropic","release_date":"2026-06","positioning":["旗舰","推理增强"],"access":{"open_weights":false,"api":true,"local_deployment":false,"notes":null}},"architecture":{"total_params_b":null,"active_params_b":null,"architecture_type":"Unknown","backbone_type":"Unknown","context_window_tokens":200000,"context_window_effective_tokens":null,"knowledge_cutoff":"2026-01","notes":"官方未披露参数量；标称 200K 上下文，有效上下文未测试"},"benchmarks":{"self_reported":[{"benchmark":"GPQA Diamond","score":0.82,"score_type":"accuracy","config":"0-shot CoT","date":"2026-06","source_url":"https://anthropic.com/claude-opus-4.7-technical-report","source_type":"官方技术报告","confidence":"T0-自报","notes":null}],"independent":[{"benchmark":"GPQA Diamond","score":0.78,"score_type":"accuracy","config":"default","date":"2026-07","source_url":"https://artificialanalysis.ai/","source_type":"独立评测平台","confidence":"T1","gap_to_self_reported":-0.04,"notes":"独立评测与自报差 4 个百分点，在可接受范围内"}],"arena_elo":[{"sub_benchmark":"text","score":1450,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":true,"notes":"主榜 text 快照日期 2026-08-20"},{"sub_benchmark":"coding","score":1520,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":false,"notes":"CodeArena 子榜，与 text 榜排名差异显著"}]},"pricing":{"currency":"USD","unit":"per_million_tokens","input":15.0,"output":75.0,"cached_input":1.5,"batch_input":7.5,"batch_output":37.5,"free_tier":{"available":null,"rpm":null,"rpd":null,"tpm":null,"notes":null},"effective_date":"2026-08-01","source_url":"https://anthropic.com/pricing","source_type":"官方定价页","confidence":"T0","notes":"输入/输出价差 5 倍，使用时文本输出成本高"},"modality":{"input":{"text":true,"image":true,"audio":false,"video":true,"pdf":true,"code":true,"web":false,"notes":"PDF 输入经解析为图像，非原生 PDF 解析"},"output":{"text":true,"code":true,"image":false,"audio":false,"speech":false,"notes":null},"native_multimodal":{"input_image":true,"input_audio":false,"input_video":true,"output_image":false,"output_audio":false,"notes":"视频理解原生，图像原生；PDF 为工具链支持"}},"meta":{"collected_at":"2026-08-24","verified_at":"2026-08-24","verification_status":"已验证","source_urls":["https://anthropic.com/claude-opus-4.7-technical-report","https://anthropic.com/pricing"],"notes":null}}
 ```
 
 ---

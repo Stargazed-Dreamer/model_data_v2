@@ -267,6 +267,21 @@ def check_record(rec):
         warns.append("pricing 六个价键全为 null，但 pricing.currency=%r —— 无价应填 null，"
                      "USD 等币种仅在确有价格时才有意义" % (pricing.get("currency"),))
 
+    # 4.4 free_tier 形状漂移（D16）。根因是文档与门禁互相矛盾：prompt.md 曾教字符串写法，
+    #     而结构漂移检查（0.1）的 cmp_block 对非 dict 直接 return，裸布尔/纯文字一律静默放行，
+    #     于是采集照文档写 → 无人报警 → 漂移到 81 条（str 52 + bool 29）才被发现。
+    #     D16 已一次性归一 84 条（见 temp/d16_changelog.txt）；本条 WARN 只负责挡住后续采集写回。
+    ft = pricing.get("free_tier")
+    ft_keys = SUB_BLOCK_KEYS["pricing.free_tier"]
+    if ft is not None and not isinstance(ft, dict):
+        shown = ft if isinstance(ft, str) else repr(ft)
+        warns.append("pricing.free_tier 形状漂移：实际 %s（%s）"
+                     " —— 规范为 null 或含 available/rpm/rpd/tpm/notes 五键的对象"
+                     % (type(ft).__name__, shown[:40]))
+    elif isinstance(ft, dict) and set(ft) != ft_keys:
+        warns.append("pricing.free_tier 键集与规范不符：实际 %s（规范 %s）"
+                     % (", ".join(sorted(ft)) or "空对象", ", ".join(sorted(ft_keys))))
+
     # 5. positioning：数组 + 枚举
     pos = (rec.get("basic_info") or {}).get("positioning")
     if pos is None:

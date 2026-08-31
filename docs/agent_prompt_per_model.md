@@ -48,7 +48,9 @@
   "pricing": {
     "currency": "USD", "unit": "per_million_tokens",
     "input": null, "output": null, "cached_input": null, "cache_write": null,
-    "batch_input": null, "batch_output": null, "free_tier": null, "promotions": null,
+    "batch_input": null, "batch_output": null,
+    "free_tier": {"available": null, "rpm": null, "rpd": null, "tpm": null, "notes": null},
+    "promotions": null,
     "long_context": null, "effective_date": null, "source_url": null,
     "source_type": null, "confidence": null, "notes": null
   },
