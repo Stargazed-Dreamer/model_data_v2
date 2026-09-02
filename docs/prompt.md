@@ -400,7 +400,7 @@
       "config": "0-shot CoT",
       "date": "2026-06",
       "source_url": "https://anthropic.com/claude-opus-4.7-technical-report",
-      "source_type": "官方技术报告",
+      "source_type": "官方技术报告（自报）",
       "confidence": "T0-自报",
       "notes": null
     }
@@ -458,6 +458,9 @@
 - `date`：评测发布日期或快照日期。  
 - `source_url`：来源链接。  
 - `source_type`：来源类型，如 `"官方技术报告"`、`"独立评测平台"`。  
+  **`self_reported` 条目的 `source_type` 必须自带「自报」二字**（如 `"官方技术报告（自报）"`、`"官方 Model Card（自报）"`）——
+  门禁会对 `confidence` 为 T0 / T0-自报 / T0-自报-转述 却不含「自报」的自报分报 WARN。裸写 `"官方技术报告"` 会让
+  下游把厂商自报分误读成中立来源，且这类值无法与 `independent` 的技术报告引用区分开。
 - `source_site`：**仅 `independent` 使用**。字符串，记这条独立评测出自哪个站，如 `"evals.report"`、
   `"Artificial Analysis"`、`"benched.ai"`。同一基准被多个站各测一次是本表的正常形态，
   `source_site` 就是区分这些测量的主键段 —— 少了它，不同站的分数会被当成「同一次测量记了两遍」而被合并吃掉。
@@ -495,7 +498,7 @@
     "rpm": null,
     "rpd": null,
     "tpm": null,
-    "notes": "新用户 50 万 token 免费额度（不过期，仅抵扣按 token 后付费在线推理费用）"
+    "notes": "官方定价页本模型行的免费额度列：新用户 50 万 token（不过期，仅抵扣按 token 后付费的在线推理费用）"
   },
   "promotions": {
     "input": 4.0,
@@ -535,19 +538,59 @@
   > 于是采集照文档写 → 门禁不报 → 漂移静默累积到 81 条（纯文字 52 + 裸布尔 29）才在 D16 被发现并归一。
   > 现在门禁规则 4.4 会对非对象形状报 WARN，写完请自查。
   - 键序固定为 `available, rpm, rpd, tpm, notes`。
-  - `available`：布尔或 `null`。语义是「**存在某条免费途径**」（官方 App / Web / 聊天页 / Playground /
-    新用户赠送额度 …任一），**不是「这个模型免费」**。因此它**不参与、也不得抵消价格判断**——
+  - `available`：布尔或 `null`。语义是「**vendor 官方 API 接口当前是否有免费额度**」（**窄口径，2026-09-02 拍板，
+    见指南 §26**），**不是「这个模型免费」，也不是「存在某条免费途径」**。因此它**不参与、也不得抵消价格判断**——
     是否免费只看 `input` / `output` / `cached_input` / `batch_*` 等官方 API 定价键，
-    下游统计**不得**用 `available` 反推价格。`available=true` 时 `notes` **必须写清是哪条渠道**
+    下游统计**不得**用 `available` 反推价格。`available=true` 时 `notes` **必须写清是哪条官方 API 渠道**
     （否则该键失去可核性）；判不动就填 `null`（偏差方向是少填，不是多填）。
+    本字段描述**当前**状态，不记历史：渠道曾存在但已随模型下线失效的，按下面记 `false`。
   - `rpm` / `rpd` / `tpm`：免费层的速率配额（每分钟请求数 / 每天请求数 / 每分钟 token 数），整数或 `null`。
   - `notes`：免费渠道的说明原文或采集到的原句。
-  - 示例：`{"available": true, "rpm": null, "rpd": null, "tpm": null, "notes": "新用户开通百炼后 90 天内各模型有免费额度（以控制台为准）"}`
-  - **以下情形不算「存在免费渠道」**（按 D16 拍板口径）：
-    随付费订阅 / 计划内含的用量额度（渠道本身要付费）→ `null`；官方限速的 API 试用 key → `null`；
-    已过期、已随模型下线失效的渠道 → `false`；免费的是某项**计费项**（如缓存存储）而非使用额度 → `null`；
-    开源权重免费下载 / 自托管（属 `basic_info.access`，不是 API 免费层）→ `null`；
+  - 正例（依据落到本模型的官方 API 定价行 → `true`）：
+    `{"available": true, "rpm": null, "rpd": null, "tpm": null, "notes": "智谱官方定价页 open.bigmodel.cn 将 GLM-4.7-Flash 的 input/output/cache hit 三栏全部列为「免费」（T0 直采），即 vendor 官方 API 对本模型免费开放；rpm/rpd/tpm 官方未公布，置 null 不伪造"}`
+  - 反例（平台级笼统话术 → `null`，**不要照抄成 `true`**）：
+    `{"available": null, "rpm": null, "rpd": null, "tpm": null, "notes": "只拿到阿里云百炼平台级话术「新用户开通百炼后 90 天内各模型有免费额度（以控制台为准）」，未经官方定价页的 per-model 免费额度列确证到本模型，按裁定6 记 null；已登记待重采"}`
+    > 这条反例是**两代累积**的真事（`git log -S` 实测）：D16 提交 `b185006` 就把平台级话术
+    > 「新用户开通百炼后 90 天内各模型有免费额度（以控制台为准）」当示例教成 `available=true`；
+    > D17 改窄口径时只把示例换成另一句笼统数字「100万 Token 免费（自开通百炼起 90 天有效期）」，
+    > **判定方向仍是 `true`** ——口径改了、示例的方向没跟着改。采集照抄的结果是 26 条同族记录挂在 `true` 上，
+    > 直到 D17b（23 条）/ D17c（3 条）才按裁定6 归一为 `null`（见指南 §26.1 第 6 条、§26.3 第 3 条）。
+    > **判据：`notes` 里必须能看出这个数字/额度是从官方页的哪一行读来的；只有「各模型」「通常为」「以控制台为准」这类
+    > 平台级量词的，一律 `null`。改口径时必须回头检查示例的判定方向，光换措辞等于没改。**
+  - **记 `false` 的情形**（有正面依据说明官方 API 侧没有/不再有免费额度）：
+    模型已退役、免费期已过、额度已随模型下线失效 → `false`；
+    正面确证 vendor 从无官方托管 API（纯开源权重 / 纯研究模型 / 纯 App 内置功能）→ `false`；
+    `notes` 或 `pricing.notes` 明写 API 需付费 → `false`；
     「免费版仅限其他型号」这类**排他**表述 → 本型号 `false`。
+  - **记 `null` 的情形**（依据没落到官方 API 头上，或干脆查不到）：
+    依据只到官方 App / 网页聊天端 / Playground / 消费者订阅内含额度 → `null`；
+    官方限速的 API 试用 key（裁定2）→ `null`；
+    依据只是开源权重免费下载 / 自托管（属 `basic_info.access`，不是 API 免费层）→ `null`；
+    依据只是第三方托管的免费档（OpenRouter `:free` / Cerebras 免费 key / HuggingFace serverless）→ `null`；
+    免费的是某项**计费项**（如缓存存储）而非使用额度 → `null`；
+    只拿到兄弟型号或平台级政策、未确证到本型号头上（裁定6）→ `null`；
+    官方 API 侧查不到 / 未确证 → `null`（红线：查不到就是 `null`，不许推断）。
+  > **口径变更留痕**：D16 曾把本字段写成宽口径（「存在某条免费途径，官方 App / Web / Playground / 新用户赠送额度
+  > …任一」），并据此留下 5 条互相矛盾的判定。2026-09-02 第 20 轮拍板改**窄口径**，同一条口径**分三遍**才走完：
+  > - **D17**（第一遍）：215 条结构化记录里改判 67 条（`true→false` 37、`true→null` 26、`null→false` 4），
+  >   修正 19 条记录里 24 处「值与 notes 自述相反」的句子（分布在 `free_tier.notes` / `pricing.notes` /
+  >   `pricing.long_context.notes` / `meta.notes`）。改判后：`true` 57 / `false` 77 / `null` 81。
+  > - **D17b**（第二遍）：用更强的检测器照出第一遍判据的五处盲区（详见指南 §26.1），先取得第 21 轮四项追加裁定
+  >   ——**Q1** 平台级额度不算到本条（23 条阿里云「开通百炼后 90 天内各模型有免费额度（以控制台为准）」→ `null`）；
+  >   **Q2** legacy ≠ retired（从定价页移除/标 legacy 但未明示 retired 且可调用性未实测 → `null`，不是 `false`）；
+  >   **Q3** 窄口径不要求额度以 token 计量（AWS Q Developer 的「50 次 agentic 请求/月 + 1000 行代码/月」保 `true`）；
+  >   **Q4** vendor 自有 Free API endpoint 算（NVIDIA `integrate.api.nvidia.com/v1` 免费端点保 `true`）——
+  >   据此再改判 45 条（`true→false` 11、`true→null` 30、`null→false` 4）+ 补写 1 条空 notes。
+  >   改判后：`true` 16 / `false` 92 / `null` 107。
+  > - **D17c**（第三遍）：照出第六处盲区（平台级话术正则漏「百炼开通后」「自开通百炼起」「各100万Token」三种词序变体），
+  >   再改判 3 条阿里云记录 → `null`；同时纠正第二遍写进 23 条记录的一句错误理由（声称「四条同族已持本模型专属数字
+  >   并引用官方页」，实测只有 `qwen-plus` 一条成立）。
+  > **三遍累计**：`available` 改判 **115** 处（`true→false` 48、`true→null` 59、`null→false` 8）、notes 改 **63** 处、
+  > 触及 **120** 条记录。**最终分布：`true` 13 / `false` 92 / `null` 110**（形状仍 `null` 718 / 对象 215，键序变体 1）。
+  > 全程记录 933、跑分条目 5642、`score` 零改动，门禁 933 / ERROR 0 / WARN 469 三遍均不变。
+  > **存活 13 条 `true` 每条都在 notes 里写清了是哪条官方 API 渠道**，无一条 notes 为空。
+  > 已登记待重采：26 条阿里云记录需读官方 per-model 免费额度表（`help.aliyun.com/zh/model-studio/billing` 的免费额度列
+  > + `new-free-quota` 页）；`open-mistral-nemo:2407` 与孪生条 `mistral-nemo-base:2407` 的 API 可调用性事实对撞。
 - `effective_date`：价格生效日期，ISO 8601（OpenAI 类频繁变动须精确到日，采集 30 天后复核）。  
 - `source_url`：官方定价页链接（官方域不可访问时可为媒体 / 独立价格追踪链接，并在 `meta.notes` 声明，见决策 1）。  
 - `source_type`：`"官方定价页"`（不可达时记为媒体转述 / 独立价格追踪类，并在 `meta.notes` 声明）。  
@@ -682,7 +725,8 @@
 ### 步骤 3：标注来源与可信度
 
 每个字段必须标注来源类型、可信度等级、采集日期。  
-- 来源类型下拉：官方技术报告 / 官方定价页 / Model Card / 独立评测平台 / Hugging Face / 厂商博客 / 行业媒体 / 行业媒体转述官方发布 / 社交媒体。  
+- 来源类型下拉：官方技术报告 / **官方技术报告（自报）** / 官方定价页 / Model Card / **官方 Model Card（自报）** / 独立评测平台 / Hugging Face / 厂商博客 / 行业媒体 / 行业媒体转述官方发布 / **行业媒体聚合官方发布（自报分转述）** / 社交媒体。  
+  > `self_reported` 条目**只能**从带「自报」的三项里选（门禁 WARN 级规则）；不带「自报」的同名类型留给 `independent` 引用官方报告时使用。库里现存 436 条自报分写的是裸类型，属存量待归一（D18），新采集不得再抄裸写法。
 - 可信度等级：T0 / T0-自报 / T0-自报-转述 / T1 / T2 / T3 / T4（新增 `T0-自报-转述`，见决策 2）。  
 - 来源 URL 必须完整；确实无法直读官方页时，可用可达的媒体 / 独立评测链接，但须真实存在且非杜撰，并在 `meta.notes` 声明。  
 - 采集日期必须为实际采集日期。  
@@ -734,7 +778,7 @@
 **示例输出片段**（仅一条记录）：
 
 ```jsonl
-{"schema_version":"1.1","model_id":"anthropic:claude-opus:4.7","basic_info":{"full_name":"Claude Opus 4.7","version":"4.7","vendor":"Anthropic","release_date":"2026-06","positioning":["旗舰","推理增强"],"access":{"open_weights":false,"api":true,"local_deployment":false,"notes":null}},"architecture":{"total_params_b":null,"active_params_b":null,"architecture_type":"Unknown","backbone_type":"Unknown","context_window_tokens":200000,"context_window_effective_tokens":null,"knowledge_cutoff":"2026-01","notes":"官方未披露参数量；标称 200K 上下文，有效上下文未测试"},"benchmarks":{"self_reported":[{"benchmark":"GPQA Diamond","score":0.82,"score_type":"accuracy","config":"0-shot CoT","date":"2026-06","source_url":"https://anthropic.com/claude-opus-4.7-technical-report","source_type":"官方技术报告","confidence":"T0-自报","notes":null}],"independent":[{"benchmark":"GPQA Diamond","score":0.78,"score_type":"accuracy","config":"default","date":"2026-07","source_url":"https://artificialanalysis.ai/","source_type":"独立评测平台","confidence":"T1","gap_to_self_reported":-0.04,"notes":"独立评测与自报差 4 个百分点，在可接受范围内"}],"arena_elo":[{"sub_benchmark":"text","score":1450,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":true,"notes":"主榜 text 快照日期 2026-08-20"},{"sub_benchmark":"coding","score":1520,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":false,"notes":"CodeArena 子榜，与 text 榜排名差异显著"}]},"pricing":{"currency":"USD","unit":"per_million_tokens","input":15.0,"output":75.0,"cached_input":1.5,"batch_input":7.5,"batch_output":37.5,"free_tier":{"available":null,"rpm":null,"rpd":null,"tpm":null,"notes":null},"effective_date":"2026-08-01","source_url":"https://anthropic.com/pricing","source_type":"官方定价页","confidence":"T0","notes":"输入/输出价差 5 倍，使用时文本输出成本高"},"modality":{"input":{"text":true,"image":true,"audio":false,"video":true,"pdf":true,"code":true,"web":false,"notes":"PDF 输入经解析为图像，非原生 PDF 解析"},"output":{"text":true,"code":true,"image":false,"audio":false,"speech":false,"notes":null},"native_multimodal":{"input_image":true,"input_audio":false,"input_video":true,"output_image":false,"output_audio":false,"notes":"视频理解原生，图像原生；PDF 为工具链支持"}},"meta":{"collected_at":"2026-08-24","verified_at":"2026-08-24","verification_status":"已验证","source_urls":["https://anthropic.com/claude-opus-4.7-technical-report","https://anthropic.com/pricing"],"notes":null}}
+{"schema_version":"1.1","model_id":"anthropic:claude-opus:4.7","basic_info":{"full_name":"Claude Opus 4.7","version":"4.7","vendor":"Anthropic","release_date":"2026-06","positioning":["旗舰","推理增强"],"access":{"open_weights":false,"api":true,"local_deployment":false,"notes":null}},"architecture":{"total_params_b":null,"active_params_b":null,"architecture_type":"Unknown","backbone_type":"Unknown","context_window_tokens":200000,"context_window_effective_tokens":null,"knowledge_cutoff":"2026-01","notes":"官方未披露参数量；标称 200K 上下文，有效上下文未测试"},"benchmarks":{"self_reported":[{"benchmark":"GPQA Diamond","score":0.82,"score_type":"accuracy","config":"0-shot CoT","date":"2026-06","source_url":"https://anthropic.com/claude-opus-4.7-technical-report","source_type":"官方技术报告（自报）","confidence":"T0-自报","notes":null}],"independent":[{"benchmark":"GPQA Diamond","score":0.78,"score_type":"accuracy","config":"default","date":"2026-07","source_url":"https://artificialanalysis.ai/","source_type":"独立评测平台","confidence":"T1","gap_to_self_reported":-0.04,"notes":"独立评测与自报差 4 个百分点，在可接受范围内"}],"arena_elo":[{"sub_benchmark":"text","score":1450,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":true,"notes":"主榜 text 快照日期 2026-08-20"},{"sub_benchmark":"coding","score":1520,"date":"2026-08-20","source_url":"https://lmarena.ai/","source_type":"LMArena","confidence":"T1","is_primary":false,"notes":"CodeArena 子榜，与 text 榜排名差异显著"}]},"pricing":{"currency":"USD","unit":"per_million_tokens","input":15.0,"output":75.0,"cached_input":1.5,"cache_write":18.75,"batch_input":7.5,"batch_output":37.5,"free_tier":{"available":null,"rpm":null,"rpd":null,"tpm":null,"notes":null},"effective_date":"2026-08-01","source_url":"https://anthropic.com/pricing","source_type":"官方定价页","confidence":"T0","notes":"输入/输出价差 5 倍，使用时文本输出成本高"},"modality":{"input":{"text":true,"image":true,"audio":false,"video":true,"pdf":true,"code":true,"web":false,"notes":"PDF 输入经解析为图像，非原生 PDF 解析"},"output":{"text":true,"code":true,"image":false,"audio":false,"speech":false,"notes":null},"native_multimodal":{"input_image":true,"input_audio":false,"input_video":true,"output_image":false,"output_audio":false,"notes":"视频理解原生，图像原生；PDF 为工具链支持"}},"meta":{"collected_at":"2026-08-24","verified_at":"2026-08-24","verification_status":"已验证","source_urls":["https://anthropic.com/claude-opus-4.7-technical-report","https://anthropic.com/pricing"],"notes":null}}
 ```
 
 ---
