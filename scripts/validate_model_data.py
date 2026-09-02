@@ -424,12 +424,13 @@ def check_record(rec):
             # （2026-09-02 拍板）。空值那批登记在指南 §27 的遗留清单里待重采，门禁不再重复计一次。
             if section == "self_reported" and conf in ("T0", "T0-自报", "T0-自报-转述") and stype and "自报" not in stype:
                 warns.append(f"{tag} 自报分 source_type={stype!r} 建议体现「自报」属性")
-            # 6.6 来源类型栏写法应在受控词表内（D24 拍板 WARN 留痕）。三段分设枚举，
+            # 6.6 来源类型栏写法应在受控词表内（D24 拍板 WARN 留痕，D26 升 ERROR：D25 五批归一后
+            #     现库命中 0，与 6.4/6.5 升 ERROR 时机一致：现库命中 0 → 升级）。三段分设枚举，
             #     详见 SOURCE_TYPE_ENUM_BY_SECTION 上方注释。本条只判等不归一，归一由 D25 改数据做。
             if stype and stype not in SOURCE_TYPE_ENUM_BY_SECTION[section]:
-                warns.append(f"{tag} source_type={stype!r} 不在 {section} 段受控枚举内"
+                errors.append(f"{tag} source_type={stype!r} 不在 {section} 段受控枚举内"
                              f"（允许：{sorted(SOURCE_TYPE_ENUM_BY_SECTION[section])}）"
-                             f" —— D24 起登记同义异写，待 D25 起归一")
+                             f" —— D25 归一后现库命中 0，D26 升 ERROR 防回归")
     for i, item in enumerate(bench.get("arena_elo") or []):
         tag = f"benchmarks.arena_elo[{i}]({_bench_name(item, 'sub_benchmark')})"
         # 同 6.1：arena_elo 的 canonical 主键是 sub_benchmark，写成 benchmark 也算非 canonical
@@ -459,9 +460,9 @@ def check_record(rec):
         # 同 6.6：arena_elo 段同步查受控枚举（与 self_reported/independent 共用 SOURCE_TYPE_ENUM_BY_SECTION，
         #   但取该段自己的枚举集合）。详见 SOURCE_TYPE_ENUM_BY_SECTION 上方注释。
         if stype and stype not in SOURCE_TYPE_ENUM_BY_SECTION["arena_elo"]:
-            warns.append(f"{tag} source_type={stype!r} 不在 arena_elo 段受控枚举内"
+            errors.append(f"{tag} source_type={stype!r} 不在 arena_elo 段受控枚举内"
                          f"（允许：{sorted(SOURCE_TYPE_ENUM_BY_SECTION['arena_elo'])}）"
-                         f" —— D24 起登记同义异写，待 D25 起归一")
+                         f" —— D25 归一后现库命中 0，D26 升 ERROR 防回归")
 
     # 6.2 合并主键撞车（D11，D12 起 independent 主键含 source_site）：
     #     同一主键挂着多条条目 —— 合并时去重无从裁决。
