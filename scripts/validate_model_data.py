@@ -23,7 +23,8 @@ validate_model_data.py —— 记录级校验器（P5 修复，执行细则 #11 
             2026-08-31 D15 拆栏再加两项：1.1 `architecture_type` 越出稀疏性四值枚举、
             1.2 `backbone_type` 越出主干结构枚举（拆栏前的自由文本写法正命中 1.1）
             2026-09-02 D18b 加 6.3（来源类型栏整栏写的是纯可信度等级值）；
-            D18e 加 6.4（来源类型栏把等级值当**前缀**缀在来源描述前，存量已由 D18d 剥净 → 加上时命中 0，纯防回归）
+            D18e 加 6.4（来源类型栏把等级值当**前缀**缀在来源描述前，存量已由 D18d 剥净 → 加上时命中 0，纯防回归）；
+            D20 加 6.5（来源类型栏把等级值当**括号后缀**写在来源描述后，6.4 的镜像形，存量已由 D20 剥净 → 同样命中 0）
 
 用法：
   python validate_model_data.py <file.jsonl> [--report <out.md>]
@@ -106,6 +107,23 @@ TIER_ONLY_STYPE_RE = re.compile(r"^T[0-4](?:-自报)?(?:-转述)?(?:-第三方)?
 #      单独登记在指南 §27.3，别让一条 WARN 背两类缺陷。
 # 同 6.3：只决定是否记 WARN，绝不驱动数据改写。
 TIER_PREFIX_STYPE_RE = re.compile(r"^T[0-4](?:-自报)?(?:-转述)?(?:-第三方)?[ \t:：、,，)）—-]+.+$")
+# 规则 6.5：来源类型栏把可信度等级值当**括号后缀**写在真实来源描述后（"官方模型卡自报（T0 直采）"）。
+# 6.4 的镜像形，2026-09-02 第 28 轮拍板「补，并造探针」。存量 21 条已由 D20 剥净（只剥等级、
+# 保留「直采」「官方一手」等采集者限定词），所以本条加上时现库命中为 0，纯防新采集回归。
+# 三件必须记住的事：
+#   ① 判据 = 任意位置含等级值 ∧ **不以等级值开头**。后半个前置是互斥的构造性保证，不可省：
+#      6.3/6.4 都要求等级值在位置 0，所以凡满足本前置者按定义不属那两条。少了它，现库会
+#      把 6.3 的 85 条重复报一遍（118 → 203），正是 D18e 躲开的那个坑。
+#      再显式追加 `¬6.3 ∧ ¬6.4` 不改变命中集（实测现库 / D20 改前备份 / D18d 改前备份三盘均为
+#      0 / 21 / 21），故不写进代码，别把它当第二道保险加回来。
+#   ② 前置刻意写成 `^\s*T`（比 6.3/6.4 的 `^T` 更宽）：这样 " T0 官方自报" 这种**带前导空格的前缀形**
+#      也不会被本条当成后缀形报出来 —— 本条宁可漏一格排版瑕疵，也不把一类缺陷报成另一类。
+#   ③ 左边界 `[^A-Za-z]` 是为了不匹配嵌在字母串里的等级字样（如型号名 "…XT0"）。
+#      实测把 `[0-4]` 放宽成 `[0-9]` 命中集一字不变（三盘同测）；`T1.5` 这类小数等级已由
+#      `(?:\.[0-9]+)?` 覆盖，不需要额外分支。
+# 同 6.3/6.4：只决定要不要记 WARN，绝不驱动数据改写。
+TIER_ANYWHERE_STYPE_RE = re.compile(r"(?:^|[^A-Za-z])T[0-4](?:\.[0-9]+)?")
+TIER_LEADING_STYPE_RE = re.compile(r"^\s*T[0-4](?:\.[0-9]+)?")
 DATE_MD_RE = re.compile(r"^\d{4}-\d{2}$")
 DATE_FULL_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # 「未披露」类声明词序变体很多（官方未披露 / 未官方披露 / 尚未披露），按字面匹配会把
@@ -349,6 +367,11 @@ def check_record(rec):
             if stype and TIER_PREFIX_STYPE_RE.match(stype) and not TIER_ONLY_STYPE_RE.match(stype):
                 warns.append(f"{tag} source_type={stype!r} 把可信度等级值当前缀写在来源描述前"
                              f" —— 等级应写进 confidence，本栏只写「是什么文件/页面」，不加前缀（指南 §27.3）")
+            # 6.5 来源类型栏把等级值当**括号后缀**写在来源描述后（D20）。存量 21 条已由本轮剥净，
+            #     加上时命中 0，纯防回归。`not TIER_LEADING` 那道前置见 TIER_ANYWHERE_STYPE_RE 上方注释①，不可省。
+            if stype and TIER_ANYWHERE_STYPE_RE.search(stype) and not TIER_LEADING_STYPE_RE.match(stype):
+                warns.append(f"{tag} source_type={stype!r} 把可信度等级值当括号后缀写在来源描述后"
+                             f" —— 等级应写进 confidence，本栏只写「是什么文件/页面」，括号里不填等级（指南 §27.6）")
             if conf in ("T0", "T0-自报") and RELAY_MARK in stype:
                 errors.append(f"{tag} confidence={conf} 与 source_type「{stype}」不自洽：转述来源不得配 T0/T0-自报")
             # source_type 为空 = 「没主张来源类型」，与「主张了却漏标自报」是两类缺陷，不报同一条 WARN
@@ -375,6 +398,11 @@ def check_record(rec):
         if stype and TIER_PREFIX_STYPE_RE.match(stype) and not TIER_ONLY_STYPE_RE.match(stype):
             warns.append(f"{tag} source_type={stype!r} 把可信度等级值当前缀写在来源描述前"
                          f" —— 等级应写进 confidence，本栏只写「是什么文件/页面」，不加前缀（指南 §27.3）")
+        # 同 6.4：本段也要查后缀形（改前备份实测本段命中 0 —— 21 条全在 self_reported，
+        #   但判据不能靠这个省略，否则新采集写在本段就照不到）。
+        if stype and TIER_ANYWHERE_STYPE_RE.search(stype) and not TIER_LEADING_STYPE_RE.match(stype):
+            warns.append(f"{tag} source_type={stype!r} 把可信度等级值当括号后缀写在来源描述后"
+                         f" —— 等级应写进 confidence，本栏只写「是什么文件/页面」，括号里不填等级（指南 §27.6）")
 
     # 6.2 合并主键撞车（D11，D12 起 independent 主键含 source_site）：
     #     同一主键挂着多条条目 —— 合并时去重无从裁决。
