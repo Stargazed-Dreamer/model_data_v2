@@ -357,10 +357,12 @@ def check_record(rec):
             if conf is not None and conf not in CONFIDENCE_ENUM:
                 errors.append(f"{tag} confidence={conf!r} 不在枚举内")
             stype = item.get("source_type") or ""
-            # 6.3 来源类型栏写成了纯可信度等级值（D18b）。2026-09-02 拍板「只加门禁留痕，数据一字不动」：
-            #     实测命中 607 条 / 62 条记录，原样在册，由本条 WARN 自动维护清单（升 ERROR 的条件见指南 §27）。
+            # 6.3 来源类型栏写成了纯可信度等级值（D18b 起 WARN 级留痕；D18c/D19/D20/D21/D22 逐轮修复后
+            #     现库命中 0 → D22 拍板升 ERROR 级，与 6.4/6.5 时机一致）。该值天然含「自报」二字，
+            #     能过下面的「建议体现自报属性」子串判据，可它说的是等级、不是「什么文件/页面」，
+            #     来源信息为零 —— 判据查的是字符串表面属性而非字段语义（指南 §27）。
             if stype and TIER_ONLY_STYPE_RE.match(stype):
-                warns.append(f"{tag} source_type={stype!r} 整栏写的是可信度等级值，零来源信息"
+                errors.append(f"{tag} source_type={stype!r} 整栏写的是可信度等级值，零来源信息"
                              f" —— 等级应写进 confidence，来源类型应写「是什么文件/页面」（指南 §27）")
             # 6.4 来源类型栏把等级值当**前缀**写在来源描述前（D18e）。存量已由 D18d 剥净，加上时命中 0，
             #     纯防新采集回归。`not TIER_ONLY` 那道前置见 TIER_PREFIX_STYPE_RE 上方注释①，不可省。
@@ -390,9 +392,10 @@ def check_record(rec):
         if not item.get("date"):
             errors.append(f"{tag} 缺快照 date")
         # 同 6.3：arena_elo 段此前完全不读 source_type，该段的同类写法（实测 3 条）对旧门禁彻底不可见。
+        #     D22 起 6.3 升 ERROR，本段同步。
         stype = item.get("source_type") or ""
         if stype and TIER_ONLY_STYPE_RE.match(stype):
-            warns.append(f"{tag} source_type={stype!r} 整栏写的是可信度等级值，零来源信息"
+            errors.append(f"{tag} source_type={stype!r} 整栏写的是可信度等级值，零来源信息"
                          f" —— 等级应写进 confidence，来源类型应写「是什么文件/页面」（指南 §27）")
         # 同 6.4：本段也要查，否则该段的前缀写法照旧不可见（改前备份实测本段命中 0，但判据不能靠这个省略）。
         if stype and TIER_PREFIX_STYPE_RE.match(stype) and not TIER_ONLY_STYPE_RE.match(stype):

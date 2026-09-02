@@ -34,6 +34,12 @@ Thumbs.db
 
 # 整改脚本自动备份（可从 git 恢复，不入库）
 model_data_v2.jsonl.d*bak-*
+# 门禁脚本备份（D22 升 ERROR 前的快照，等价 model_data_v2.jsonl.d*bak-*）
+scripts/*.d*bak-*
+
+# 便携包：换机归档载体（包内是仓库已有数据 + memory/temp 的不入库副本，
+# 本身不该入库 —— 与 /docs/memory/ 同理由：user/ 含个人信息）
+/model_data_portable_*/
 
 # 记忆的仓库内副本（2026-08-31 用户裁决：不入库）
 # 原因：远端是 GitHub 公共仓库，而 user/ 里含用户在其他项目里的协作习惯、项目名与本机路径。
