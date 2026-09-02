@@ -85,6 +85,50 @@ ARCH_BACKBONE_ENUM = {"Transformer", "Transformer-Decoder", "Transformer-Encoder
                       "Transformer-Encoder-Decoder", "Mamba-SSM", "RNN-LinearAttention",
                       "Diffusion", "CNN", "MLP", "Hybrid", "Unknown"}
 CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"}
+# 规则 6.6（D24 拍板「WARN 留痕」，与 D18b 同模式：数据一字未动、只加门禁）：
+#     来源类型栏的写法应在受控词表内。三段分设枚举（self_reported 来源应是厂商官方文件/页面，
+#     independent 来源应是独立第三方评测，arena_elo 来源应是竞技场分镜像）。该栏写法达 225→223 种自由
+#     文本，top 10 占 63.4% / top 50 占 84.2% / 尾部 123 种仅占 6.6%，多样性主要来自「来源类型 × 自报
+#     属性 × 限定词后缀」三个正交维度的自由组合。D24 草案 13+6+4 枚举值经全库测算可覆盖 100%（其中
+#     直接命中 33.4% / 归一表命中 57.6% / 兜底「官方自报（其它）」9.0% 待重采补具体文件类型）。
+#     现库非空 4337 条预计大量命中（223 - 13 枚举值 = 210 种写法会触发本条）—— 留 WARN 不 block 合并，
+#     D25 起逐轮归一同义异写 + 限定词进 notes + 重采补具体文件类型，待现库命中 0 后再升 ERROR（与 6.4/6.5
+#     升 ERROR 时机一致：现库命中 0 → 升级，不靠改前备份探针）。
+# 本条只判等不归一：只在「值不在该段枚举内」时报 WARN，不试图把写法映射到枚举值。归一由 D25 改数据做。
+# 与 6.3/6.4/6.5 的关系：四条判据作用域不同——6.3/6.4/6.5 查「等级值错误出现」（形状判据），
+# 6.6 查「写法不在受控词表」（语义判据）。同一条目可同时命中，但 6.6 不重复照 6.3/6.4/6.5 的形状。
+# 空值/无键不报（与 6.3 的 `if stype and ...` 同前置，避免「缺失」与「写错」混报，见 D18c 教训 ②）。
+SOURCE_TYPE_ENUM_BY_SECTION = {
+    "self_reported": {
+        "官方技术报告（自报）",
+        "官方 Model Card（自报）",            # HF Model Card / HuggingFace Model Card / 模型卡 全归此
+        "官方 ModelScope 模型卡（自报）",
+        "官方技术博客（自报）",              # blog / 技术博客 / 开发者博客 归此
+        "官方 GitHub README（自报）",
+        "官方产品页（自报）",
+        "官方系统卡（自报）",                # System Card / 系统卡
+        "官方发布公告（自报）",              # 公告 / changelog / updates
+        "官方论文（自报）",                  # arXiv 论文，区分于技术报告
+        "官方自报（多源复合）",              # 「技术报告 + GitHub README」等复合来源
+        "行业媒体聚合官方发布（自报分转述）",  # 媒体聚合 + 厂商自报双重属性
+        "行业媒体转述官方发布（自报）",        # 媒体转述但本质是厂商自报
+        "官方自报（其它）",                  # 兜底：未明确文件类型的官方自报，待重采补具体文件类型
+    },
+    "independent": {
+        "独立评测平台",                      # Artificial Analysis / LMSYS / Open LLM Leaderboard 等
+        "第三方登记站",                      # datalearner / 各类聚合登记站
+        "第三方评测机构聚合（转述）",        # Artificial Analysis 聚合数据
+        "第三方基准测试聚合",                # GPT-Fathom 等
+        "学术独立评测",                      # Stanford HELM / Epoch AI 等
+        "独立第三方评测（其它）",            # 兜底
+    },
+    "arena_elo": {
+        "LMArena 镜像（DataLearner），原始来源 LM Arena",
+        "LMArena 镜像（其它），原始来源 LMArena",
+        "独立评测平台",
+        "第三方登记站",
+    },
+}
 # 规则 6.3：来源类型栏整栏写的就是一个可信度等级值（如 "T0-自报"）。这种值天然含「自报」二字，
 # 能过下面那条「建议体现自报属性」的子串判据，可它说的是等级、不是「什么文件/页面」，
 # 来源信息为零 —— 判据查的是字符串表面属性而非字段语义（指南 §27）。
@@ -380,6 +424,12 @@ def check_record(rec):
             # （2026-09-02 拍板）。空值那批登记在指南 §27 的遗留清单里待重采，门禁不再重复计一次。
             if section == "self_reported" and conf in ("T0", "T0-自报", "T0-自报-转述") and stype and "自报" not in stype:
                 warns.append(f"{tag} 自报分 source_type={stype!r} 建议体现「自报」属性")
+            # 6.6 来源类型栏写法应在受控词表内（D24 拍板 WARN 留痕）。三段分设枚举，
+            #     详见 SOURCE_TYPE_ENUM_BY_SECTION 上方注释。本条只判等不归一，归一由 D25 改数据做。
+            if stype and stype not in SOURCE_TYPE_ENUM_BY_SECTION[section]:
+                warns.append(f"{tag} source_type={stype!r} 不在 {section} 段受控枚举内"
+                             f"（允许：{sorted(SOURCE_TYPE_ENUM_BY_SECTION[section])}）"
+                             f" —— D24 起登记同义异写，待 D25 起归一")
     for i, item in enumerate(bench.get("arena_elo") or []):
         tag = f"benchmarks.arena_elo[{i}]({_bench_name(item, 'sub_benchmark')})"
         # 同 6.1：arena_elo 的 canonical 主键是 sub_benchmark，写成 benchmark 也算非 canonical
@@ -406,6 +456,12 @@ def check_record(rec):
         if stype and TIER_ANYWHERE_STYPE_RE.search(stype) and not TIER_LEADING_STYPE_RE.match(stype):
             warns.append(f"{tag} source_type={stype!r} 把可信度等级值当括号后缀写在来源描述后"
                          f" —— 等级应写进 confidence，本栏只写「是什么文件/页面」，括号里不填等级（指南 §27.6）")
+        # 同 6.6：arena_elo 段同步查受控枚举（与 self_reported/independent 共用 SOURCE_TYPE_ENUM_BY_SECTION，
+        #   但取该段自己的枚举集合）。详见 SOURCE_TYPE_ENUM_BY_SECTION 上方注释。
+        if stype and stype not in SOURCE_TYPE_ENUM_BY_SECTION["arena_elo"]:
+            warns.append(f"{tag} source_type={stype!r} 不在 arena_elo 段受控枚举内"
+                         f"（允许：{sorted(SOURCE_TYPE_ENUM_BY_SECTION['arena_elo'])}）"
+                         f" —— D24 起登记同义异写，待 D25 起归一")
 
     # 6.2 合并主键撞车（D11，D12 起 independent 主键含 source_site）：
     #     同一主键挂着多条条目 —— 合并时去重无从裁决。
