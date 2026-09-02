@@ -82,6 +82,15 @@ ARCH_BACKBONE_ENUM = {"Transformer", "Transformer-Decoder", "Transformer-Encoder
                       "Transformer-Encoder-Decoder", "Mamba-SSM", "RNN-LinearAttention",
                       "Diffusion", "CNN", "MLP", "Hybrid", "Unknown"}
 CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"}
+# 规则 6.3：来源类型栏整栏写的就是一个可信度等级值（如 "T0-自报"）。这种值天然含「自报」二字，
+# 能过下面那条「建议体现自报属性」的子串判据，可它说的是等级、不是「什么文件/页面」，
+# 来源信息为零 —— 判据查的是字符串表面属性而非字段语义（指南 §27）。
+# 用正则而不是 CONFIDENCE_ENUM 成员判定：实测 "T2-第三方" 3 条、"T3-转述" 1 条在枚举外，
+# 按枚举判会漏掉这 4 条（607 → 603）。
+# 这条正则只决定「要不要记一条 WARN 留痕」，绝不驱动任何数据改写。
+# 刻意不覆盖「等级值当前缀缀在真实来源描述前」（如 "T0 官方一手技术报告（自报）"，实测 406 条）：
+# 那类信息不丢、只是前缀冗余，登记在指南 §27 待拍板，不混进本条留痕。
+TIER_ONLY_STYPE_RE = re.compile(r"^T[0-4](?:-自报)?(?:-转述)?(?:-第三方)?$")
 DATE_MD_RE = re.compile(r"^\d{4}-\d{2}$")
 DATE_FULL_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # 「未披露」类声明词序变体很多（官方未披露 / 未官方披露 / 尚未披露），按字面匹配会把
@@ -315,6 +324,11 @@ def check_record(rec):
             if conf is not None and conf not in CONFIDENCE_ENUM:
                 errors.append(f"{tag} confidence={conf!r} 不在枚举内")
             stype = item.get("source_type") or ""
+            # 6.3 来源类型栏写成了纯可信度等级值（D18b）。2026-09-02 拍板「只加门禁留痕，数据一字不动」：
+            #     实测命中 607 条 / 62 条记录，原样在册，由本条 WARN 自动维护清单（升 ERROR 的条件见指南 §27）。
+            if stype and TIER_ONLY_STYPE_RE.match(stype):
+                warns.append(f"{tag} source_type={stype!r} 整栏写的是可信度等级值，零来源信息"
+                             f" —— 等级应写进 confidence，来源类型应写「是什么文件/页面」（指南 §27）")
             if conf in ("T0", "T0-自报") and RELAY_MARK in stype:
                 errors.append(f"{tag} confidence={conf} 与 source_type「{stype}」不自洽：转述来源不得配 T0/T0-自报")
             # source_type 为空 = 「没主张来源类型」，与「主张了却漏标自报」是两类缺陷，不报同一条 WARN
@@ -332,6 +346,11 @@ def check_record(rec):
             errors.append(f"{tag} 缺 score")
         if not item.get("date"):
             errors.append(f"{tag} 缺快照 date")
+        # 同 6.3：arena_elo 段此前完全不读 source_type，该段的同类写法（实测 3 条）对旧门禁彻底不可见。
+        stype = item.get("source_type") or ""
+        if stype and TIER_ONLY_STYPE_RE.match(stype):
+            warns.append(f"{tag} source_type={stype!r} 整栏写的是可信度等级值，零来源信息"
+                         f" —— 等级应写进 confidence，来源类型应写「是什么文件/页面」（指南 §27）")
 
     # 6.2 合并主键撞车（D11，D12 起 independent 主键含 source_site）：
     #     同一主键挂着多条条目 —— 合并时去重无从裁决。
