@@ -317,7 +317,9 @@ def check_record(rec):
             stype = item.get("source_type") or ""
             if conf in ("T0", "T0-自报") and RELAY_MARK in stype:
                 errors.append(f"{tag} confidence={conf} 与 source_type「{stype}」不自洽：转述来源不得配 T0/T0-自报")
-            if section == "self_reported" and conf in ("T0", "T0-自报", "T0-自报-转述") and "自报" not in (stype or ""):
+            # source_type 为空 = 「没主张来源类型」，与「主张了却漏标自报」是两类缺陷，不报同一条 WARN
+            # （2026-09-02 拍板）。空值那批登记在指南 §27 的遗留清单里待重采，门禁不再重复计一次。
+            if section == "self_reported" and conf in ("T0", "T0-自报", "T0-自报-转述") and stype and "自报" not in stype:
                 warns.append(f"{tag} 自报分 source_type={stype!r} 建议体现「自报」属性")
     for i, item in enumerate(bench.get("arena_elo") or []):
         tag = f"benchmarks.arena_elo[{i}]({_bench_name(item, 'sub_benchmark')})"
