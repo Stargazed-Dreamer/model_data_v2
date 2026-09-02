@@ -24,7 +24,10 @@ validate_model_data.py —— 记录级校验器（P5 修复，执行细则 #11 
             1.2 `backbone_type` 越出主干结构枚举（拆栏前的自由文本写法正命中 1.1）
             2026-09-02 D18b 加 6.3（来源类型栏整栏写的是纯可信度等级值）；
             D18e 加 6.4（来源类型栏把等级值当**前缀**缀在来源描述前，存量已由 D18d 剥净 → 加上时命中 0，纯防回归）；
-            D20 加 6.5（来源类型栏把等级值当**括号后缀**写在来源描述后，6.4 的镜像形，存量已由 D20 剥净 → 同样命中 0）
+            D20 加 6.5（来源类型栏把等级值当**括号后缀**写在来源描述后，6.4 的镜像形，存量已由 D20 剥净 → 同样命中 0）；
+            2026-09-03 D23 把 6.3 从 WARN 升 ERROR（D22 修净 71 条后命中 0）；
+            D26 把 6.6 从 WARN 升 ERROR（D25 五批归一 2500 条后命中 0）；
+            D27 把 6.4/6.5 从 WARN 升 ERROR（存量早已剥净 405/21 条，与 6.3/6.6 同模式：现库命中 0 → 升级）
 
 用法：
   python validate_model_data.py <file.jsonl> [--report <out.md>]
@@ -93,7 +96,8 @@ CONFIDENCE_ENUM = {"T0", "T0-自报", "T0-自报-转述", "T1", "T2", "T3", "T4"
 #     直接命中 33.4% / 归一表命中 57.6% / 兜底「官方自报（其它）」9.0% 待重采补具体文件类型）。
 #     现库非空 4337 条预计大量命中（223 - 13 枚举值 = 210 种写法会触发本条）—— 留 WARN 不 block 合并，
 #     D25 起逐轮归一同义异写 + 限定词进 notes + 重采补具体文件类型，待现库命中 0 后再升 ERROR（与 6.4/6.5
-#     升 ERROR 时机一致：现库命中 0 → 升级，不靠改前备份探针）。
+#     升 ERROR 时机一致：现库命中 0 → 升级，不靠改前备份探针）。→ D25 五批归一 2500 条后命中 0，D26 已升
+#     ERROR；6.4/6.5 也由 D27 升 ERROR（现库命中 0 → 升级，正对照 trivially 成立：现盘报告逐字节不变）。
 # 本条只判等不归一：只在「值不在该段枚举内」时报 WARN，不试图把写法映射到枚举值。归一由 D25 改数据做。
 # 与 6.3/6.4/6.5 的关系：四条判据作用域不同——6.3/6.4/6.5 查「等级值错误出现」（形状判据），
 # 6.6 查「写法不在受控词表」（语义判据）。同一条目可同时命中，但 6.6 不重复照 6.3/6.4/6.5 的形状。
@@ -408,15 +412,17 @@ def check_record(rec):
             if stype and TIER_ONLY_STYPE_RE.match(stype):
                 errors.append(f"{tag} source_type={stype!r} 整栏写的是可信度等级值，零来源信息"
                              f" —— 等级应写进 confidence，来源类型应写「是什么文件/页面」（指南 §27）")
-            # 6.4 来源类型栏把等级值当**前缀**写在来源描述前（D18e）。存量已由 D18d 剥净，加上时命中 0，
-            #     纯防新采集回归。`not TIER_ONLY` 那道前置见 TIER_PREFIX_STYPE_RE 上方注释①，不可省。
+            # 6.4 来源类型栏把等级值当**前缀**写在来源描述前（D18e 起 WARN 级留痕；D18d 已剥净 405 条
+            #     → 加上时命中 0；D27 拍板升 ERROR 级，与 6.3/6.6 同模式：现库命中 0 → 升级）。
+            #     `not TIER_ONLY` 那道前置见 TIER_PREFIX_STYPE_RE 上方注释①，不可省。
             if stype and TIER_PREFIX_STYPE_RE.match(stype) and not TIER_ONLY_STYPE_RE.match(stype):
-                warns.append(f"{tag} source_type={stype!r} 把可信度等级值当前缀写在来源描述前"
+                errors.append(f"{tag} source_type={stype!r} 把可信度等级值当前缀写在来源描述前"
                              f" —— 等级应写进 confidence，本栏只写「是什么文件/页面」，不加前缀（指南 §27.3）")
-            # 6.5 来源类型栏把等级值当**括号后缀**写在来源描述后（D20）。存量 21 条已由本轮剥净，
-            #     加上时命中 0，纯防回归。`not TIER_LEADING` 那道前置见 TIER_ANYWHERE_STYPE_RE 上方注释①，不可省。
+            # 6.5 来源类型栏把等级值当**括号后缀**写在来源描述后（D20 起 WARN 级留痕；D20 已剥净 21 条
+            #     → 加上时命中 0；D27 拍板升 ERROR 级，与 6.3/6.6 同模式：现库命中 0 → 升级）。
+            #     `not TIER_LEADING` 那道前置见 TIER_ANYWHERE_STYPE_RE 上方注释①，不可省。
             if stype and TIER_ANYWHERE_STYPE_RE.search(stype) and not TIER_LEADING_STYPE_RE.match(stype):
-                warns.append(f"{tag} source_type={stype!r} 把可信度等级值当括号后缀写在来源描述后"
+                errors.append(f"{tag} source_type={stype!r} 把可信度等级值当括号后缀写在来源描述后"
                              f" —— 等级应写进 confidence，本栏只写「是什么文件/页面」，括号里不填等级（指南 §27.6）")
             if conf in ("T0", "T0-自报") and RELAY_MARK in stype:
                 errors.append(f"{tag} confidence={conf} 与 source_type「{stype}」不自洽：转述来源不得配 T0/T0-自报")
