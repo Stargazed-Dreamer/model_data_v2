@@ -81,6 +81,18 @@ def _to_tristate(v: Any) -> int | None:
     return 1 if v else 0
 
 
+def _norm_sub_benchmark(s: Any) -> str:
+    """Arena 子榜名归一（仅用于主榜分判断，非数据层归一）。
+    'text'/'overall'/'chatbot'/空 → 'text'；其他子榜名保留原意（coding/math/agent 等）。
+    """
+    s = (s or "").lower().strip()
+    if not s:
+        return "text"
+    if "text" in s or "overall" in s or "chatbot" in s:
+        return "text"
+    return s  # coding/math/webdev/vision/search/agent/gdpval 等保留
+
+
 def flatten_record(d: dict[str, Any]) -> dict[str, Any]:
     bi = d.get("basic_info") or {}
     arch = d.get("architecture") or {}
@@ -147,17 +159,25 @@ def flatten_record(d: dict[str, Any]) -> dict[str, Any]:
         "source_url_count": len(meta.get("source_urls") or []) or None,
         "source_urls": [u for u in (meta.get("source_urls") or []) if isinstance(u, str)],  # 新增
     }
-    # arena elo：取 is_primary 或 text 子榜作为代表值
-    elos = [
-        e.get("score") for e in (bench.get("arena_elo") or [])
-        if isinstance(e, dict) and isinstance(e.get("score"), (int, float))
+    # arena elo 主榜分：D31 修复子榜区隔问题
+    # 旧逻辑：max(elos) 会把 agent/coding/math 子榜分误当主榜分（如 GLM-5.2 agent 1524 被显示为主榜）
+    # 新逻辑：1) 优先 is_primary=true；2) 否则 sub_benchmark 归一为 text/overall/空 的；3) 都无则 None（避免子榜虚高）
+    arena_arr = [e for e in (bench.get("arena_elo") or []) if isinstance(e, dict)]
+    primary_scores = [
+        e.get("score") for e in arena_arr
+        if e.get("is_primary") and isinstance(e.get("score"), (int, float))
     ]
-    primary = [
-        e.get("score") for e in (bench.get("arena_elo") or [])
-        if isinstance(e, dict) and e.get("is_primary")
+    text_scores = [
+        e.get("score") for e in arena_arr
+        if _norm_sub_benchmark(e.get("sub_benchmark")) == "text"
         and isinstance(e.get("score"), (int, float))
     ]
-    row["arena_elo_max"] = (primary[0] if len(primary) == 1 else max(elos)) if elos else None
+    if primary_scores:
+        row["arena_elo_max"] = primary_scores[0]  # 多 primary 取首个
+    elif text_scores:
+        row["arena_elo_max"] = text_scores[0]
+    else:
+        row["arena_elo_max"] = None  # 仅子榜（agent/coding/math 等）时不作主榜分
     _reg("arena_elo_max", "Arena Elo(主榜)", "num", "跑分")
     _reg("independent_best_gsm8k", "GSM8K 最佳分(独立)", "num", "跑分")
     _reg("independent_best_mmlu", "MMLU 最佳分(独立)", "num", "跑分")
@@ -729,8 +749,583 @@ def build_vendor_geo_stats(rows: list[dict[str, Any]]) -> dict[str, Any]:
     return {"geo_stats": result}
 
 
-def build_extended_aggregates(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    """扩展聚合入口：6 页架构 + 模型对比 + 性价比 + MoE + Arena 子榜 + 来源 + 地缘"""
+# ---------------------------------------------------------------------------
+# 模型档案（点击模型名 → 全档案视图）
+# ---------------------------------------------------------------------------
+
+def load_raw_records(jsonl_path: Path = DEFAULT_JSONL) -> list[dict[str, Any]]:
+    """读原始 JSONL 记录（保留 self_reported/independent/arena_elo 子数组结构）"""
+    records = []
+    with open(jsonl_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return records
+
+
+def _normalize(v: float | None, mn: float, mx: float) -> float:
+    """min-max 归一化到 [0, 1]，缺失返回 0.5（中性）"""
+    if v is None or mn == mx:
+        return 0.5
+    if v < mn:
+        return 0.0
+    if v > mx:
+        return 1.0
+    return (v - mn) / (mx - mn)
+
+
+def build_model_details(rows: list[dict[str, Any]],
+                       raw_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """每个 model_id 的完整档案：
+    - 原始 self_reported / independent / arena_elo 子数组
+    - 同厂商兄弟 model_id 列表
+    - 相似模型推荐（按 total_params + price_input + arena_elo_max 邻近）
+
+    raw_records 为 None 时返回空字典（兼容旧调用）。
+    """
+    if not raw_records:
+        return {}
+
+    # 1. 建立 model_id -> raw_record 索引
+    raw_by_id: dict[str, dict] = {}
+    for rec in raw_records:
+        mid = rec.get("model_id")
+        if mid:
+            raw_by_id[mid] = rec
+
+    # 2. 同厂商兄弟：vendor -> [model_id, ...]
+    vendor_to_models: dict[str, list[str]] = defaultdict(list)
+    for r in rows:
+        v = r.get("vendor") or "未知"
+        mid = r.get("model_id")
+        if mid:
+            vendor_to_models[v].append(mid)
+
+    # 3. 相似模型：用 total_params / price_input / arena_elo_max 三维 min-max 归一化后欧氏距离
+    #    预计算 min/max
+    params_vals = [r["total_params_b"] for r in rows if r.get("total_params_b") is not None]
+    price_vals = [r["price_input"] for r in rows if r.get("price_input") is not None]
+    elo_vals = [r["arena_elo_max"] for r in rows if r.get("arena_elo_max") is not None]
+    p_min, p_max = (min(params_vals), max(params_vals)) if params_vals else (0, 1)
+    pr_min, pr_max = (min(price_vals), max(price_vals)) if price_vals else (0, 1)
+    e_min, e_max = (min(elo_vals), max(elo_vals)) if elo_vals else (0, 1)
+
+    # 计算每个模型的归一化坐标
+    row_by_id: dict[str, dict] = {r.get("model_id"): r for r in rows if r.get("model_id")}
+    coords: dict[str, tuple[float, float, float]] = {}
+    for mid, r in row_by_id.items():
+        coords[mid] = (
+            _normalize(r.get("total_params_b"), p_min, p_max),
+            _normalize(r.get("price_input"), pr_min, pr_max),
+            _normalize(r.get("arena_elo_max"), e_min, e_max),
+        )
+
+    # 4. 构建每个模型的档案
+    details: dict[str, dict[str, Any]] = {}
+    for mid, raw in raw_by_id.items():
+        bench = raw.get("benchmarks") or {}
+        # 兄弟：同 vendor 但 model_id != mid，最多 20 个
+        v = (raw.get("basic_info") or {}).get("vendor") or "未知"
+        siblings_all = [s for s in vendor_to_models.get(v, []) if s != mid]
+        siblings = siblings_all[:20]  # 截 Top 20
+
+        # 相似：欧氏距离最小，排除自身 + 同 vendor 兄弟（避免重复）
+        # 简化：全表算距离，取 Top 5，排除自身
+        if mid in coords:
+            mx, my, mz = coords[mid]
+            distances = []
+            for other_mid, (ox, oy, oz) in coords.items():
+                if other_mid == mid:
+                    continue
+                d = ((ox - mx) ** 2 + (oy - my) ** 2 + (oz - mz) ** 2) ** 0.5
+                distances.append((other_mid, round(d, 3)))
+            distances.sort(key=lambda x: x[1])
+            similar = [{"model_id": m, "distance": d} for m, d in distances[:5]]
+        else:
+            similar = []
+
+        details[mid] = {
+            "self_reported": bench.get("self_reported") or [],
+            "independent": bench.get("independent") or [],
+            "arena_elo": bench.get("arena_elo") or [],
+            "siblings": siblings,
+            "similar": similar,
+        }
+
+    return details
+
+
+def build_gap_analysis(rows: list[dict[str, Any]],
+                       raw_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """数据缺口分析：字段填充率雷达 + 跑分覆盖热力图 + 缺口排行"""
+    total = len(rows)
+
+    # 1. 字段组填充率（雷达图用）
+    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for col, info in FIELD_DICT.items():
+        filled = sum(1 for r in rows if r.get(col) is not None)
+        rate = round(filled / total * 100, 1) if total else 0.0
+        groups[info["group"]].append({"column": col, "label": info["label"], "rate": rate})
+
+    group_avg = []
+    for g, fields in groups.items():
+        avg = round(sum(f["rate"] for f in fields) / len(fields), 1)
+        group_avg.append({"group": g, "avg_rate": avg, "field_count": len(fields)})
+
+    # 2. 跑分覆盖热力图：Top 30 benchmark × Top 30 厂商（按模型数）
+    bench_cnt = Counter()
+    for r in rows:
+        sr = (r.get("self_reported_count") or 0)
+        ind = (r.get("independent_count") or 0)
+        bench_cnt[r.get("vendor") or "未知"] += sr + ind
+
+    # 从 raw_records 提取 benchmark 覆盖
+    bench_model_matrix: dict[str, set[str]] = defaultdict(set)
+    if raw_records:
+        for rec in raw_records:
+            mid = rec.get("model_id") or ""
+            bench = rec.get("benchmarks") or {}
+            for sec in ["self_reported", "independent"]:
+                for e in (bench.get(sec) or []):
+                    bn = e.get("benchmark") or ""
+                    if bn:
+                        bench_model_matrix[bn].add(mid)
+
+    # Top 30 benchmarks by model coverage
+    top_bench = sorted(bench_model_matrix.items(), key=lambda x: -len(x[1]))[:30]
+    bench_names = [b[0] for b in top_bench]
+
+    # Top 30 vendors by model count
+    vendor_model_cnt = Counter(r.get("vendor") or "未知" for r in rows)
+    top_vendors = [v for v, _ in vendor_model_cnt.most_common(30)]
+
+    # 矩阵：bench × vendor，值=该厂商中有该 benchmark 的模型数
+    vendor_models: dict[str, set[str]] = defaultdict(set)
+    for r in rows:
+        v = r.get("vendor") or "未知"
+        mid = r.get("model_id") or ""
+        if mid:
+            vendor_models[v].add(mid)
+
+    matrix_data = []
+    for bn, models in top_bench:
+        for vi, v in enumerate(top_vendors):
+            cnt = len(models & vendor_models.get(v, set()))
+            if cnt > 0:
+                matrix_data.append([vi, bench_names.index(bn), cnt])
+
+    # 3. 缺口排行：所有字段按填充率升序
+    all_fields = []
+    for col, info in FIELD_DICT.items():
+        filled = sum(1 for r in rows if r.get(col) is not None)
+        rate = round(filled / total * 100, 1) if total else 0.0
+        all_fields.append({"column": col, "label": info["label"], "group": info["group"],
+                          "filled": filled, "missing": total - filled, "rate": rate})
+    all_fields.sort(key=lambda x: x["rate"])
+
+    # 4. 无跑分模型清单
+    no_bench = [
+        {"model_id": r.get("model_id"), "full_name": r.get("full_name"),
+         "vendor": r.get("vendor"), "release_date": r.get("release_date")}
+        for r in rows
+        if (r.get("self_reported_count") or 0) == 0
+        and (r.get("independent_count") or 0) == 0
+        and (r.get("arena_elo_count") or 0) == 0
+    ]
+
+    # 5. 关键缺口统计
+    gaps = {
+        "no_benchmarks": len(no_bench),
+        "no_price": sum(1 for r in rows if r.get("price_input") is None),
+        "no_params": sum(1 for r in rows if r.get("total_params_b") is None),
+        "no_kc": sum(1 for r in rows if r.get("knowledge_cutoff") is None),
+        "no_elo": sum(1 for r in rows if r.get("arena_elo_max") is None),
+        "no_ctx": sum(1 for r in rows if r.get("context_window_tokens") is None),
+    }
+
+    return {
+        "group_fill_rates": group_avg,
+        "benchmark_coverage": {
+            "benchmarks": bench_names,
+            "vendors": top_vendors,
+            "matrix": matrix_data,
+        },
+        "field_gaps": all_fields,
+        "no_bench_models": no_bench[:100],  # 限制 100 条避免过大
+        "no_bench_count": len(no_bench),
+        "gap_summary": gaps,
+    }
+
+
+# 关键字段清单（缺口矩阵用）—— 覆盖各核心维度，避开过于冷门字段
+GAP_MATRIX_FIELDS = [
+    "price_input", "price_output", "total_params_b", "active_params_b",
+    "context_window_tokens", "knowledge_cutoff", "license",
+    "arena_elo_max", "independent_best_mmlu", "independent_best_gsm8k",
+    "independent_best_gpqa", "independent_best_humaneval",
+    "open_weights", "api_access", "in_image", "positioning_count",
+    "source_url_count", "release_date", "verification_status",
+]
+
+
+def build_gap_matrix(rows: list[dict[str, Any]], top_vendors_n: int = 30) -> dict[str, Any]:
+    """厂商 × 字段 缺口矩阵 + 智能诊断 + 导出清单。
+
+    返回:
+      matrix: 热力图数据（vendor_idx, field_idx, fill_rate%）
+      diagnosis: 每个厂商 top_gaps（最缺 Top 3） + 健康度分数
+      export: todo_items 一键导出友好格式
+    """
+    total = len(rows)
+    if total == 0:
+        return {"matrix": {"vendors": [], "fields": [], "data": [], "vendor_totals": []},
+                "diagnosis": [], "export": {"fields_tracked": 0, "vendors_with_gaps": 0, "todo_items": []}}
+
+    # 准备字段元数据
+    fields_meta = []
+    for col in GAP_MATRIX_FIELDS:
+        info = FIELD_DICT.get(col, {})
+        fields_meta.append({"col": col, "label": info.get("label", col), "group": info.get("group", "其他")})
+
+    # Top N 厂商 + 其他
+    vendor_cnt = Counter(r.get("vendor") or "未知" for r in rows)
+    top_vendors = [v for v, _ in vendor_cnt.most_common(top_vendors_n)]
+    other_models = [r for r in rows if (r.get("vendor") or "未知") not in set(top_vendors)]
+    vendor_names = top_vendors + (["其他"] if other_models else [])
+
+    # 每个厂商的模型数 + 每字段填充数
+    vendor_models: dict[str, list[dict]] = {v: [] for v in vendor_names}
+    for r in rows:
+        v = r.get("vendor") or "未知"
+        target = v if v in vendor_models else "其他"
+        if target in vendor_models:
+            vendor_models[target].append(r)
+
+    vendor_totals = [len(vendor_models[v]) for v in vendor_names]
+
+    # 矩阵: (vendor_idx, field_idx, fill_rate)
+    matrix_data = []
+    for vi, v in enumerate(vendor_names):
+        models = vendor_models[v]
+        v_total = len(models)
+        if v_total == 0:
+            continue
+        for fi, fm in enumerate(fields_meta):
+            filled = sum(1 for r in models if r.get(fm["col"]) is not None)
+            rate = round(filled / v_total * 100, 1) if v_total else 0.0
+            # 只输出非零填充（避免稀疏矩阵过大）
+            if filled > 0:
+                matrix_data.append([vi, fi, rate, filled])
+
+    # 厂商诊断：每家最缺的 Top 3 字段（按缺失数降序，仅算非空字段也需补的）
+    diagnosis = []
+    for v in vendor_names:
+        models = vendor_models[v]
+        v_total = len(models)
+        if v_total == 0:
+            continue
+        gaps = []
+        for fm in fields_meta:
+            filled = sum(1 for r in models if r.get(fm["col"]) is not None)
+            missing = v_total - filled
+            rate = round(filled / v_total * 100, 1) if v_total else 0.0
+            gaps.append({"field": fm["col"], "label": fm["label"], "missing": missing,
+                         "filled": filled, "rate": rate})
+        # 按缺失数降序取 Top 3（仅算 missing>0 的）
+        gaps.sort(key=lambda x: -x["missing"])
+        top_gaps = [g for g in gaps if g["missing"] > 0][:3]
+        # 健康度：所有字段平均填充率
+        health_score = round(sum(g["rate"] for g in gaps) / len(gaps), 1) if gaps else 0.0
+        diagnosis.append({
+            "vendor": v, "total_models": v_total,
+            "top_gaps": top_gaps, "health_score": health_score,
+        })
+    # 按健康度升序（最差的在前）
+    diagnosis.sort(key=lambda x: x["health_score"])
+
+    # 导出清单：vendor × field 的 missing 列表（仅 missing>0）
+    todo_items = []
+    for v in vendor_names:
+        models = vendor_models[v]
+        v_total = len(models)
+        if v_total == 0:
+            continue
+        # 找该厂商缺失字段对应的具体 model_id
+        for fm in fields_meta:
+            missing_models = [r.get("model_id") for r in models if r.get(fm["col"]) is None]
+            if not missing_models:
+                continue
+            todo_items.append({
+                "vendor": v,
+                "field": fm["col"],
+                "label": fm["label"],
+                "missing": len(missing_models),
+                "total": v_total,
+                "rate": round((v_total - len(missing_models)) / v_total * 100, 1),
+                "models": missing_models[:50],  # 限制 50 个，避免导出过大
+            })
+    # 按缺失数降序
+    todo_items.sort(key=lambda x: -x["missing"])
+
+    return {
+        "matrix": {
+            "vendors": vendor_names,
+            "fields": fields_meta,
+            "data": matrix_data,
+            "vendor_totals": vendor_totals,
+        },
+        "diagnosis": diagnosis,
+        "export": {
+            "fields_tracked": len(fields_meta),
+            "vendors_with_gaps": len(todo_items),
+            "todo_items": todo_items,
+        },
+    }
+
+
+def build_vendor_fragmentation(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """厂商碎片化检测：大小写/空格/连字符变体 + 合并建议"""
+    # 按小写 + 去空格/连字符分组
+    def norm_key(v):
+        return v.lower().replace(" ", "").replace("-", "").replace(".", "").replace("_", "")
+
+    vendor_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    vendor_cnt = Counter()
+    for r in rows:
+        v = r.get("vendor") or "未知"
+        vendor_cnt[v] += 1
+
+    for v, c in vendor_cnt.items():
+        key = norm_key(v)
+        vendor_groups[key].append({"vendor": v, "count": c})
+
+    # 找出有变体的组
+    merge_suggestions = []
+    for key, variants in vendor_groups.items():
+        if len(variants) > 1:
+            total = sum(v["count"] for v in variants)
+            preferred = max(variants, key=lambda x: x["count"])
+            merge_suggestions.append({
+                "key": key,
+                "variants": sorted(variants, key=lambda x: -x["count"]),
+                "total": total,
+                "preferred": preferred["vendor"],
+            })
+
+    merge_suggestions.sort(key=lambda x: -x["total"])
+
+    # 厂商气泡图数据：vendor × 模型数 × 平均 Elo × 地缘
+    geo_colors = {"中国": "#dc2626", "美国": "#2563eb", "欧洲": "#7c3aed", "其他": "#6b7280"}
+    bubble_data = []
+    for v, c in vendor_cnt.most_common(30):
+        subset = [r for r in rows if r.get("vendor") == v]
+        elos = [r["arena_elo_max"] for r in subset if r.get("arena_elo_max") is not None]
+        avg_elo = round(sum(elos) / len(elos), 1) if elos else 0
+        geo = subset[0].get("vendor_geo") if subset else "其他"
+        bubble_data.append({
+            "vendor": v, "count": c, "avg_elo": avg_elo,
+            "geo": geo, "color": geo_colors.get(geo, "#6b7280"),
+        })
+
+    return {
+        "merge_suggestions": merge_suggestions,
+        "bubble_data": bubble_data,
+        "total_vendors": len(vendor_cnt),
+        "fragmented_groups": len(merge_suggestions),
+    }
+
+
+def _median(vals: list[float]) -> float | None:
+    if not vals:
+        return None
+    s = sorted(vals)
+    n = len(s)
+    mid = n // 2
+    return s[mid] if n % 2 == 1 else (s[mid - 1] + s[mid]) / 2
+
+
+def build_price_quadrant(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """价格×性能 4 象限散点 + 中位分割线 + 线性回归。
+
+    象限定义（以中位价格 x=med_price、中位 Elo y=med_elo 分割）：
+      高性价比：x<med 且 y>=med   （低价高性能）
+      低性价比：x>=med 且 y<med   （高价低性能）
+      高端：     x>=med 且 y>=med  （高价高性能）
+      低端：     x<med 且 y<med    （低价低性能）
+    """
+    pts = []
+    for r in rows:
+        p = r.get("price_input")
+        e = r.get("arena_elo_max")
+        if p is None or e is None or p < 0 or e <= 0:
+            continue
+        pts.append({
+            "model_id": r.get("model_id"),
+            "name": r.get("full_name") or r.get("model_id"),
+            "vendor": r.get("vendor") or "未知",
+            "x": round(p, 4),
+            "y": round(e, 1),
+            "open": r.get("open_weights") == 1,
+            "params": r.get("total_params_b"),
+        })
+    if not pts:
+        return {"points": [], "med_price": None, "med_elo": None,
+                "regression": None, "quadrants": {}}
+
+    prices = [p["x"] for p in pts]
+    elos = [p["y"] for p in pts]
+    med_p = _median(prices)
+    med_e = _median(elos)
+
+    # 线性回归 price(x) -> elo(y)：y = a + b*x
+    n = len(pts)
+    sx = sum(prices)
+    sy = sum(elos)
+    sxx = sum(x * x for x in prices)
+    sxy = sum(x * y for x, y in zip(prices, elos))
+    denom = n * sxx - sx * sx
+    if denom != 0:
+        b = (n * sxy - sx * sy) / denom
+        a = (sy - b * sx) / n
+        x_min, x_max = min(prices), max(prices)
+        regression = {
+            "a": round(a, 4), "b": round(b, 6),
+            "line": [[round(x_min, 4), round(a + b * x_min, 1)],
+                     [round(x_max, 4), round(a + b * x_max, 1)]],
+        }
+    else:
+        regression = None
+
+    # 象限分类
+    quad_cnt = {"high_value": 0, "low_value": 0, "premium": 0, "budget": 0}
+    for p in pts:
+        if p["x"] < med_p and p["y"] >= med_e:
+            p["quadrant"] = "high_value"
+            quad_cnt["high_value"] += 1
+        elif p["x"] >= med_p and p["y"] < med_e:
+            p["quadrant"] = "low_value"
+            quad_cnt["low_value"] += 1
+        elif p["x"] >= med_p and p["y"] >= med_e:
+            p["quadrant"] = "premium"
+            quad_cnt["premium"] += 1
+        else:
+            p["quadrant"] = "budget"
+            quad_cnt["budget"] += 1
+
+    return {
+        "points": pts,
+        "med_price": round(med_p, 4) if med_p is not None else None,
+        "med_elo": round(med_e, 1) if med_e is not None else None,
+        "regression": regression,
+        "quadrants": quad_cnt,
+        "total": len(pts),
+    }
+
+
+def _parse_kc_date(kc: str | None) -> str | None:
+    """knowledge_cutoff 可能是 YYYY / YYYY-MM / YYYY-MM-DD，归一成 YYYY-MM-DD（缺日补01，缺月补01）"""
+    if not kc or not isinstance(kc, str):
+        return None
+    kc = kc.strip()
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", kc):
+        return kc
+    if re.fullmatch(r"\d{4}-\d{2}", kc):
+        return kc + "-01"
+    if re.fullmatch(r"\d{4}", kc):
+        return kc + "-01-01"
+    return None
+
+
+def build_lifecycle_gantt(rows: list[dict[str, Any]], top_n: int = 120) -> dict[str, Any]:
+    """模型生命周期甘特图：release_date → knowledge_cutoff（缺则用 today）。
+
+    返回 Top N 条（按 release_date 降序，优先有 Elo 的），避免 933 条全画过载。
+    每条带 vendor、duration_days、has_elo、has_kc。
+    """
+    import datetime
+
+    today = datetime.date.today().isoformat()
+
+    def _parse_rd(rd: str | None) -> str | None:
+        if not rd or not isinstance(rd, str):
+            return None
+        rd = rd.strip()
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", rd):
+            return rd
+        if re.fullmatch(r"\d{4}-\d{2}", rd):
+            return rd + "-01"
+        if re.fullmatch(r"\d{4}", rd):
+            return rd + "-01-01"
+        return None
+
+    items = []
+    for r in rows:
+        rd = _parse_rd(r.get("release_date"))
+        if not rd:
+            continue
+        kc = _parse_kc_date(r.get("knowledge_cutoff")) or today
+        # 若 kc < rd，用 today 兜底（异常数据）
+        if kc < rd:
+            kc = today
+        try:
+            d1 = datetime.date.fromisoformat(rd)
+            d2 = datetime.date.fromisoformat(kc)
+            dur = (d2 - d1).days
+        except ValueError:
+            dur = 0
+        items.append({
+            "model_id": r.get("model_id"),
+            "name": r.get("full_name") or r.get("model_id"),
+            "vendor": r.get("vendor") or "未知",
+            "release": rd,
+            "end": kc,
+            "duration_days": dur,
+            "has_elo": r.get("arena_elo_max") is not None,
+            "elo": r.get("arena_elo_max"),
+            "has_kc": r.get("knowledge_cutoff") is not None,
+            "geo": r.get("vendor_geo") or "其他",
+            "open": r.get("open_weights") == 1,
+        })
+
+    # 排序优先级：有 kc（真实生命周期）> 有 elo > 无（仅 release）
+    # 取 Top N：优先有 kc 的，其次有 elo 的，再次最新 release
+    items.sort(key=lambda x: (not x["has_kc"], not x["has_elo"], x["release"]),
+               reverse=False)
+    # 取最有信息量的 top_n（即列表末尾，按优先级+时间倒序）
+    # 但我们想要"有 kc 的优先 + 时间分布广"，所以取 has_kc 的全部 + 不足再补 has_elo
+    with_kc = [it for it in items if it["has_kc"]]
+    with_elo_only = [it for it in items if not it["has_kc"] and it["has_elo"]]
+    rest = [it for it in items if not it["has_kc"] and not it["has_elo"]]
+    # 每段按 release 降序（最新的优先），合并后取 top_n
+    with_kc.sort(key=lambda x: x["release"], reverse=True)
+    with_elo_only.sort(key=lambda x: x["release"], reverse=True)
+    rest.sort(key=lambda x: x["release"], reverse=True)
+    picked = (with_kc + with_elo_only + rest)[:top_n]
+    # 再按 release 升序排（甘特图从早到晚）
+    items = sorted(picked, key=lambda x: x["release"])
+
+    # vendor 色板
+    geo_keys = {
+        "中国": "#dc2626", "美国": "#2563eb", "欧洲": "#7c3aed", "其他": "#6b7280",
+    }
+
+    return {
+        "items": items,
+        "total_with_release": sum(1 for r in rows if r.get("release_date")),
+        "shown": len(items),
+        "today": today,
+        "geo_colors": geo_keys,
+    }
+
+
+def build_extended_aggregates(rows: list[dict[str, Any]],
+                              raw_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """扩展聚合入口：6 页架构 + 模型对比 + 性价比 + MoE + Arena 子榜 + 来源 + 地缘 + 档案 + 缺口 + 碎片 + 象限 + 甘特"""
     return {
         # 原 6 页架构
         "vendor_capability": build_vendor_capability(rows),
@@ -745,6 +1340,16 @@ def build_extended_aggregates(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "moe_sparsity": build_moe_sparsity(rows),
         "benchmark_dims": build_benchmark_dimensions(rows),
         "vendor_geo": build_vendor_geo_stats(rows),
+        # 模型档案（D28+ 新增）
+        "model_details": build_model_details(rows, raw_records),
+        # D29 新增
+        "gap_analysis": build_gap_analysis(rows, raw_records),
+        "vendor_fragmentation": build_vendor_fragmentation(rows),
+        # D30 新增：可视化增强
+        "price_quadrant": build_price_quadrant(rows),
+        "lifecycle_gantt": build_lifecycle_gantt(rows),
+        # D31 新增：缺口矩阵 + 智能诊断
+        "gap_matrix": build_gap_matrix(rows),
     }
 
 
