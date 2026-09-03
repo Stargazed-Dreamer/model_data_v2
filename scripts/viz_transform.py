@@ -1323,6 +1323,322 @@ def build_lifecycle_gantt(rows: list[dict[str, Any]], top_n: int = 120) -> dict[
     }
 
 
+# ---------------------------------------------------------------------------
+# D31+ 新增：跑分排行总榜 + scaling law 散点 + 多源一致性
+# ---------------------------------------------------------------------------
+
+def _norm_bench_name(s: str) -> str:
+    """benchmark 名归一（粗粒度，用于排行总榜）"""
+    s = (s or "").lower().strip()
+    if not s:
+        return ""
+    if "mmlu" in s:
+        return "mmlu"
+    if "gsm8k" in s:
+        return "gsm8k"
+    if "gpqa" in s:
+        return "gpqa"
+    if "math" in s and "maths" not in s:
+        return "math"
+    if "humaneval" in s or "human_eval" in s:
+        return "humaneval"
+    if "aime" in s:
+        return "aime2025"
+    if "swe-bench" in s:
+        return "swe_bench"
+    if "arc" in s and "challenge" in s:
+        return "arc_challenge"
+    if "hellaswag" in s or "hswag" in s:
+        return "hellaswag"
+    if "winogrande" in s:
+        return "winogrande"
+    if "truthfulqa" in s:
+        return "truthfulqa"
+    return s[:30]
+
+
+def build_leaderboard(rows: list[dict[str, Any]], raw_records: list[dict[str, Any]] | None = None,
+                      top_n: int = 30) -> dict[str, Any]:
+    """跑分排行总榜：按 benchmark 维度切换 Top N
+
+    支持的 benchmark：mmlu/gsm8k/gpqa/math/humaneval/aime2025/swe_bench（独立评测）
+                       + arena_text/arena_coding/arena_math（Arena Elo 子榜）
+    """
+    # 准备独立评测排行
+    bench_top: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for raw in (raw_records or []):
+        mid = raw.get("model_id")
+        if not mid:
+            continue
+        bi = raw.get("basic_info") or {}
+        bench = raw.get("benchmarks") or {}
+        # 独立评测
+        for e in (bench.get("independent") or []):
+            if not isinstance(e, dict):
+                continue
+            bn = _norm_bench_name(e.get("benchmark") or "")
+            if not bn:
+                continue
+            score = e.get("score")
+            if not isinstance(score, (int, float)):
+                continue
+            s = float(score)
+            if s > 1.5:
+                s = s / 100.0
+            if s < 0 or s > 1.01:
+                continue
+            bench_top[bn].append({
+                "model_id": mid, "full_name": bi.get("full_name") or mid,
+                "vendor": bi.get("vendor") or "未知", "score": round(s, 4),
+                "source_url": e.get("source_url") or "",
+                "source_type": e.get("source_type") or "",
+                "confidence": e.get("confidence") or "",
+            })
+    # 每个独立 benchmark 取 top_n（去重同模型取最高）
+    for bn in list(bench_top.keys()):
+        seen: dict[str, dict] = {}
+        for it in bench_top[bn]:
+            mid = it["model_id"]
+            if mid not in seen or it["score"] > seen[mid]["score"]:
+                seen[mid] = it
+        bench_top[bn] = sorted(seen.values(), key=lambda x: -x["score"])[:top_n]
+
+    # Arena 子榜排行（直接从 flatten 后的 rows 取）
+    arena_subs_top: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for r in rows:
+        subs = r.get("arena_elo_subs") or []
+        for e in subs:
+            sub = _norm_sub_benchmark(e.get("sub_benchmark"))
+            score = e.get("score")
+            if not isinstance(score, (int, float)):
+                continue
+            arena_subs_top[sub].append({
+                "model_id": r["model_id"], "full_name": r.get("full_name") or r["model_id"],
+                "vendor": r.get("vendor") or "未知", "score": float(score),
+                "source_url": e.get("source_url") or "",
+                "is_primary": bool(e.get("is_primary")),
+            })
+    # 每个 arena 子榜取 top_n
+    for sub in list(arena_subs_top.keys()):
+        arena_subs_top[sub] = sorted(arena_subs_top[sub], key=lambda x: -x["score"])[:top_n]
+
+    # 各 benchmark 元数据
+    bench_meta = {
+        "mmlu": {"label": "MMLU", "group": "独立评测", "unit": "%", "scale": 100},
+        "gsm8k": {"label": "GSM8K", "group": "独立评测", "unit": "%", "scale": 100},
+        "gpqa": {"label": "GPQA", "group": "独立评测", "unit": "%", "scale": 100},
+        "math": {"label": "MATH", "group": "独立评测", "unit": "%", "scale": 100},
+        "humaneval": {"label": "HumanEval", "group": "独立评测", "unit": "%", "scale": 100},
+        "aime2025": {"label": "AIME 2025", "group": "独立评测", "unit": "%", "scale": 100},
+        "swe_bench": {"label": "SWE-bench Verified", "group": "独立评测", "unit": "%", "scale": 100},
+        "arc_challenge": {"label": "ARC Challenge", "group": "独立评测", "unit": "%", "scale": 100},
+        "hellaswag": {"label": "HellaSwag", "group": "独立评测", "unit": "%", "scale": 100},
+        "winogrande": {"label": "WinoGrande", "group": "独立评测", "unit": "%", "scale": 100},
+        "truthfulqa": {"label": "TruthfulQA", "group": "独立评测", "unit": "%", "scale": 100},
+        "arena_text": {"label": "Arena Elo (Text)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
+        "arena_coding": {"label": "Arena Elo (Coding)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
+        "arena_math": {"label": "Arena Elo (Math)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
+        "arena_webdev": {"label": "Arena Elo (WebDev)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
+        "arena_vision": {"label": "Arena Elo (Vision)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
+        "arena_agent": {"label": "Arena Elo (Agent)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
+    }
+
+    # 合并所有可用 benchmark key + 数量 + 是否有数据
+    all_benches = []
+    for k, meta in bench_meta.items():
+        if k.startswith("arena_"):
+            sub_key = k.replace("arena_", "")
+            items = arena_subs_top.get(sub_key, [])
+        else:
+            items = bench_top.get(k, [])
+        if items:
+            all_benches.append({
+                "key": k, "label": meta["label"], "group": meta["group"],
+                "unit": meta["unit"], "scale": meta["scale"], "n": len(items),
+            })
+
+    return {
+        "bench_meta": bench_meta,
+        "available_benches": all_benches,
+        "leaderboards": {**{k: v for k, v in bench_top.items() if v},
+                         **{f"arena_{k}": v for k, v in arena_subs_top.items() if v}},
+    }
+
+
+def build_scaling_law(rows: list[dict[str, Any]], raw_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """scaling law 散点：参数量 vs 各 benchmark 分数 + log-log 拟合线 + 异常点
+
+    返回每个 benchmark 的散点数据 + 拟合参数 (a, b, R²) + 预测 score@7B/70B/700B
+    """
+    import math
+    bench_data: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for raw in (raw_records or []):
+        mid = raw.get("model_id")
+        if not mid:
+            continue
+        bi = raw.get("basic_info") or {}
+        arch = raw.get("architecture") or {}
+        bench = raw.get("benchmarks") or {}
+        params = arch.get("total_params_b")
+        if not isinstance(params, (int, float)) or params <= 0:
+            continue
+        for e in (bench.get("independent") or []):
+            if not isinstance(e, dict):
+                continue
+            bn = _norm_bench_name(e.get("benchmark") or "")
+            if bn not in ("mmlu", "gsm8k", "gpqa", "math"):
+                continue
+            score = e.get("score")
+            if not isinstance(score, (int, float)):
+                continue
+            s = float(score)
+            if s > 1.5:
+                s = s / 100.0
+            if s <= 0 or s > 1.01:
+                continue
+            bench_data[bn].append({
+                "model_id": mid, "full_name": bi.get("full_name") or mid,
+                "vendor": bi.get("vendor") or "未知",
+                "params": float(params), "score": round(s, 4),
+                "open_weights": bool((bi.get("access") or {}).get("open_weights")),
+                "price_input": ((raw.get("pricing") or {}).get("input")),
+            })
+
+    result = {}
+    for bn in ("mmlu", "gsm8k", "gpqa", "math"):
+        pts = bench_data[bn]
+        if len(pts) < 5:
+            continue
+        # log-log 拟合：log(score) = a + b * log(params)
+        fit_pts = [(math.log(p["params"]), math.log(p["score"]))
+                   for p in pts if p["score"] > 0.001 and p["params"] > 0]
+        if len(fit_pts) < 5:
+            continue
+        xs = [x for x, _ in fit_pts]
+        ys = [y for _, y in fit_pts]
+        n = len(xs)
+        mx = sum(xs) / n
+        my = sum(ys) / n
+        sxx = sum((x - mx) ** 2 for x in xs)
+        sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        syy = sum((y - my) ** 2 for y in ys)
+        if sxx == 0:
+            continue
+        b = sxy / sxx
+        a = my - b * mx
+        r2 = (sxy ** 2) / (sxx * syy) if syy > 0 else 0
+        # 预测点
+        preds = []
+        for p in [1, 7, 30, 70, 200, 700]:
+            try:
+                preds.append({"params": p, "pred": math.exp(a + b * math.log(p))})
+            except Exception:
+                pass
+        # 异常点标记（实际 vs 拟合差异 > 0.15）
+        for p in pts:
+            try:
+                pred = math.exp(a + b * math.log(p["params"]))
+                p["pred"] = round(pred, 4)
+                p["diff"] = round(p["score"] - pred, 4)
+                p["is_outlier"] = abs(p["score"] - pred) > 0.15
+            except Exception:
+                p["pred"] = None
+                p["diff"] = None
+                p["is_outlier"] = False
+
+        result[bn] = {
+            "n": len(pts),
+            "a": round(a, 3), "b": round(b, 3), "r2": round(r2, 3),
+            "predictions": preds,
+            "points": pts,
+        }
+
+    return {
+        "benches": result,
+        "params_buckets": [
+            {"label": "<1B", "lo": 0, "hi": 1},
+            {"label": "1-7B", "lo": 1, "hi": 7},
+            {"label": "7-30B", "lo": 7, "hi": 30},
+            {"label": "30-100B", "lo": 30, "hi": 100},
+            {"label": "100-350B", "lo": 100, "hi": 350},
+            {"label": "350B+", "lo": 350, "hi": 100000},
+        ],
+    }
+
+
+def build_multi_source_conflict(rows: list[dict[str, Any]],
+                                raw_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """多源一致性扫描：同模型同 benchmark 多源差异
+
+    返回：所有多源组（≥2 条）+ 不一致组（差异 ≥5%）+ 各 benchmark 不一致率
+    """
+    groups: dict[tuple, list[dict]] = defaultdict(list)
+    for raw in (raw_records or []):
+        mid = raw.get("model_id")
+        if not mid:
+            continue
+        bench = raw.get("benchmarks") or {}
+        for e in (bench.get("independent") or []):
+            if not isinstance(e, dict):
+                continue
+            bn = _norm_bench_name(e.get("benchmark") or "")
+            if not bn:
+                continue
+            score = e.get("score")
+            if not isinstance(score, (int, float)):
+                continue
+            s = float(score)
+            if s > 1.5:
+                s = s / 100.0
+            if s < 0 or s > 1.01:
+                continue
+            groups[(mid, bn)].append({
+                "score": round(s, 4), "source_url": e.get("source_url") or "",
+                "source_type": e.get("source_type") or "",
+                "confidence": e.get("confidence") or "",
+            })
+
+    multi = {k: v for k, v in groups.items() if len(v) > 1}
+    conflicts = []
+    for (mid, bn), entries in multi.items():
+        scores = [e["score"] for e in entries]
+        diff = max(scores) - min(scores)
+        if diff >= 0.05:
+            conflicts.append({
+                "model_id": mid, "benchmark": bn, "diff": round(diff, 4),
+                "max_score": round(max(scores), 4), "min_score": round(min(scores), 4),
+                "entries": entries,
+            })
+    conflicts.sort(key=lambda x: -x["diff"])
+
+    # 按 benchmark 不一致率
+    bench_multi_cnt = Counter()
+    bench_conf_cnt = Counter()
+    for (mid, bn), entries in multi.items():
+        bench_multi_cnt[bn] += 1
+        scores = [e["score"] for e in entries]
+        if max(scores) - min(scores) >= 0.05:
+            bench_conf_cnt[bn] += 1
+
+    bench_stats = []
+    for bn, multi_n in bench_multi_cnt.most_common():
+        conf_n = bench_conf_cnt[bn]
+        bench_stats.append({
+            "benchmark": bn, "multi_n": multi_n, "conflict_n": conf_n,
+            "conflict_rate": round(conf_n / multi_n * 100, 1) if multi_n else 0,
+        })
+
+    return {
+        "total_groups": len(groups),
+        "multi_groups": len(multi),
+        "multi_coverage_rate": round(len(multi) / len(groups) * 100, 1) if groups else 0,
+        "conflict_groups": len(conflicts),
+        "conflict_rate": round(len(conflicts) / len(multi) * 100, 1) if multi else 0,
+        "conflicts": conflicts[:100],  # 限制返回数
+        "bench_stats": bench_stats,
+    }
+
+
 def build_extended_aggregates(rows: list[dict[str, Any]],
                               raw_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """扩展聚合入口：6 页架构 + 模型对比 + 性价比 + MoE + Arena 子榜 + 来源 + 地缘 + 档案 + 缺口 + 碎片 + 象限 + 甘特"""

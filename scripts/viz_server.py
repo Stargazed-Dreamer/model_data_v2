@@ -38,13 +38,14 @@ def _data() -> dict:
         except OSError:
             mtime = 0
         if _cache is None or _cache.get("_mtime") != mtime:
-            rows = vt.load_rows(jsonl)
+            raw_records = vt.load_raw_records(jsonl)
+            rows = [vt.flatten_record(r) for r in raw_records]
             _cache = {
                 "_mtime": mtime,
                 "rows": rows,
                 "schema": vt.build_schema_info(rows),
                 "aggregates": vt.build_aggregates(rows),
-                "extended": vt.build_extended_aggregates(rows),
+                "extended": vt.build_extended_aggregates(rows, raw_records),
             }
         return _cache
 

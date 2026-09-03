@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+### Fixed（D32 新增）
+
+- **D32 数据修复 8 项**：扫描 5 个未深探方向后修复，门禁 ERROR 0 / WARN 0 持平。
+  - **修复项 1**：`arena_elo` 段 14 条 source_type 错位（"独立评测平台" → "LMArena 镜像（DataLearner），原始来源 LM Arena"），涉及 Alibaba Qwen-3-8-Max / Baidu ERNIE-5-1 / Google Gemini-2-5-Pro / Gemma-3-27B / GLM-5-2 等 14 个模型的子榜分。
+  - **修复项 2**：4 条 `open_weights=null` 但 `api=true` → `ow=false`（Google DeepMind gemini-3.6-flash-high / kunlun 天工 4.0 / unisound Shanhai 2.0 / Inflection 3.0）。
+  - **修复项 3**：4 条 `ow=null` 但 license="闭源 API" → `ow=false`（gemini-1.5-pro-001/002 / gemini-2.5-pro-exp / Moonshot-v1）。
+  - **修复项 4**：API-only 厂商 `ow=null` 改 `false` 共 31 条（OpenAI 21 / Anthropic 9 / Google DeepMind 1）。这些厂商明确闭源，`ow=null` 应是 `false`。
+  - **修复项 5**：518 条 `ow=true` 但 license 空的批量补 license（按 vendor 推断），两轮共补 **446 条**，license 填充率从 0.9% → **51.0%**。仍 72 条 vendor 长尾保守保留空（Prime Intellect / Deep Cogito / eth-zurich / salesforce / sambanova 等）。
+  - **修复项 6**：686 条 `self_reported` 段 `confidence` 空 → 按 source_type 推断（T0-自报 / T0-自报-转述 / T1 / T3），共修 649 条。
+  - **修复项 7**：1301 条 `source_type` 空 → 按 source_url 域名推断，共修 1143 条 + 3 条受控枚举违规补丁（independent 段 huggingface.co/github.com → "独立评测平台"；arxiv.org → "学术独立评测"；arena_elo 段 lmarena.ai/datalearner.com → "LMArena 镜像"）。
+  - **修复项 8**：44 条 `ow=true` 但 license="Proprietary" 矛盾改开源协议（Apple OpenELM → CC-BY-NC 4.0 / Google Gemma → Apache 2.0 / Cognition Kevin-32B → Apache 2.0 / Moonshot Kimi K2 系列 → Apache 2.0 / OpenAI gpt-oss → Apache 2.0 / xAI Grok-1 → Apache 2.0 / Perplexity R1-1776 → Apache 2.0 / MiniMax M1/M2 → Apache 2.0）。
+- **D32 备份**：`model_data_v2.jsonl.bak.D32`（修复前快照）。
+
 ### Added（D29-D31 累计）
 
 - **D31 删除 2022 前老模型**：用户要求"只要 2022+ 数据"，扫描 `release_date < 2022-01-01` 共 42 条记录（最早 1959 Pandemonium、最晚 2021 HyperCLOVA），含 GPT-3/T5/RoBERTa/XLNet/GNMT 等历史名模型。从 `model_data_v2.jsonl` 删除，933 → 891 条。门禁验证 ERROR 0 / WARN 0 持平。原文件备份 `model_data_v2.jsonl.bak.20260903_190631`。

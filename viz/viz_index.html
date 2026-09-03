@@ -25,6 +25,7 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px 60px}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:14px}
 .cols2{grid-template-columns:1fr 1fr}
 .cols3{grid-template-columns:1fr 1fr 1fr}
+.cols4{grid-template-columns:repeat(4,1fr)}
 .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
 .card h3{font-size:14px;margin-bottom:10px;color:var(--text);display:flex;align-items:center;gap:8px}
 .card h3 small{color:var(--muted);font-weight:400;font-size:11px}
@@ -67,6 +68,45 @@ select,input[type=text],input[type=number]{padding:6px 10px;border:1px solid var
 .tag.ok{background:var(--ok-bg);color:var(--ok)}
 .sort-arrow::after{content:"▼";font-size:9px;color:var(--accent);margin-left:3px}
 .sort-arrow.asc::after{content:"▲"}
+
+/* ============ 全局筛选条（D28+ 新增） ============ */
+.filter-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:8px 24px;position:sticky;top:55px;z-index:9;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.filter-bar .ctrl label{font-size:11px;color:var(--muted);margin-bottom:2px}
+.filter-bar select,input[type=number],input[type=date]{padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:12px;min-width:120px}
+.filter-bar .chk{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text);cursor:pointer}
+.filter-bar .chk input{margin:0}
+.filter-bar .counter{margin-left:auto;font-size:12px;color:var(--muted);padding-bottom:4px}
+.filter-bar .counter b{color:var(--accent);font-size:14px}
+.filter-bar .btn-mini{padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:12px}
+.filter-bar .btn-mini:hover{background:var(--chip)}
+
+/* ============ 模型档案抽屉 ============ */
+.drawer{position:fixed;top:0;right:-560px;width:560px;height:100vh;background:var(--panel);border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(0,0,0,.08);z-index:100;transition:right .25s ease;overflow-y:auto}
+.drawer.open{right:0}
+.drawer-header{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.drawer-header h2{font-size:16px;font-weight:600;flex:1}
+.drawer-header .pd-vendor{color:var(--muted);font-size:12px;margin-left:8px}
+.drawer-header button{border:none;background:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.drawer-header button:hover{color:var(--danger)}
+.drawer-body{padding:16px 20px}
+.pd-section{margin-bottom:18px}
+.pd-section h4{font-size:13px;color:var(--accent);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.pd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.pd-grid .item{background:#fafbfc;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px}
+.pd-grid .item .k{color:var(--muted);font-size:10px}
+.pd-grid .item .v{font-weight:600;margin-top:2px;word-break:break-all}
+.pd-bench-table{width:100%;font-size:11px;border-collapse:collapse}
+.pd-bench-table th,.pd-bench-table td{padding:4px 6px;border-bottom:1px solid var(--border);text-align:left}
+.pd-bench-table th{color:var(--muted);background:#fafbfc}
+.pd-link{color:var(--accent);cursor:pointer;text-decoration:underline}
+.pd-link:hover{color:var(--accent2)}
+.pd-tag{display:inline-block;background:var(--chip);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:10px;margin:2px}
+.pd-similar-item{display:flex;justify-content:space-between;padding:6px 8px;background:#fafbfc;border-radius:6px;margin-bottom:4px;cursor:pointer;font-size:12px}
+.pd-similar-item:hover{background:var(--chip)}
+.pd-similar-item .dist{color:var(--muted);font-size:10px}
+.pd-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.2);z-index:99;opacity:0;pointer-events:none;transition:opacity .2s}
+.pd-overlay.open{opacity:1;pointer-events:auto}
+
 </style>
 </head>
 <body>
@@ -80,11 +120,42 @@ select,input[type=text],input[type=number]{padding:6px 10px;border:1px solid var
     <button data-page="arena_source">Arena/来源</button>
     <button data-page="timeline">时间演进</button>
     <button data-page="quality">数据质量</button>
+    <button data-page="gap">数据缺口</button>
+    <button data-page="frag">厂商碎片</button>
     <button data-page="fields">字段总览</button>
     <button data-page="custom">图表工坊</button>
     <button data-page="detail">明细浏览</button>
   </nav>
 </header>
+<div class="filter-bar" id="filterBar">
+  <div class="ctrl"><label>厂商</label>
+    <select id="fVendor" multiple size="1" style="min-width:140px;max-width:200px">
+      <option value="">全部</option>
+    </select>
+  </div>
+  <div class="ctrl"><label>定位标签</label>
+    <select id="fPos" multiple size="1" style="min-width:120px">
+      <option value="">全部</option>
+    </select>
+  </div>
+  <div class="ctrl"><label>开源权重</label>
+    <select id="fOpen"><option value="any">全部</option><option value="yes">仅开源</option><option value="no">仅闭源</option></select>
+  </div>
+  <div class="ctrl"><label>价格区间 ($/M)</label>
+    <input type="number" id="fPriceMin" placeholder="0" style="width:60px"> - <input type="number" id="fPriceMax" placeholder="∞" style="width:60px">
+  </div>
+  <div class="ctrl"><label>参数量区间 (B)</label>
+    <input type="number" id="fParamsMin" placeholder="0" style="width:60px"> - <input type="number" id="fParamsMax" placeholder="∞" style="width:60px">
+  </div>
+  <div class="ctrl"><label>发布日期</label>
+    <input type="date" id="fRelFrom" style="width:130px"> - <input type="date" id="fRelTo" style="width:130px">
+  </div>
+  <div class="ctrl"><label class="chk"><input type="checkbox" id="fHasElo"> 仅看有 Elo 分</label></div>
+  <div class="ctrl"><label class="chk"><input type="checkbox" id="fHasBench"> 仅看有跑分</label></div>
+  <div class="ctrl"><button class="btn-mini" id="btnFilterApply">应用</button></div>
+  <div class="ctrl"><button class="btn-mini" id="btnFilterReset">重置</button></div>
+  <div class="counter" id="filterCounter">显示 <b>0</b> / 0 模型</div>
+</div>
 <main>
 
 <!-- ============ 1. 总览 ============ -->
@@ -148,6 +219,12 @@ select,input[type=text],input[type=number]{padding:6px 10px;border:1px solid var
     </div>
     <div class="card"><h3>MoE 稀疏度散点 <small>active vs total params；斜率越低 MoE 稀疏度越高</small></h3><div class="chart tall" id="chMoEScatter"></div></div>
   </div>
+  <div class="card" style="margin-top:14px">
+    <h3>价格×性能 4 象限图 <small>中位价格 $<span id="pqMedPrice">—</span>/M × 中位 Elo <span id="pqMedElo">—</span> 分割；点击点看档案</small></h3>
+    <div class="grid cols4" id="pqStats" style="margin-bottom:10px"></div>
+    <div class="chart tall" id="chPriceQuadrant" style="height:460px"></div>
+    <div class="hint">高性价比（低价高能）/ 低性价比（高价低能）/ 高端（高价高能）/ 低端（低价低能）；虚线=中位分割，实线=线性回归</div>
+  </div>
 </section>
 
 <!-- ============ 4. 模型对比 ============ -->
@@ -204,6 +281,11 @@ select,input[type=text],input[type=number]{padding:6px 10px;border:1px solid var
     <div class="card"><h3>年度平均上下文 <small>(tokens)</small></h3><div class="chart" id="chYearCtx"></div></div>
     <div class="card"><h3>年度平均价格 <small>($/M tokens)</small></h3><div class="chart" id="chYearPrice"></div></div>
   </div>
+  <div class="card" style="margin-top:14px">
+    <h3>模型生命周期甘特图 <small>release → knowledge_cutoff；显示 Top <span id="ganttShown">120</span> 条（优先有 kc 的真实生命周期）</small></h3>
+    <div class="hint" style="margin-bottom:8px">每条 = 一个模型；条长度 = 知识截止日 - 发布日（缺 kc 的用今天兜底）。颜色：红=中国 / 蓝=美国 / 紫=欧洲 / 灰=其他。点击条加入对比。</div>
+    <div class="chart tall" id="chGantt" style="height:560px"></div>
+  </div>
 </section>
 
 <!-- ============ 5. 数据质量 ============ -->
@@ -219,7 +301,70 @@ select,input[type=text],input[type=number]{padding:6px 10px;border:1px solid var
   </div>
 </section>
 
-<!-- ============ 6. 字段总览 ============ -->
+<!-- ============ 6b. 数据缺口分析 ============ -->
+<section class="page" id="page-gap">
+  <div class="grid kpis" id="gapKpis"></div>
+  <div class="grid cols2" style="margin-top:14px">
+    <div class="card"><h3>字段组填充率雷达 <small>按分组平均，越满越好</small></h3><div class="chart tall" id="chGapRadar"></div></div>
+    <div class="card"><h3>跑分覆盖热力图 <small>Top 30 benchmark × Top 30 厂商</small></h3><div class="chart tall" id="chGapHeatmap"></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>字段缺口排行 <small>按填充率升序，最缺的在前</small></h3>
+    <div style="overflow:auto;max-height:420px">
+      <table id="gapFieldTable"><thead><tr>
+        <th>字段</th><th>分组</th><th>类型</th><th>已填充</th><th>缺失</th><th style="width:200px">填充率</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>无跑分模型清单 <small>共 <span id="noBenchCount">0</span> 条模型完全无任何跑分数据</small></h3>
+    <div style="overflow:auto;max-height:360px">
+      <table id="noBenchTable"><thead><tr>
+        <th>model_id</th><th>模型名</th><th>厂商</th><th>发布日期</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <!-- D31 新增：缺口矩阵 + 智能诊断 + 导出 -->
+  <div class="card" style="margin-top:14px">
+    <h3>厂商 × 字段 缺口矩阵 <small>Top 30 厂商 × <span id="gmFieldCnt">0</span> 关键字段；颜色越红=缺失越多；悬停看具体填充率</small></h3>
+    <div class="hint" style="margin-bottom:8px">行=厂商（按模型数 Top 30 + 其他聚合），列=关键字段。色阶：绿(≥70%) → 黄(30-70%) → 红(&lt;30%)。点击单元格导出该格对应缺失 model_id 清单。</div>
+    <div class="chart tall" id="chGapMatrix" style="height:560px"></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h3>厂商智能诊断 <small>健康度最低的 Top 15 厂商 + 各自最缺的 3 个字段</small></h3>
+    <div class="hint" style="margin-bottom:8px">健康度 = 该厂商所有关键字段平均填充率。点击厂商名跳转明细页筛选；点击字段名跳转图表工坊。</div>
+    <div id="vendorDiagnosis" class="grid cols3" style="gap:10px"></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h3>一键导出待补清单 <small>共 <span id="gmTodoCount">0</span> 条 (vendor × field 缺失组合)</small></h3>
+    <div class="controls" style="margin-bottom:10px">
+      <button class="btn" id="btnExportJSON">导出 JSON</button>
+      <button class="btn gray" id="btnExportCSV">导出 CSV</button>
+      <button class="btn gray" id="btnExportMD">导出 Markdown</button>
+      <span id="exportHint" style="margin-left:14px;font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div style="overflow:auto;max-height:420px">
+      <table id="todoTable"><thead><tr>
+        <th>厂商</th><th>缺失字段</th><th>标签</th><th>缺失/总数</th><th style="width:180px">填充率</th><th>示例 model_id（前 5）</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6c. 厂商碎片化 ============ -->
+<section class="page" id="page-frag">
+  <div class="grid cols2">
+    <div class="card"><h3>厂商碎片化合并建议 <small>大小写/空格/连字符变体</small></h3>
+      <div id="fragSuggestions" style="padding:8px 0"></div>
+    </div>
+    <div class="card"><h3>厂商气泡图 <small>大小=模型数, 颜色=地缘, X=平均Elo</small></h3><div class="chart tall" id="chFragBubble"></div></div>
+  </div>
+</section>
+
+<!-- ============ 7. 字段总览 ============ -->
 <section class="page" id="page-fields">
   <div class="card">
     <h3>字段字典 + 填充率 <small>点击字段可直接跳到图表工坊作为纵轴；填充率即"你能拿到多少数据"</small></h3>
@@ -283,11 +428,264 @@ select,input[type=text],input[type=number]{padding:6px 10px;border:1px solid var
 </section>
 
 </main>
+
+<!-- 模型档案抽屉 -->
+<div class="pd-overlay" id="pdOverlay" onclick="closeProfile()"></div>
+<div class="drawer" id="profileDrawer">
+  <div class="drawer-header">
+    <div><h2 id="pdTitle">—</h2><span class="pd-vendor" id="pdVendor"></span></div>
+    <button onclick="closeProfile()">✕</button>
+  </div>
+  <div class="drawer-body" id="pdBody">—</div>
+</div>
+
 <script>
-let ROWS=[], SCHEMA=null, AGG=null, EXT=null;
+let ROWS=[], VIEW_ROWS=[], SCHEMA=null, AGG=null, EXT=null;
 const charts={};
 const $=s=>document.querySelector(s);
 const fmt=n=>n==null?'—':(typeof n==='number'?(Math.abs(n)>=1000?n.toLocaleString():n):n);
+
+// ============ 全局筛选器 ============
+const FILTERS={
+  vendors:new Set(),
+  positionings:new Set(),
+  openWeights:'any',
+  priceMin:null,priceMax:null,
+  paramsMin:null,paramsMax:null,
+  releaseFrom:'',releaseTo:'',
+  hasElo:false,hasBench:false,
+};
+
+function applyFilters(rows){
+  return rows.filter(r=>{
+    if(FILTERS.vendors.size && !FILTERS.vendors.has(r.vendor||'未知'))return false;
+    if(FILTERS.positionings.size){
+      const tags=r.positioning||[];
+      if(!tags.some(t=>FILTERS.positionings.has(t)))return false;
+    }
+    if(FILTERS.openWeights==='yes' && r.open_weights!==1)return false;
+    if(FILTERS.openWeights==='no' && r.open_weights===1)return false;
+    if(FILTERS.priceMin!=null && (r.price_input==null || r.price_input<FILTERS.priceMin))return false;
+    if(FILTERS.priceMax!=null && (r.price_input==null || r.price_input>FILTERS.priceMax))return false;
+    if(FILTERS.paramsMin!=null && (r.total_params_b==null || r.total_params_b<FILTERS.paramsMin))return false;
+    if(FILTERS.paramsMax!=null && (r.total_params_b==null || r.total_params_b>FILTERS.paramsMax))return false;
+    if(FILTERS.releaseFrom && (r.release_date||'')<FILTERS.releaseFrom)return false;
+    if(FILTERS.releaseTo && (r.release_date||'')>FILTERS.releaseTo)return false;
+    if(FILTERS.hasElo && r.arena_elo_max==null)return false;
+    if(FILTERS.hasBench && (r.self_reported_count||0)+(r.independent_count||0)+(r.arena_elo_count||0)===0)return false;
+    return true;
+  });
+}
+
+function updateFilterCount(){
+  $('#filterCounter').innerHTML=`显示 <b>${VIEW_ROWS.length}</b> / ${ROWS.length} 模型`;
+}
+
+function collectFilterStateFromUI(){
+  FILTERS.vendors=new Set([...$('#fVendor').selectedOptions].map(o=>o.value).filter(v=>v));
+  FILTERS.positionings=new Set([...$('#fPos').selectedOptions].map(o=>o.value).filter(v=>v));
+  FILTERS.openWeights=$('#fOpen').value;
+  const pm=$('#fPriceMin').value;FILTERS.priceMin=pm?parseFloat(pm):null;
+  const px=$('#fPriceMax').value;FILTERS.priceMax=px?parseFloat(px):null;
+  const pp=$('#fParamsMin').value;FILTERS.paramsMin=pp?parseFloat(pp):null;
+  const pq=$('#fParamsMax').value;FILTERS.paramsMax=pq?parseFloat(pq):null;
+  FILTERS.releaseFrom=$('#fRelFrom').value||'';
+  FILTERS.releaseTo=$('#fRelTo').value||'';
+  FILTERS.hasElo=$('#fHasElo').checked;
+  FILTERS.hasBench=$('#fHasBench').checked;
+}
+
+function saveFiltersToHash(){
+  const p=[];
+  if(FILTERS.vendors.size)p.push('v='+encodeURIComponent([...FILTERS.vendors].join(',')));
+  if(FILTERS.positionings.size)p.push('p='+encodeURIComponent([...FILTERS.positionings].join(',')));
+  if(FILTERS.openWeights!=='any')p.push('o='+FILTERS.openWeights);
+  if(FILTERS.priceMin!=null)p.push('pm='+FILTERS.priceMin);
+  if(FILTERS.priceMax!=null)p.push('px='+FILTERS.priceMax);
+  if(FILTERS.paramsMin!=null)p.push('pp='+FILTERS.paramsMin);
+  if(FILTERS.paramsMax!=null)p.push('pq='+FILTERS.paramsMax);
+  if(FILTERS.releaseFrom)p.push('rf='+FILTERS.releaseFrom);
+  if(FILTERS.releaseTo)p.push('rt='+FILTERS.releaseTo);
+  if(FILTERS.hasElo)p.push('he=1');
+  if(FILTERS.hasBench)p.push('hb=1');
+  history.replaceState(null,'',p.length?'#'+p.join('&'):location.pathname);
+}
+
+function loadFiltersFromHash(){
+  const h=location.hash.slice(1);
+  if(!h)return;
+  for(const kv of h.split('&')){
+    const [k,v]=kv.split('=');
+    if(!k)continue;
+    const val=decodeURIComponent(v||'');
+    if(k==='v'){FILTERS.vendors=new Set(val.split(','));}
+    else if(k==='p'){FILTERS.positionings=new Set(val.split(','));}
+    else if(k==='o'){FILTERS.openWeights=val;}
+    else if(k==='pm'){FILTERS.priceMin=parseFloat(val);}
+    else if(k==='px'){FILTERS.priceMax=parseFloat(val);}
+    else if(k==='pp'){FILTERS.paramsMin=parseFloat(val);}
+    else if(k==='pq'){FILTERS.paramsMax=parseFloat(val);}
+    else if(k==='rf'){FILTERS.releaseFrom=val;}
+    else if(k==='rt'){FILTERS.releaseTo=val;}
+    else if(k==='he'){FILTERS.hasElo=true;}
+    else if(k==='hb'){FILTERS.hasBench=true;}
+  }
+}
+
+function syncFilterUIFromState(){
+  const vs=[...FILTERS.vendors];
+  [...$('#fVendor').options].forEach(o=>o.selected=vs.includes(o.value));
+  const ps=[...FILTERS.positionings];
+  [...$('#fPos').options].forEach(o=>o.selected=ps.includes(o.value));
+  $('#fOpen').value=FILTERS.openWeights;
+  $('#fPriceMin').value=FILTERS.priceMin??'';
+  $('#fPriceMax').value=FILTERS.priceMax??'';
+  $('#fParamsMin').value=FILTERS.paramsMin??'';
+  $('#fParamsMax').value=FILTERS.paramsMax??'';
+  $('#fRelFrom').value=FILTERS.releaseFrom;
+  $('#fRelTo').value=FILTERS.releaseTo;
+  $('#fHasElo').checked=FILTERS.hasElo;
+  $('#fHasBench').checked=FILTERS.hasBench;
+}
+
+function resetFilters(){
+  FILTERS.vendors.clear();FILTERS.positionings.clear();
+  FILTERS.openWeights='any';
+  FILTERS.priceMin=FILTERS.priceMax=FILTERS.paramsMin=FILTERS.paramsMax=null;
+  FILTERS.releaseFrom=FILTERS.releaseTo='';
+  FILTERS.hasElo=FILTERS.hasBench=false;
+  syncFilterUIFromState();
+  refreshAll();
+}
+
+function refreshAll(){
+  VIEW_ROWS=applyFilters(ROWS);
+  updateFilterCount();
+  saveFiltersToHash();
+  renderOverview();
+  renderVendorPage();
+  renderPerformancePage();
+  renderComparePage();
+  renderArenaSourcePage();
+  renderTimelinePage();
+  renderQualityPage();
+  renderGapPage();
+  renderFragPage();
+  renderFieldTable();
+  initCustomControls();
+  renderDetailInit();
+}
+
+// ============ 模型档案抽屉 ============
+function openProfile(mid){
+  const row=ROWS.find(r=>r.model_id===mid);
+  const detail=(EXT.model_details||{})[mid]||{};
+  if(!row){alert('未找到模型: '+mid);return;}
+  $('#pdTitle').textContent=row.full_name||mid;
+  $('#pdVendor').textContent=`${row.vendor||'未知'} · ${row.release_date||'?'}`;
+  const bi=row;
+  const html=[
+    `<div class="pd-section"><h4>基本信息</h4><div class="pd-grid">`,
+    item('model_id',bi.model_id),
+    item('版本',bi.version),
+    item('定位标签',(bi.positioning||[]).join(' / ')||'—'),
+    item('开源协议',bi.license||'—'),
+    item('开源权重',tri(bi.open_weights)),
+    item('API 可用',tri(bi.api_access)),
+    item('可本地部署',tri(bi.local_deployment)),
+    item('验证状态',bi.verification_status||'—'),
+    item('采集日期',bi.collected_at||'—'),
+    `</div></div>`,
+    `<div class="pd-section"><h4>架构</h4><div class="pd-grid">`,
+    item('总参数量 (B)',bi.total_params_b),
+    item('激活参数量 (B)',bi.active_params_b),
+    item('MoE 稀疏度',bi.moe_sparsity),
+    item('上下文窗口 (tokens)',bi.context_window_tokens),
+    item('有效上下文 (tokens)',bi.context_window_effective_tokens),
+    item('知识截止日期',bi.knowledge_cutoff),
+    `</div></div>`,
+    `<div class="pd-section"><h4>定价</h4><div class="pd-grid">`,
+    item('输入价 ($/M)',bi.price_input),
+    item('输出价 ($/M)',bi.price_output),
+    item('缓存输入价',bi.price_cached_input),
+    item('批量输入价',bi.price_batch_input),
+    item('单位 Elo 成本',bi.cost_per_elo),
+    `</div></div>`,
+    `<div class="pd-section"><h4>模态</h4><div>`,
+    modalTag('输入·文本',bi.in_text),modalTag('输入·图像',bi.in_image),
+    modalTag('输入·音频',bi.in_audio),modalTag('输入·视频',bi.in_video),modalTag('输入·PDF',bi.in_pdf),
+    '<br>',
+    modalTag('输出·文本',bi.out_text),modalTag('输出·代码',bi.out_code),
+    modalTag('输出·图像',bi.out_image),modalTag('输出·语音',bi.out_audio),
+    `</div></div>`,
+    renderBenchSection('自报跑分 (self_reported)', detail.self_reported||[]),
+    renderBenchSection('独立评测跑分 (independent)', detail.independent||[]),
+    renderBenchSection('Arena Elo 跑分 (arena_elo)', detail.arena_elo||[]),
+    renderSiblings(detail.siblings||[]),
+    renderSimilar(detail.similar||[]),
+    renderSourceUrls(bi.source_urls||[]),
+    `<div class="pd-section" style="text-align:center;padding:14px 0">`,
+    `<button class="btn" onclick="addCompareModel('${mid}');closeProfile()">加入对比</button>`,
+    `</div>`,
+  ].join('');
+  $('#pdBody').innerHTML=html;
+  $('#profileDrawer').classList.add('open');
+  $('#pdOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeProfile(){
+  $('#profileDrawer').classList.remove('open');
+  $('#pdOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function item(k,v){
+  return `<div class="item"><div class="k">${k}</div><div class="v">${v==null||v===''?'—':(typeof v==='boolean'?(v?'是':'否'):v)}</div></div>`;
+}
+function tri(v){return v==null?'未知':(v===1?'是':'否');}
+function modalTag(label,v){
+  const cls=v==null?'':(v===1?'tag ok':(v===0?'tag danger':''));
+  return `<span class="pd-tag ${cls}">${label}: ${tri(v)}</span>`;
+}
+function renderBenchSection(title,arr){
+  if(!arr.length)return `<div class="pd-section"><h4>${title}</h4><div style="color:var(--muted)">无数据</div></div>`;
+  const rows=arr.map(e=>{
+    const name=e.benchmark||e.sub_benchmark||'—';
+    const score=e.score==null?'—':(typeof e.score==='number'?(e.score>1.5?e.score:e.score*100+'%'):e.score);
+    const date=e.date||'—';
+    const url=e.source_url||'';
+    const urlCell=url?`<a href="${url}" target="_blank" style="color:var(--accent)">源↗</a>`:'—';
+    const conf=e.confidence||'';
+    return `<tr><td>${name}</td><td>${score}</td><td>${date}</td><td>${conf}</td><td>${urlCell}</td></tr>`;
+  }).join('');
+  return `<div class="pd-section"><h4>${title} (${arr.length} 条)</h4>
+    <table class="pd-bench-table"><thead><tr><th>benchmark</th><th>分数</th><th>日期</th><th>可信度</th><th>源</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+function renderSiblings(siblings){
+  if(!siblings.length)return '';
+  const items=siblings.map(mid=>{
+    const r=ROWS.find(x=>x.model_id===mid);
+    const name=r?(r.full_name||mid):mid;
+    return `<div class="pd-similar-item" onclick="openProfile('${mid}')"><span>${name}</span><span style="font-size:10px;color:var(--muted)">${r?(r.release_date||''):'—'}</span></div>`;
+  }).join('');
+  return `<div class="pd-section"><h4>同厂商兄弟模型 (${siblings.length})</h4>${items}</div>`;
+}
+function renderSimilar(similar){
+  if(!similar.length)return '';
+  const items=similar.map(s=>{
+    const r=ROWS.find(x=>x.model_id===s.model_id);
+    const name=r?(r.full_name||s.model_id):s.model_id;
+    return `<div class="pd-similar-item" onclick="openProfile('${s.model_id}')"><span>${name}</span><span class="dist">距离 ${s.distance}</span></div>`;
+  }).join('');
+  return `<div class="pd-section"><h4>相似模型推荐 (Top ${similar.length})</h4>${items}</div>`;
+}
+function renderSourceUrls(urls){
+  if(!urls.length)return '';
+  const items=urls.map(u=>`<div style="font-size:11px;margin-bottom:4px;word-break:break-all"><a href="${u}" target="_blank" style="color:var(--accent)">${u}</a></div>`).join('');
+  return `<div class="pd-section"><h4>来源 URL (${urls.length})</h4>${items}</div>`;
+}
 
 // ---------- 导航 ----------
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
@@ -314,14 +712,31 @@ async function init(){
     fetch('/api/models').then(r=>r.json())
   ]);
   $('#metaLine').textContent=`${AGG.total_models} 个模型 · ${AGG.vendor_count} 家厂商 · ${AGG.access.open_weights} 开源 / ${AGG.access.api} API · 刷新页面即更新`;
-  renderOverview();
-  renderVendorPage();
-  renderPerformancePage();
-  renderComparePage();
-  renderArenaSourcePage();
-  renderTimelinePage();
-  renderQualityPage();
-  renderFieldTable();initCustomControls();renderDetailInit();
+
+  // 初始化筛选器选项
+  const vendorSet=new Set();
+  const posSet=new Set();
+  ROWS.forEach(r=>{
+    vendorSet.add(r.vendor||'未知');
+    (r.positioning||[]).forEach(p=>posSet.add(p));
+  });
+  const fV=$('#fVendor');
+  [...vendorSet].sort().forEach(v=>{
+    const o=document.createElement('option');o.value=v;o.textContent=v;fV.appendChild(o);
+  });
+  const fP=$('#fPos');
+  [...posSet].sort().forEach(p=>{
+    const o=document.createElement('option');o.value=p;o.textContent=p;fP.appendChild(o);
+  });
+  // 绑定事件
+  $('#btnFilterApply').onclick=()=>{collectFilterStateFromUI();refreshAll();};
+  $('#btnFilterReset').onclick=resetFilters;
+  window.addEventListener('hashchange',()=>{loadFiltersFromHash();syncFilterUIFromState();refreshAll();});
+
+  // 从 URL hash 加载筛选状态
+  loadFiltersFromHash();
+  syncFilterUIFromState();
+  refreshAll();
 }
 
 // ---------- 1. 总览 ----------
@@ -501,7 +916,62 @@ function renderVendorTable(){
 // ---------- 3. 性价比 ----------
 function renderPerformancePage(){
   renderPriceBracket();renderPriceScatter();renderBracketTop();
-  renderCostRank();renderMoEScatter();
+  renderCostRank();renderMoEScatter();renderPriceQuadrant();
+}
+function renderPriceQuadrant(){
+  const pq=EXT.price_quadrant;
+  if(!pq||!pq.total){$('#pqStats').innerHTML='<div class="empty">无价格+Elo 双有数据</div>';return;}
+  $('#pqMedPrice').textContent=pq.med_price;
+  $('#pqMedElo').textContent=pq.med_elo;
+  const q=pq.quadrants;
+  const cards=[
+    ['高性价比',q.high_value||0,'#16a34a','低价 × 高 Elo'],
+    ['高端',q.premium||0,'#2563eb','高价 × 高 Elo'],
+    ['低性价比',q.low_value||0,'#dc2626','高价 × 低 Elo'],
+    ['低端/经济',q.budget||0,'#6b7280','低价 × 低 Elo'],
+  ];
+  $('#pqStats').innerHTML=cards.map(([l,v,c,d])=>`<div class="card kpi" style="border-left:3px solid ${c}"><div class="v" style="color:${c}">${v}</div><div class="l">${l}</div><div style="font-size:10px;color:#6b7280;margin-top:2px">${d}</div></div>`).join('');
+  const quadColor={high_value:'#16a34a',premium:'#2563eb',low_value:'#dc2626',budget:'#6b7280'};
+  const pts=pq.points.map(p=>({
+    value:[p.x,p.y],name:p.name,model_id:p.model_id,vendor:p.vendor,
+    quadrant:p.quadrant,
+    symbolSize:p.params?6+Math.log(p.params)*1.5:8,
+    itemStyle:{color:quadColor[p.quadrant],opacity:.75,borderColor:'#fff',borderWidth:1}
+  }));
+  const opt={
+    grid:{left:70,right:30,top:40,bottom:60},
+    tooltip:{formatter:p=>{const d=p.data;return `<b>${d.name}</b><br>${d.vendor}<br>价格: $${d.value[0]}/M<br>Elo: ${d.value[1]}<br>点击看档案`}},
+    xAxis:{type:'value',name:'输入价 ($/M)',scale:true,nameLocation:'middle',nameGap:28,
+      axisLabel:{formatter:v=>'$'+v}},
+    yAxis:{type:'value',name:'Arena Elo',scale:true,nameLocation:'middle',nameGap:50},
+    series:[
+      {type:'scatter',data:pts,clickable:true,
+        markLine:{
+          symbol:'none',silent:true,lineStyle:{type:'dashed',color:'#94a3b8'},
+          data:[{xAxis:pq.med_price},{yAxis:pq.med_elo}]
+        },
+        markPoint:{symbol:'rect',symbolSize:0,
+          data:[
+            {coord:[pq.med_price,pq.med_elo],label:{formatter:'中位点',position:'top',color:'#6b7280',fontSize:10}}
+          ]
+        },
+      },
+    ]
+  };
+  // 回归线（用单独 series 的 markLine 或 line）
+  if(pq.regression){
+    opt.series.push({
+      type:'line',data:pq.regression.line,lineStyle:{color:'#7c3aed',width:2,type:'solid'},
+      showSymbol:false,tooltip:{formatter:'线性回归线'},silent:true,
+      markPoint:{symbol:'pin',symbolSize:0,data:[
+        {coord:pq.regression.line[1],label:{formatter:`y=${pq.regression.a}+${pq.regression.b}x`,color:'#7c3aed',fontSize:10,position:'top'}}
+      ]}
+    });
+  }
+  const ch=mkChart('chPriceQuadrant');
+  ch.setOption(opt);
+  ch.off('click');
+  ch.on('click',p=>{if(p.data&&p.data.model_id)openProfile(p.data.model_id)});
 }
 function renderCostRank(){
   const d=EXT.cost_effectiveness.ranking;
@@ -553,15 +1023,44 @@ function renderPriceScatter(){
   const vendors=[...new Set(pts.map(p=>p.vendor))];
   const palette=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#65a30d','#0ea5e9','#ea580c'];
   const vendorColor={};vendors.forEach((v,i)=>vendorColor[v]=palette[i%palette.length]);
-  const dataPts=pts.map(p=>({value:[p.x,p.y],name:p.name,vendor:p.vendor,elo:p.elo,symbolSize:8+Math.log(p.elo||1)*2}));
+  // 象限分析：用 median 分割
+  const pricesX=pts.map(p=>p.x).sort((a,b)=>a-b);
+  const elosY=pts.map(p=>p.elo).sort((a,b)=>a-b);
+  const medPrice=pricesX[Math.floor(pricesX.length/2)]||0;
+  const medElo=elosY[Math.floor(elosY.length/2)]||0;
+  // 回归线（简单线性回归 y=elo, x=price）
+  const n=pts.length;
+  const sumX=pts.reduce((s,p)=>s+p.x,0),sumY=pts.reduce((s,p)=>s+p.elo,0);
+  const sumXY=pts.reduce((s,p)=>s+p.x*p.elo,0),sumX2=pts.reduce((s,p)=>s+p.x*p.x,0);
+  const slope=n>0?(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX):0;
+  const intercept=n>0?(sumY-slope*sumX)/n:0;
+  const xMin=Math.min(...pricesX),xMax=Math.max(...pricesX);
+  const dataPts=pts.map(p=>({
+    value:[p.x,p.elo],name:p.name,vendor:p.vendor,elo:p.elo,symbolSize:8+Math.log(p.elo||1)*2,
+    // 象限着色
+    quad:p.x<medPrice&&p.elo>=medElo?'高性价比':(p.x<medPrice&&p.elo<medElo?'经济型':(p.x>=medPrice&&p.elo>=medElo?'旗舰型':'溢价型')),
+  }));
+  const quadColors={'高性价比':'#16a34a','经济型':'#0891b2','旗舰型':'#2563eb','溢价型':'#dc2626'};
   mkChart('chPriceScatter').setOption({
     grid:{left:70,right:30,top:30,bottom:50},
-    tooltip:{formatter:p=>{const d=p.data;return `<b>${d.name}</b><br>${d.vendor}<br>输入价: $${p.value[0]}/M<br>输出价: $${p.value[1]}/M<br>Elo: ${d.elo}`}},
+    tooltip:{formatter:p=>{const d=p.data;return `<b>${d.name}</b><br>${d.vendor}<br>输入价: $${p.value[0]}/M<br>Elo: ${p.value[1]}<br>象限: ${d.quad}`}},
     xAxis:{type:'value',name:'输入价($/M)',scale:true,axisLabel:{formatter:v=>'$'+v}},
-    yAxis:{type:'value',name:'输出价($/M)',scale:true,axisLabel:{formatter:v=>'$'+v}},
-    series:[{type:'scatter',data:dataPts,
-      symbolSize:d=>d&&d.symbolSize?d.symbolSize:10,
-      itemStyle:{color:p=>vendorColor[p.data&&p.data.vendor]||'#6b7280',opacity:.7}}]
+    yAxis:{type:'value',name:'Arena Elo',scale:true},
+    series:[
+      // 散点（按象限着色）
+      {type:'scatter',data:dataPts,
+        symbolSize:d=>d&&d.symbolSize?d.symbolSize:10,
+        itemStyle:{color:p=>quadColors[p.data&&p.data.quad]||'#6b7280',opacity:.7}},
+      // 中位线
+      {type:'line',markLine:{silent:true,symbol:'none',
+        data:[{xAxis:medPrice,label:{formatter:`中位价 $${medPrice.toFixed(1)}`}},],lineStyle:{color:'#d97706',type:'dashed'}}},
+      // 回归线
+      {type:'line',data:[[xMin,slope*xMin+intercept],[xMax,slope*xMax+intercept]],
+        symbol:'none',lineStyle:{color:'#7c3aed',type:'solid',width:2},
+        name:'回归线',tooltip:{formatter:`Elo = ${slope.toFixed(2)}*价格 + ${intercept.toFixed(0)}`}},
+    ],
+    legend:{data:['高性价比','经济型','旗舰型','溢价型'],top:0,textStyle:{fontSize:10},
+      formatter:name=>`${name}(${dataPts.filter(d=>d.quad===name).length})`},
   });
 }
 function renderBracketTop(){
@@ -766,7 +1265,55 @@ function renderSourceDomain(){
 
 // ---------- 4. 时间演进 ----------
 function renderTimelinePage(){
-  renderMonthly();renderYearParams();renderYearCtx();renderYearPrice();
+  renderMonthly();renderYearParams();renderYearCtx();renderYearPrice();renderGantt();
+}
+function renderGantt(){
+  const g=EXT.lifecycle_gantt;
+  if(!g||!g.items.length){$('#ganttShown').textContent=0;return;}
+  $('#ganttShown').textContent=g.shown;
+  const geoColors=g.geo_colors||{中国:'#dc2626',美国:'#2563eb',欧洲:'#7c3aed',其他:'#6b7280'};
+  const items=g.items;
+  const todayTs=new Date(g.today).getTime();
+  // y 轴类别：按 release 升序，最早在底部（ECharts y 轴默认从下往上，需 reverse）
+  const yCats=items.map(it=>it.name).reverse();
+  const yIdx={};items.forEach((it,i)=>{yIdx[it.name]=items.length-1-i}); // 反转索引
+  // custom series 画矩形
+  const renderItem=(params,api)=>{
+    const catIdx=api.value(0); // y 类别索引（已反转后的）
+    const start=api.coord([api.value(1),catIdx]);
+    const end=api.coord([api.value(2),catIdx]);
+    const h=api.size([0,1])[1]*0.6;
+    const rect=echarts.graphic.clipRectByRect({
+      x:start[0],y:start[1]-h/2,width:Math.max(end[0]-start[0],2),height:h
+    },{x:params.coordSys.x,y:params.coordSys.y,width:params.coordSys.width,height:params.coordSys.height});
+    return rect?{type:'rect',transition:['shape'],shape:rect,style:api.style({stroke:'#fff',lineWidth:1})}:{};
+  };
+  const data=items.map(it=>({
+    name:it.name,
+    value:[yIdx[it.name],new Date(it.release).getTime(),
+           new Date(it.end).getTime(),it.vendor,it.model_id,it.has_elo,it.elo,it.has_kc,it.geo,it.duration_days],
+    itemStyle:{color:geoColors[it.geo]||'#6b7280',opacity:it.has_elo?0.85:0.55}
+  })).reverse(); // 配合 y 轴 reverse
+  const ch=mkChart('chGantt');
+  ch.setOption({
+    tooltip:{formatter:p=>{
+      const v=p.data.value;const rel=new Date(v[1]).toISOString().slice(0,10);
+      const en=new Date(v[2]).toISOString().slice(0,10);
+      return `<b>${p.data.name}</b><br>${v[3]}<br>${rel} → ${en}<br>持续 ${v[9]} 天${v[7]?'':'（缺 kc，截止=今天）'}<br>Elo: ${v[6]||'—'} · ${v[8]}`;
+    }},
+    grid:{left:10,right:30,top:20,bottom:60,containLabel:true},
+    xAxis:{type:'time',name:'发布 → 知识截止',nameLocation:'middle',nameGap:30,
+      axisLabel:{formatter:v=>new Date(v).toISOString().slice(0,7)}},
+    yAxis:{type:'category',data:yCats,axisLabel:{fontSize:9}},
+    dataZoom:[
+      {type:'slider',yAxisIndex:0,width:60,right:0,start:50,end:100,throttle:30},
+      {type:'slider',xAxisIndex:0,height:18,bottom:15,start:0,end:100,throttle:30},
+    ],
+    series:[{type:'custom',name:'生命周期',renderItem:renderItem,data:data,
+      encode:{x:[1,2],y:0},clip:true}],
+  });
+  ch.off('click');
+  ch.on('click',p=>{if(p.data&&p.data.value&&p.data.value[4])openProfile(p.data.value[4])});
 }
 function renderMonthly(){
   const d=EXT.time_trend.monthly;
@@ -847,7 +1394,282 @@ function renderQualityPage(){
   });
 }
 
-// ---------- 6. 字段总览 ----------
+// ---------- 6b. 数据缺口 ----------
+function renderGapPage(){
+  const ga=EXT.gap_analysis;
+  if(!ga)return;
+  const gs=ga.gap_summary;
+  const kpis=[
+    ['无跑分模型',gs.no_benchmarks,'danger'],
+    ['无价格',gs.no_price,'danger'],
+    ['无参数量',gs.no_params,'warn'],
+    ['无知识截止',gs.no_kc,'warn'],
+    ['无 Elo 分',gs.no_elo,'warn'],
+    ['无上下文',gs.no_ctx,'warn'],
+  ];
+  $('#gapKpis').innerHTML=kpis.map(([l,v,cls])=>`<div class="card kpi ${cls}"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+
+  // 雷达图
+  const gr=ga.group_fill_rates;
+  mkChart('chGapRadar').setOption({
+    tooltip:{trigger:'item'},
+    radar:{
+      indicator:gr.map(g=>({name:g.group,max:100})),
+      radius:'65%',
+    },
+    series:[{
+      type:'radar',
+      data:[{name:'填充率(%)',value:gr.map(g=>g.avg_rate),areaStyle:{opacity:0.3}}],
+      itemStyle:{color:'#2563eb'},
+    }],
+  });
+
+  // 热力图
+  const bc=ga.benchmark_coverage;
+  const maxVal=Math.max(...bc.matrix.map(m=>m[2]),1);
+  mkChart('chGapHeatmap').setOption({
+    tooltip:{position:'top',formatter:p=>`${bc.vendors[p.value[0]]} × ${bc.benchmarks[p.value[1]]}<br/>${p.value[2]} 模型有该跑分`},
+    grid:{left:120,bottom:100,top:20,right:20},
+    xAxis:{type:'category',data:bc.benchmarks,axisLabel:{rotate:45,fontSize:9,interval:0}},
+    yAxis:{type:'category',data:bc.vendors,axisLabel:{fontSize:9}},
+    visualMap:{min:0,max:maxVal,orient:'horizontal',left:'center',bottom:0,calculable:true,
+      inRange:{color:['#eef2ff','#2563eb','#1e3a5f']}},
+    series:[{type:'heatmap',data:bc.matrix,
+      label:{show:true,fontSize:8},
+      emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}],
+  });
+
+  // 字段缺口表
+  let fhtml='';
+  ga.field_gaps.forEach(f=>{
+    const cls=f.rate<30?'danger':(f.rate<70?'warn':'ok');
+    const st=f.rate<30?'严重缺失':(f.rate<70?'警告':'良好');
+    fhtml+=`<tr><td><code>${f.column}</code><br><small style="color:#6b7280">${f.label}</small></td><td>${f.group}</td><td><span class="badge b-${f.type||'str'}">${f.type||'str'}</span></td><td>${f.filled}</td><td>${f.missing}</td><td><span class="bar-wrap"><span class="bar ${cls}" style="width:${f.rate}%"></span></span> ${f.rate}%</td></tr>`;
+  });
+  $('#gapFieldTable tbody').innerHTML=fhtml;
+
+  // 无跑分模型表
+  $('#noBenchCount').textContent=ga.no_bench_count;
+  let nbh='';
+  ga.no_bench_models.forEach(m=>{
+    nbh+=`<tr><td><span class="pd-link" onclick="openProfile('${m.model_id}')">${m.model_id}</span></td><td>${m.full_name||'—'}</td><td>${m.vendor||'—'}</td><td>${m.release_date||'—'}</td></tr>`;
+  });
+  $('#noBenchTable tbody').innerHTML=nbh;
+
+  // D31 新增：缺口矩阵 + 诊断 + 导出
+  renderGapMatrix();
+  renderVendorDiagnosis();
+  renderTodoTable();
+  bindExportButtons();
+}
+
+// ---------- D31: 厂商 × 字段 缺口矩阵 ----------
+function renderGapMatrix(){
+  const gm=EXT.gap_matrix;
+  if(!gm||!gm.matrix){return;}
+  const m=gm.matrix;
+  $('#gmFieldCnt').textContent=m.fields.length;
+  // 准备 heatmap 数据：[vendor_idx, field_idx, rate]
+  const data=m.data.map(d=>({
+    value:[d[0],d[1],d[2]],
+    filled:d[3],
+    vendor:m.vendors[d[0]],
+    field:m.fields[d[1]],
+  }));
+  const ch=mkChart('chGapMatrix');
+  ch.setOption({
+    tooltip:{position:'top',formatter:p=>{
+      const d=p.data;
+      return `<b>${d.vendor}</b> × <b>${d.field.label}</b><br/>填充: ${d.filled} / ${m.vendor_totals[d.value[0]]} (${d.value[2]}%)<br/>缺失: ${m.vendor_totals[d.value[0]]-d.filled}<br/>点击导出该格缺失清单`;
+    }},
+    grid:{left:140,bottom:130,top:30,right:20},
+    xAxis:{type:'category',data:m.fields.map(f=>f.label),splitArea:{show:true},
+      axisLabel:{rotate:55,fontSize:10,interval:0}},
+    yAxis:{type:'category',data:m.vendors.map((v,i)=>`${v} (${m.vendor_totals[i]})`),
+      axisLabel:{fontSize:10},splitArea:{show:true}},
+    visualMap:{min:0,max:100,orient:'horizontal',left:'center',bottom:5,
+      calculable:true,
+      inRange:{color:['#fee2e2','#fde68a','#86efac','#16a34a']},
+      text:['满','空'],textStyle:{fontSize:11}},
+    series:[{
+      type:'heatmap',data:data,
+      label:{show:true,fontSize:9,formatter:p=>p.value[2]>0?p.value[2]+'\n':'',
+        color:'#374151'},
+      emphasis:{itemStyle:{shadowBlur:8,shadowColor:'rgba(0,0,0,0.4)'}},
+    }],
+  });
+  ch.off('click');
+  ch.on('click',p=>{
+    if(!p.data)return;
+    const d=p.data;
+    // 找到对应的 todo_item
+    const todo=EXT.gap_matrix.export.todo_items.find(t=>t.vendor===d.vendor&&t.field.col===d.field.col);
+    if(todo&&todo.models&&todo.models.length){
+      const txt=`【${todo.vendor} × ${todo.label}】缺失 ${todo.missing}/${todo.total} 个\n\n前 20 个 model_id:\n${todo.models.slice(0,20).join('\n')}`;
+      navigator.clipboard.writeText(txt).then(()=>{
+        showToast(`已复制到剪贴板：${todo.vendor} × ${todo.label} (${todo.missing} 个缺失)`);
+      },()=>showToast(txt,true));
+    }else{
+      showToast('该格无缺失清单',true);
+    }
+  });
+}
+
+// ---------- D31: 厂商智能诊断 ----------
+function renderVendorDiagnosis(){
+  const gm=EXT.gap_matrix;
+  if(!gm||!gm.diagnosis){return;}
+  // 健康度最低 Top 15
+  const items=gm.diagnosis.slice(0,15);
+  $('#vendorDiagnosis').innerHTML=items.map(it=>{
+    const score=it.health_score;
+    const cls=score<30?'danger':(score<70?'warn':'ok');
+    const chips=it.top_gaps.map(g=>`<span class="tag ${g.rate<30?'danger':(g.rate<70?'warn':'ok')}" onclick="filterVendorField('${it.vendor}','${g.field}')" title="缺失 ${g.missing}/${it.total_models}">${g.label} <b>${g.missing}</b></span>`).join('');
+    return `<div class="card kpi ${cls}" style="cursor:default">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div class="v" style="font-size:18px;color:${score<30?'#dc2626':(score<70?'#d97706':'#16a34a')}">${score}%</div>
+        <div style="font-size:10px;color:#6b7280">健康度</div>
+      </div>
+      <div class="l" style="margin-top:4px;cursor:pointer" onclick="jumpToDetailWithVendor('${it.vendor}')"><b>${it.vendor}</b> · ${it.total_models} 模型</div>
+      <div style="margin-top:6px">${chips||'<span style="color:#16a34a;font-size:11px">✓ 关键字段已完整</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+// 辅助：跳到明细页并按厂商筛选
+function jumpToDetailWithVendor(vendor){
+  // 切到 detail 页
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('nav button[data-page="detail"]').classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-detail').classList.add('active');
+  // 设置厂商筛选
+  const sel=$('#fVendor');
+  if(sel){
+    [...sel.options].forEach(o=>o.selected=o.value===vendor);
+    collectFilterStateFromUI();
+    refreshAll();
+  }
+}
+
+// 辅助：跳到图表工坊并设置字段
+function filterVendorField(vendor,field){
+  // 切到 custom 页
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('nav button[data-page="custom"]').classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-custom').classList.add('active');
+  const sx=$('#selX'),sy=$('#selY');
+  if(sy)[...sy.options].forEach(o=>o.selected=o.value===field);
+  if(sx)[...sx.options].forEach(o=>o.selected=o.value==='vendor');
+  document.getElementById('btnDraw')&&document.getElementById('btnDraw').click();
+}
+
+// ---------- D31: 导出待补清单 ----------
+function renderTodoTable(){
+  const gm=EXT.gap_matrix;
+  if(!gm||!gm.export){return;}
+  const todos=gm.export.todo_items;
+  $('#gmTodoCount').textContent=todos.length;
+  let html='';
+  todos.slice(0,200).forEach(t=>{
+    const cls=t.rate<30?'danger':(t.rate<70?'warn':'ok');
+    const samples=(t.models||[]).slice(0,5).map(m=>`<span class="pd-link" onclick="openProfile('${m}')">${m.split(':').slice(-1)[0].slice(0,18)}</span>`).join(', ');
+    html+=`<tr><td><span class="pd-link" onclick="jumpToDetailWithVendor('${t.vendor.replace(/'/g,"\\'")}')">${t.vendor}</span></td>
+      <td><code>${t.field}</code></td><td>${t.label}</td>
+      <td>${t.missing}/${t.total}</td>
+      <td><span class="bar-wrap"><span class="bar ${cls}" style="width:${t.rate}%"></span></span> ${t.rate}%</td>
+      <td style="font-size:11px">${samples}${t.missing>5?' …':''}</td></tr>`;
+  });
+  $('#todoTable tbody').innerHTML=html||'<tr><td colspan=6 class="empty">无缺口</td></tr>';
+}
+
+// 导出按钮绑定
+function bindExportButtons(){
+  // 避免重复绑定
+  if(window._gapExportBound)return;
+  window._gapExportBound=true;
+  $('#btnExportJSON')&&($('#btnExportJSON').onclick=()=>exportGapList('json'));
+  $('#btnExportCSV')&&($('#btnExportCSV').onclick=()=>exportGapList('csv'));
+  $('#btnExportMD')&&($('#btnExportMD').onclick=()=>exportGapList('md'));
+}
+
+function exportGapList(fmt){
+  const gm=EXT.gap_matrix;
+  if(!gm||!gm.export){return;}
+  const todos=gm.export.todo_items;
+  const ts=new Date().toISOString().slice(0,10);
+  let content='',filename='',mime='text/plain';
+  if(fmt==='json'){
+    content=JSON.stringify({exported_at:ts,total:todos.length,todos},null,2);
+    filename=`gap_todo_${ts}.json`;mime='application/json';
+  }else if(fmt==='csv'){
+    const rows=[['vendor','field','label','missing','total','rate','sample_models']];
+    todos.forEach(t=>rows.push([t.vendor,t.field,t.label,t.missing,t.total,t.rate+'%',(t.models||[]).slice(0,20).join('|')]));
+    content=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    filename=`gap_todo_${ts}.csv`;mime='text/csv';
+  }else if(fmt==='md'){
+    content=[`# 待补清单（${ts}）`,``,`共 ${todos.length} 条 (vendor × field 缺失组合)`,``,
+      `| 厂商 | 字段 | 标签 | 缺失 | 总数 | 填充率 |`,
+      `|------|------|------|------|------|--------|`];
+    todos.forEach(t=>content.push(`| ${t.vendor} | ${t.field} | ${t.label} | ${t.missing} | ${t.total} | ${t.rate}% |`));
+    content=content.join('\n');
+    filename=`gap_todo_${ts}.md`;
+  }
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  const hint=$('#exportHint');if(hint)hint.textContent=`已导出 ${todos.length} 条 → ${filename}`;
+}
+
+// 简易 Toast
+function showToast(msg,isLong){
+  let t=document.getElementById('__gapToast');
+  if(!t){t=document.createElement('div');t.id='__gapToast';
+    t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(17,24,39,.92);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:1000;max-width:80vw;white-space:pre-wrap;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(window.__gapToastT);
+  window.__gapToastT=setTimeout(()=>t.style.display='none',isLong?8000:3000);
+}
+
+// ---------- 6c. 厂商碎片化 ----------
+function renderFragPage(){
+  const vf=EXT.vendor_fragmentation;
+  if(!vf)return;
+
+  // 合并建议
+  let html='';
+  if(vf.merge_suggestions.length===0){
+    html='<div class="empty">✓ 无碎片化厂商，所有 vendor 命名已统一</div>';
+  }else{
+    vf.merge_suggestions.forEach(s=>{
+      const variants=s.variants.map(v=>`<span class="tag ${v.vendor===s.preferred?'ok':''}">${v.vendor} (${v.count})</span>`).join(' → ');
+      html+=`<div style="margin-bottom:8px"><div style="font-size:12px;color:#6b7280">建议合并为 <b style="color:#2563eb">${s.preferred}</b>（共${s.total}条）</div><div>${variants}</div></div>`;
+    });
+  }
+  $('#fragSuggestions').innerHTML=html;
+
+  // 气泡图
+  const bd=vf.bubble_data;
+  const maxCount=Math.max(...bd.map(d=>d.count),1);
+  mkChart('chFragBubble').setOption({
+    tooltip:{formatter:p=>`${p.data.name}<br/>模型数: ${p.data.value[0]}<br/>平均Elo: ${p.data.value[1]}`},
+    grid:{left:140,bottom:60,top:20,right:20},
+    xAxis:{name:'平均 Elo',nameLocation:'middle',nameGap:25},
+    yAxis:{type:'category',data:bd.map(d=>d.vendor).reverse(),axisLabel:{fontSize:9}},
+    series:[{
+      type:'scatter',
+      data:bd.map(d=>[d.avg_elo,bd.indexOf(d),d.count,d.vendor]).map((v,i)=>({
+        name:v[3],value:[v[0],bd.length-1-i,v[2]],
+        itemStyle:{color:bd[i].color,opacity:0.7},
+        symbolSize:d=>Math.sqrt(d[2]/maxCount)*40+8,
+      })),
+    }],
+  });
+}
 const TYPE_BADGE={num:'b-num',bool:'b-bool',str:'b-str',date:'b-date'};
 const TYPE_CN={num:'数值',bool:'布尔',str:'文本',date:'日期'};
 let fieldFlat=[];
