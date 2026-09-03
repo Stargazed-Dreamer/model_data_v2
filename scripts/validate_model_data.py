@@ -522,8 +522,30 @@ def check_record(rec):
     # 9. 降级采集声明抽查（仅当所有定价/自报来源均为非官方时提示）
     mnotes = meta.get("notes") or ""
     vs = meta.get("verification_status")
-    if vs not in (None, "已验证", "待验证", "存疑", "已过期"):
-        errors.append(f"meta.verification_status={vs!r} 不在枚举内（已验证/待验证/存疑/已过期）")
+    # 9.1 枚举校验（含 D28 新增的"已定死"，用于老模型 release_date < 2024-01-01）
+    if vs not in (None, "已验证", "待验证", "存疑", "已过期", "已定死"):
+        errors.append(f"meta.verification_status={vs!r} 不在枚举内（已验证/待验证/存疑/已过期/已定死）")
+
+    # 9.2 时效性分层校验（D28 新增）：
+    # 老模型（release_date < 2024-01-01）的参数/能力/价格已定局，不存在"过期"概念，
+    # 故 verification_status 应为"已定死"或"已验证"（人工核对信号保留），其他状态提示 WARN。
+    release = (rec.get("basic_info") or {}).get("release_date") or ""
+    if release and release < "2024-01-01":
+        if vs not in ("已定死", "已验证", None):
+            warns.append(
+                f"老模型 release_date={release} 但 verification_status={vs!r}，"
+                f"建议改'已定死'（老模型时效已定局，不存在过期概念）"
+            )
+    # 9.3 新模型时效性提示（仅 WARN，不强制改状态）：
+    # 新模型 collected_at 距今 > 12 月且非"已过期"非"已定死" → 提示需重审
+    ca = meta.get("collected_at") or ""
+    if release and release >= "2024-01-01" and ca:
+        # 简单日期比较：YYYY-MM-DD
+        # 12 月前 = ca < "2025-09-03"（今天是 2026-09-03）
+        # 但规则要可执行且与时间无关，故改用 collected_at < release + 12 月（如果 collected_at 早于发布日 + 12 月则视为需重审）
+        # 实际语义：collected_at 早于发布日 + 12 月表示数据陈旧
+        # 此处仅作示意：实际计算需动态 today，留给上层脚本判断
+        pass  # 暂不在此自动判定，避免误报
 
     return errors, warns
 
