@@ -2,7 +2,8 @@
 /backups/
 /raw_pages/
 /external_sources/
-/viz/
+/viz/echarts.min.js
+/viz/viz_index_v1_legacy.html
 /temp/
 **/_merged_archive/
 /incoming/agent_*.jsonl

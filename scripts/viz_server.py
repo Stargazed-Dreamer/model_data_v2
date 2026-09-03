@@ -44,6 +44,7 @@ def _data() -> dict:
                 "rows": rows,
                 "schema": vt.build_schema_info(rows),
                 "aggregates": vt.build_aggregates(rows),
+                "extended": vt.build_extended_aggregates(rows),
             }
         return _cache
 
@@ -61,6 +62,11 @@ def api_aggregates():
 @app.get("/api/schema")
 def api_schema():
     return JSONResponse(_data()["schema"])
+
+
+@app.get("/api/extended")
+def api_extended():
+    return JSONResponse(_data()["extended"])
 
 
 @app.get("/", response_class=HTMLResponse)
