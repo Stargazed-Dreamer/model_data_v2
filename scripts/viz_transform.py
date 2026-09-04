@@ -1309,6 +1309,15 @@ def build_lifecycle_gantt(rows: list[dict[str, Any]], top_n: int = 120) -> dict[
     # 再按 release 升序排（甘特图从早到晚）
     items = sorted(picked, key=lambda x: x["release"])
 
+    # y 轴类目按 name 建立且前端按 name 反查索引，重名会互相覆盖（如 base 与日期变体两条同 full_name），
+    # 重名的追加 model_id 前两段保证唯一
+    _seen: set[str] = set()
+    for it in items:
+        if it["name"] in _seen:
+            prefix = ":".join(str(it.get("model_id") or "").split(":")[:2])
+            it["name"] = f'{it["name"]} [{prefix}]'
+        _seen.add(it["name"])
+
     # vendor 色板
     geo_keys = {
         "中国": "#dc2626", "美国": "#2563eb", "欧洲": "#7c3aed", "其他": "#6b7280",

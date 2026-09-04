@@ -1140,25 +1140,27 @@ function resetFilters(){
   refreshAll();
 }
 
+// 单页渲染失败只跳过该页，不得截断后续页面（曾因甘特图裁剪断言把 9 个页面拖到全空）
+function _safeRender(name,fn){try{fn()}catch(e){console.error('[viz] '+name+' 渲染失败:',e);}}
 function refreshAll(){
   VIEW_ROWS=applyFilters(ROWS);
   updateFilterCount();
   saveFiltersToHash();
-  renderOverview();
-  renderVendorPage();
-  renderPerformancePage();
-  renderComparePage();
-  renderArenaSourcePage();
-  renderTimelinePage();
-  renderQualityPage();
-  renderGapPage();
-  renderFragPage();
-  renderFieldTable();
-  initCustomControls();
-  renderDetailInit();
-  renderLeaderboardPage();
-  renderScalingPage();
-  renderTrustPage();
+  _safeRender('overview',renderOverview);
+  _safeRender('vendor',renderVendorPage);
+  _safeRender('performance',renderPerformancePage);
+  _safeRender('compare',renderComparePage);
+  _safeRender('arena_source',renderArenaSourcePage);
+  _safeRender('timeline',renderTimelinePage);
+  _safeRender('quality',renderQualityPage);
+  _safeRender('gap',renderGapPage);
+  _safeRender('frag',renderFragPage);
+  _safeRender('fields',renderFieldTable);
+  _safeRender('custom',initCustomControls);
+  _safeRender('detail',renderDetailInit);
+  _safeRender('leaderboard',renderLeaderboardPage);
+  _safeRender('scaling',renderScalingPage);
+  _safeRender('trust',renderTrustPage);
 }
 
 // ============ 模型档案抽屉 ============
@@ -1885,7 +1887,9 @@ function renderGantt(){
     const rect=echarts.graphic.clipRectByRect({
       x:start[0],y:start[1]-h/2,width:Math.max(end[0]-start[0],2),height:h
     },{x:params.coordSys.x,y:params.coordSys.y,width:params.coordSys.width,height:params.coordSys.height});
-    return rect?{type:'rect',transition:['shape'],shape:rect,style:api.style({stroke:'#fff',lineWidth:1})}:{};
+    // clipRectByRect 对完全裁剪的元素返回 null，此时必须返回合法空组（{} 无 type 会令 echarts 抛 Error 中断整个 setOption）
+    if(!rect)return {type:'group',children:[]};
+    return {type:'rect',transition:['shape'],shape:rect,style:api.style({stroke:'#fff',lineWidth:1})};
   };
   const data=items.map(it=>({
     name:it.name,

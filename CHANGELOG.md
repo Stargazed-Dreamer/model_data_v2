@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Fixed（viz 修复，2026-09-05）
+
+- **可视化 9 个页面空白修复**：`viz/viz_index.html` 甘特图自定义 series 的 `renderItem` 在元素被完全裁剪时返回 `{}`（无 `type`），echarts 内部断言抛 `Error("")`；页面初始化时各分区隐藏（0×0），甘特图矩形必被整体裁剪 → **每次加载必崩**，`refreshAll()` 自第 6 环 `renderTimelinePage()` 起中断，数据质量/数据缺口/厂商碎片/字段总览/图表工坊/明细浏览/跑分排行/Scaling Law/可信度 9 个页面从不渲染。修复两处：`renderItem` 裁剪时改返回合法空组 `{type:'group',children:[]}`；`refreshAll()` 每个渲染函数包 `_safeRender()`（try/catch 隔离，单页失败不再拖垮其他页面）。另修 `scripts/viz_transform.py` `build_lifecycle_gantt()` 重名类目（Claude Haiku 4.5 的 base 与 20251001 两条同 full_name 会互相覆盖 y 轴索引），重名追加 model_id 前缀。
+- **echarts.min.js 缺失处置**：`.gitignore` 刻意不入库该文件导致新 clone 上 viz 整页不可用。新增 `scripts/fetch_viz_assets.py` 一键复原（npmmirror→jsdelivr→unpkg 依次尝试），DEPLOY.md §3.5b 补 viz 前置说明。实测 echarts 5.5.1（1.03MB）恢复后 15 个页面全部正常渲染（明细表格 100 行/页、缺口矩阵 345 行、甘特图 120 条）。
+
 ### Changed（docs 整理，2026-09-05）
 
 - **docs 目录整理**：20 份已完结阶段的历史文档经 `git mv` 移入 `docs/archive/`（内容零改动）——采集阶段计划 3 份（multi_agent_plan / COLLECTION_PLAN_v2 / TASK_ASSIGNMENT_v2）、v1/v2 时代质检与评估 8 份（TEST_REPORT / clean_v1_log / cleanup_log / validation_v1_baseline / validation_v2_official / DATA_QUALITY_REPORT_v2 / quality_report_20260825 / qa_report）、日级状态快照 3 份（全库状态与下一步_2026-08-25 / 现状盘点_2026-08-27 / 盘点与待改清单）、已结案交接卡 5 份（M型扩容交接 / 收尾状态与交接 / 交接 D16 进行中 / D16 结案 / D19 结案换平台接手卡）、可视化选型方案 1 份（VISUALIZATION_PLAN）。新增 `docs/README.md` 目录索引（含受众标注：WB 平台专属文档单列）与 `docs/archive/README.md` 归档说明；留存文档（WORKBUDDY_AGENT_GUIDE、intermediate/README、.workbuddy 记忆）中指向被移动文档的引用已同步改指 archive 路径。现行规范、GAP_SCAN 报告与数据档案（ledger / 两份隔离档 / memory/）位置不变。

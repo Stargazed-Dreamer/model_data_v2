@@ -175,6 +175,17 @@ PYTHONUTF8=1 python scripts/validate_model_data.py model_data_v2.jsonl
 # 应输出：ERROR 0 项 / WARN ~119 项（WARN 不阻塞，是规范性提醒）
 ```
 
+### 3.5b 可视化服务前置（要用 viz 才需要做）
+
+```bash
+pip install fastapi uvicorn          # 服务依赖
+python scripts/fetch_viz_assets.py   # 拉取 viz/echarts.min.js（约 1MB，.gitignore 刻意不入库）
+PYTHONUTF8=1 python scripts/viz_server.py   # http://127.0.0.1:8620/
+```
+
+> 缺 echarts.min.js 时页面会因 `echarts is not defined` 整页初始化失败（图表和表格都不渲染）。
+> viz/echarts.min.js、viz_index.html（134KB）、/api 数据（models 1.2MB / extended 3.7MB）均属正常体积，无单文件过大问题。
+
 ### 3.6 验证样本 + 认领表
 
 ```bash
