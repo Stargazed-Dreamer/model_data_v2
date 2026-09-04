@@ -1666,6 +1666,10 @@ def build_extended_aggregates(rows: list[dict[str, Any]],
         "lifecycle_gantt": build_lifecycle_gantt(rows),
         # D31 新增：缺口矩阵 + 智能诊断
         "gap_matrix": build_gap_matrix(rows),
+        # D33 新增：B1 跑分排行总榜 + B2 Scaling Law + B6 多源可信度
+        "leaderboards": build_leaderboard(rows, raw_records),
+        "scaling_law": build_scaling_law(rows, raw_records),
+        "multi_source": build_multi_source_conflict(rows, raw_records),
     }
 
 

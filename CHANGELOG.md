@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### Added（D33 新增）
+
+- **D33 可视化三模块**：`scripts/viz_transform.py` 新增 `build_leaderboard()` / `build_scaling_law()` / `build_multi_source_conflict()`，前端 `viz/viz_index.html` 在「跑分」组新增三个页面：
+  - **跑分排行**：按 benchmark 维度切换 Top 30 总榜（mmlu / gsm8k / gpqa / math / humaneval / aime2025 / swe_bench 独立评测 + arena_text / arena_coding / arena_math Arena Elo 子榜）。
+  - **Scaling Law**：参数量 vs 各 benchmark 分数散点 + log-log 拟合线（含 R²）+ 预测 score@7B/70B/700B。
+  - **可信度**：同模型同 benchmark 多源一致性扫描，多源组聚合 + 不一致组（差异 ≥5%）+ 各 benchmark 不一致率。
+
 ### Fixed（D32 新增）
 
 - **D32 数据修复 8 项**：扫描 5 个未深探方向后修复，门禁 ERROR 0 / WARN 0 持平。
