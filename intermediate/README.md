@@ -14,9 +14,9 @@
 
 | 文件 | 大小 | 性质 | 能否再生 |
 |---|---|---|---|
-| `conflicts.json` | 274 KB | 阶段 3 采集文件 vs 主库的差异扫描明细，`qa_report.md` §4.2 的证据 | 是，`python scripts/diff_incoming_db.py` |
-| `qa_stats.json` | 30 KB | 阶段 3 填充率统计明细，`qa_report.md` §3 的证据 | 是，`python scripts/qa_stats.py` |
-| `merge_todo.txt` | 24 KB | 277 个补合并文件清单，`qa_report.md` §2.3 合并命令的输入 | 否，对应文件已变动 |
+| `conflicts.json` | 274 KB | 阶段 3 采集文件 vs 主库的差异扫描明细，`docs/archive/qa_report.md` §4.2 的证据 | 是，`python scripts/diff_incoming_db.py` |
+| `qa_stats.json` | 30 KB | 阶段 3 填充率统计明细，`docs/archive/qa_report.md` §3 的证据 | 是，`python scripts/qa_stats.py` |
+| `merge_todo.txt` | 24 KB | 277 个补合并文件清单，`docs/archive/qa_report.md` §2.3 合并命令的输入 | 否，对应文件已变动 |
 | `merge_apply_log.txt` | 45 KB | 上述合并的执行日志 | 否 |
 | `roster_v1diff_DEPRECATED.jsonl` | 92 KB | 阶段 0 v1 差异清单（**已弃用，勿当名册用**） | 否，生成脚本已删除 |
 | `roster_v1diff_DEPRECATED.md` | 28 KB | 同上的人读版 | 否 |

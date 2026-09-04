@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Changed（docs 整理，2026-09-05）
+
+- **docs 目录整理**：20 份已完结阶段的历史文档经 `git mv` 移入 `docs/archive/`（内容零改动）——采集阶段计划 3 份（multi_agent_plan / COLLECTION_PLAN_v2 / TASK_ASSIGNMENT_v2）、v1/v2 时代质检与评估 8 份（TEST_REPORT / clean_v1_log / cleanup_log / validation_v1_baseline / validation_v2_official / DATA_QUALITY_REPORT_v2 / quality_report_20260825 / qa_report）、日级状态快照 3 份（全库状态与下一步_2026-08-25 / 现状盘点_2026-08-27 / 盘点与待改清单）、已结案交接卡 5 份（M型扩容交接 / 收尾状态与交接 / 交接 D16 进行中 / D16 结案 / D19 结案换平台接手卡）、可视化选型方案 1 份（VISUALIZATION_PLAN）。新增 `docs/README.md` 目录索引（含受众标注：WB 平台专属文档单列）与 `docs/archive/README.md` 归档说明；留存文档（WORKBUDDY_AGENT_GUIDE、intermediate/README、.workbuddy 记忆）中指向被移动文档的引用已同步改指 archive 路径。现行规范、GAP_SCAN 报告与数据档案（ledger / 两份隔离档 / memory/）位置不变。
+
 ### Added（D33 新增）
 
 - **D33 可视化三模块**：`scripts/viz_transform.py` 新增 `build_leaderboard()` / `build_scaling_law()` / `build_multi_source_conflict()`，前端 `viz/viz_index.html` 在「跑分」组新增三个页面：
