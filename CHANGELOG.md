@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+### Changed（D35 同模型双 id 合并，2026-09-06）
+
+D34 体检登记的 7 组「同厂商同名不同 model_id」拍板处置（备份 `model_data_v2.jsonl.d35bak-20260906-001759`）。合并后 891 → **885 条**，门禁 ERROR 0 / WARN 0 持平，C2 扫描（同厂商同名组）清零。
+
+- **6 组合并**（保留 keeper=官方名/数据超集一方；donor 跑分按合并主键只并集不覆盖：self_reported `(benchmark,config,date)`、independent `(benchmark,config,source_site,date)`、arena_elo `(sub_benchmark,date)`；标量字段 donor 只填 null；notes 非空追加「【D35 合并自 …】」段；source_urls 并集）：
+  1. `alibaba:qwen2-5-max:base` ← `qwen-max-2025-01-25:base`（并 8 自报 + 3 独立）。⚠️ 上下文冲突网核定案：Qwen2.5-Max API 为 **32,768**（Artificial Analysis / OpenRouter / MCP 文档一致），donor 的 128000 系 datalearner 转述时与 Qwen2.5 开源系列 128K 混淆，弃用并留处置注；
+  2. `anthropic:claude-3-haiku:base` ← `:20240307`（并 4 独立评测；填 knowledge_cutoff 2023-08、cache_write 等空字段）；
+  3. `anthropic:claude-haiku-4-5:base` ← `:20251001`（并 3 自报 + 3 独立；SWE-bench 0.733 撞键 1 条按 keeper 留用跳过）；
+  4. `Cohere:command-r-plus:base` ← `:2024-04`（donor 的首发定价考证与官方博客来源折入 notes；free_tier 等空字段补齐）；
+  5. `lg:exaone-deep-2-4b:base` ← `exaone-3-5-r-2-4b:base`（三基准同分实证同模型；并 donor 独有条目）；
+  6. `tii:falcon-2-11b:base` ← `falcon-11b:base`（donor notes 自证同物——其 T0 来源即「Falcon 2 11B」官方新闻稿；空骨架 keeper 吸收全部 9 自报 + 2 独立）。
+- **1 组改名不合并**：`deepseek:deepseek-v4-pro-none:base` 的 full_name 「DeepSeek-V4-Pro」→「DeepSeek-V4-Pro（Non-Think）」。两记录是同一模型的思考/非思考两种模式（AIME 2025 0.4667 vs 0.9667），合并会销毁数据；-none 后缀即库内 Non-Think 口径（该条 notes 自证），改名仅为消除 full_name 同名混淆。
+- 合计并入跑分条目 38（自报 26 + 独立 12），撞键跳过 1，标量填空 15 处，notes 处理 29 处。合并脚本 `temp/d35_merge_dups.py`（dry-run 计划 + 乐观锁断言）。
+
 ### Fixed（D34 数据修复，2026-09-05）
 
 用户拍板后对独立体检（`temp/d34_scan_outliers.py`，31 项门禁外检查）发现的 5 类问题修复，备份 `model_data_v2.jsonl.d34bak-20260905-235111`。修复前后门禁均 ERROR 0 / WARN 0 持平；字段级 diff 核对仅预期字段变动（459 处 / 447 条记录）。
