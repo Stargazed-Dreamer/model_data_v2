@@ -2,7 +2,29 @@
 
 本变更日志记录 `model_data` 工作区数据集与可视化的演进。版本号采用 `D<轮次>` 形式，对齐整改轮。
 
-## [Unreleased]
+- **Wave-1 遗留待拍板**：P2 二查结果——Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）均早于采集窗口，属**漏采**待批；Cohere Parse 5 查实为 2.3B 文档 VLM（真模型但按页计价 $1.5/千页）待批；Qwen3.7-Plus 思考档仍无独立口径证据。
+
+### Added（D37 Wave-2 二查缺口补采，2026-09-06）
+
+用户拍板「二查缺口全补」，并行 8 个采集 agent（分两组、每组 ≤4），原计划 11 条，实际净增 **9 条**，主库 892 → **900 条**，门禁 ERROR 0 / WARN 0 持平：
+
+| model_id | 发布 | 要点 |
+|---|---|---|
+| `google:gemma-4-e2b:base` | 2026-03-31 | 总 5.1B/有效 2.3B Dense（PLE 有效参数设计）、128K ctx、原生音视频输入、知识截止 2025-01 |
+| `google:gemma-4-e4b:base` | 2026-03-31 | 总 8.0B/有效 4.5B，其余同上 |
+| `google:gemma-4-12b:base` | 2026-06-03 | 11.95B Dense、256K ctx；官方无"非 Unified 12B"，pre-trained checkpoint |
+| `google:gemma-4-12b-unified:base` | 2026-06-03 | **encoder-free** 统一多模态（图像/音频 patch 直投影进 LLM，家族唯一原生音频中尺寸） |
+| `stepfun:step-3-7-flash:base` | 2026-05-29 | 198B/11B MoE VLM、256K ctx、三档推理；开源 Apache 2.0 + API ¥1.35/8.1 元折 $0.1992/$1.1949；31 条 T0-自报 |
+| `cohere:parse-v5-0:base` | 2026-08-27 | 2.3B 文档 VLM；**按页计价 $1.50/1,000 页**（token 六键 null、unit null，页价存 notes，schema 首例非 token 计价） |
+| `google:gemini-3-5-flash-cyber:base` | 2026-07-21 | 安全特化（OSV.dev 700k 漏洞微调）；CodeMender 排他渠道；CyberGym 0.832；定价沿用 3.5 Flash $1.5/$9 |
+| `alibaba:qwen3-7-plus:base` | 2026-06 | **思考档**（混合思考单一 API id，enable_thinking 默认 true）；$0.298/$1.192、1M ctx；full_name 加后缀与 -none 行区分 |
+| `google:gemma-4-31b:base` | — | **已移除**：主库 init 基线已有 `gemma-4-31b-it`/`-it-minimal`，本采 14 条为 -it 跑分、7 项同名同分构成重复（-it 数据套 base id 身份错配）；采集与既有记录互证一致，留档不提交 |
+
+- **花名册讹误证伪 1 条**：`b317`「Gemini 3.6 Flash Cyber」不存在——7-21 同日发布的 Cyber 实为 **3.5** Flash Cyber（基于 3.5 微调），采集 agent 按「讹误即停」拒绝硬填并给出 DeepMind 官方博客 T0 证据链，批次释放（Wave-1 CHANGELOG 中"3.5/3.6 Cyber 未采"说法据此更正：3.6 Cyber 不存在，3.5 Cyber 本轮已采）。
+- **立项盘点失误自纠 1 条**：`b313` gemma-4-26b-a4b 实为 init 基线既有（Wave-2 立项时 Gemma 家族盘点输出截断漏看），本轮独立采集与既有记录全字段互证一致，无需入库。
+- **采集侧修正**：Gemma 系 Codeforces Elo/CoVoST BLEU 等 8 条非 0-1 量纲分数按 GDPval 先例撤下进 meta.notes；Parse 的 source_type 归一受控枚举；Step 的 DeepSearchQA 双分数 config 区分（F1/accuracy）；qwen3-7-plus 的 long_context 键名归一。
+- **基准名归一（5 处）**：SWE-Bench Verified→**SWE-bench Verified**（Princeton 官方小写 b；与 Scale 官方大写 B 的 SWE-Bench Pro 为两个不同基准、各自官方拼法并存）、GDP.pdf→GDP.PDF。
+- 增量质检 d34 扫描与基线持平；台账 `b308w1~b318w1`：9 submitted + b313 互证留档 + b312/b317 释放留痕。
 
 ### Added（D37 增量采集轮，2026-09-06）
 
