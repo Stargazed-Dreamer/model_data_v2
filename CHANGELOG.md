@@ -4,6 +4,25 @@
 
 ## [Unreleased]
 
+### Added（D37 增量采集轮，2026-09-06）
+
+增量更新工作流（见 `docs/增量更新工作流.md`）首轮实跑，用户拍板 P0+P1 共 **7 个新模型**入库，主库 885 → **892 条**，门禁 ERROR 0 / WARN 0 持平。批次 ledger `b301w1~b307w1`（claimed_by zcode-01，均已 submitted），采集文件已 `add -f` 入库：
+
+| model_id | 发布 | 要点 |
+|---|---|---|
+| `openai:gpt-6-astra:base` | 2026-09-03 | 新旗舰；$10/$50（cached $1、batch 半价折算）、1.05M ctx/128K out、知识截止 2026-04-30；13 条 T0-自报跑分；首个达 OpenAI Preparedness **Critical** 网络安全阈值的模型 |
+| `tencent:hunyuan-hy4-preview:base` | 2026-08-28 | 开源（Apache 2.0）；770B/49B MoE、1M ctx；10 条 T0-自报；API 价 $0.834/$2.501 |
+| `anthropic:claude-fable-5-1:base` | 2026-09-01 | $10/$50（cached $0.25）；**Mythos 5.1 = 同一模型权重的宽松护栏 trusted-access 档，经判定不单开记录**，事实写入 notes |
+| `google:gemini-3-8-flash:base` | 2026-09-02 | $0.75/$3.75（促销价至 2026-12-31）；1M ctx、知识截止 2026-03；14 条 T0-自报；官方 API 单一 id、thinking 经参数调节（无 -high/-minimal 独立 id） |
+| `google:gemini-3-8-flash-cyber:base` | 2026-09-02 | 安全特化变体（专项训练非纯护栏开关，官方称 "2 variants"，判定独立建条，证据链存 notes）；仅 Fairwind 受审渠道；cyber 专属跑分 3 条 |
+| `zhipu:glm-5-3-flash:base` | 2026-08-26 | 开源（MIT）+API $0.15/$0.50；320B/18B MoE、1M ctx、原生多模态 |
+| `alibaba:qwen3-8-27b:base` | 2026-08 | 开源（Apache 2.0）+百炼 API $0.5/$3.0；27B Dense 原生视觉-语言、262K→YaRN 1M ctx；30 条 T0-自报 |
+
+- **采集侧修正**（门禁拦下后归位）：gemini-3-8-flash 的 GDPval-AA v2 为 Elo 量纲（1545）不适用 0-1 口径，按署不入库、原值留 meta.notes 待口径统一；cyber/glm 的 source_type 用词归一到 D25 受控枚举；gpt-6-astra 的 long_context 键名归一（input_multiplier→input）。
+- **基准名大小写归一（26 处）**：SWE-bench Pro→**SWE-Bench Pro**（官方拼法+21 条多数派）、Cybergym→**CyberGym**、GDP.pdf→**GDP.PDF**。
+- **增量质检**：d34 扫描 31 项与入库前基线持平（A1/B1/B2/B5 各项无新增）；license 填充率 51.0%→51.3%。
+- **Wave-1 遗留待拍板**：P2 二查结果——Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）均早于采集窗口，属**漏采**待批；Cohere Parse 5 查实为 2.3B 文档 VLM（真模型但按页计价 $1.5/千页）待批；Qwen3.7-Plus 思考档仍无独立口径证据。Cyber 系先例：3.5/3.6 Flash Cyber（2026-07）也在窗口内未采，可并入下一轮。
+
 ### Added（增量更新工作流，2026-09-06）
 
 - **`docs/增量更新工作流.md`**：跟进新模型发布的持续循环 SOP——S0 发现（信息源清单）→ S1 范围判定（是否模型/是否新/是否在范围）→ S2 采集（ledger 新批次 + M 型 subagent）→ S3 门禁合并（含三条历史事故硬约束）→ S4 增量质检（门禁基线 + d34 扫描复跑 + 定价量级锚点）→ S5 发布；含每轮固定拍板点与首轮实录。
