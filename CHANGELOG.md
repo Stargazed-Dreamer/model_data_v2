@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### Added（增量更新工作流，2026-09-06）
+
+- **`docs/增量更新工作流.md`**：跟进新模型发布的持续循环 SOP——S0 发现（信息源清单）→ S1 范围判定（是否模型/是否新/是否在范围）→ S2 采集（ledger 新批次 + M 型 subagent）→ S3 门禁合并（含三条历史事故硬约束）→ S4 增量质检（门禁基线 + d34 扫描复跑 + 定价量级锚点）→ S5 发布；含每轮固定拍板点与首轮实录。
+- **`scripts/candidate_diff.py`**：S1 辅助工具（只读），候选清单 vs 主库差异比对，输出 NEW / CHECK_VARIANT / EXISTS 三档建议（建议不自动处置，处置必经人工）。
+- **首轮 Wave-1 发现（窗口 2026-08-20 以来）**：候选 11 条——GPT-6 Astra（09-03，$10/$50）、Hunyuan Hy4 preview（08-28，770B/49B 开源）、Claude Fable 5.1 / Mythos 5.1（09-01）、Gemini 3 系列 9-02 新档、GLM-5.3-Flash、Qwen3.8-27B 等；判定 NEW 2 / CHECK_VARIANT 8 / EXISTS 1。待用户拍板后开 D37 采集轮。
+
 ### Fixed（D36 定价错值 + 价格图对数轴，2026-09-06）
 
 用户报告两张价格图被极端值拉爆坐标轴，排查出一处数据错 + 一处图的口径缺陷（备份 `model_data_v2.jsonl.d36bak-20260906-005757`，门禁 ERROR 0 / WARN 0 持平）：

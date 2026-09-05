@@ -13,6 +13,7 @@
 | `执行细则.md` | 10 项执行层面细则：字段怎么填、冲突怎么记、输出怎么分批 |
 | `multi_platform_subagent_guide.md` | 多平台并发采集通用规范：批次认领协议（CAS）、subagent 派发、单文件门禁、落盘 |
 | `agent_prompt_per_model.md` | 单模型 subagent 任务书模板（M 型） |
+| `增量更新工作流.md` | 跟进新发布的持续循环：S0 发现 → S1 范围判定（`scripts/candidate_diff.py`）→ S2 采集 → S3 门禁合并 → S4 增量质检 → S5 发布；含首轮 Wave-1 候选实录 |
 
 ### 平台专属
 
