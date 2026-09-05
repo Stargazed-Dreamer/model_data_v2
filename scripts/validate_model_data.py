@@ -372,6 +372,16 @@ def check_record(rec):
         warns.append("pricing.free_tier 键集与规范不符：实际 %s（规范 %s）"
                      % (", ".join(sorted(ft)) or "空对象", ", ".join(sorted(ft_keys))))
 
+    # 4.5 basic_info.license 类型漂移（D34）。规范为自由文本字符串（16.1 转正口径）；
+    #     D32 修复项 5 批量补 license 时写成了 {"name": ...} 单键对象（446 条），
+    #     SCHEMA_BLOCK_KEYS 只查键存在不查值类型，门禁静默放行，下游按字符串读取会拿到 dict。
+    #     D34 已拍平为字符串；本条 WARN 只负责挡住后续再写非字符串形状。
+    lic_val = (rec.get("basic_info") or {}).get("license")
+    if lic_val is not None and not isinstance(lic_val, str):
+        warns.append("basic_info.license 类型漂移：实际 %s（%s）"
+                     " —— 规范为自由文本字符串，未采集应为 null"
+                     % (type(lic_val).__name__, str(lic_val)[:40]))
+
     # 5. positioning：数组 + 枚举
     pos = (rec.get("basic_info") or {}).get("positioning")
     if pos is None:

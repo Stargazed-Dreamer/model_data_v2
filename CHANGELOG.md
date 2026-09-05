@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+### Fixed（D34 数据修复，2026-09-05）
+
+用户拍板后对独立体检（`temp/d34_scan_outliers.py`，31 项门禁外检查）发现的 5 类问题修复，备份 `model_data_v2.jsonl.d34bak-20260905-235111`。修复前后门禁均 ERROR 0 / WARN 0 持平；字段级 diff 核对仅预期字段变动（459 处 / 447 条记录）。
+
+- **license 形状拍平（446 条）**：D32 修复项 5 批量补 license 时写成了 `{"name": ...}` 单键 dict（"填充率 51%" 全是该形状），`SCHEMA_BLOCK_KEYS` 只查键不查值类型故门禁静默。全部拍平为字符串。**门禁新增规则 4.5**（WARN）：`basic_info.license` 非 null 且非字符串即报；负对照 ×改前备份命中 446、现库 0。
+- **参数量单位硬错（2 条）**：`moonshot:fireworks-kimi-k2p5` total 1.02→1020.0B（notes 自证「总参数1.02T」，T 误写 B）；`deepseek:deepseek-coder-v2-236b` active 21000000000→21.0B（legacy 参数个数写法，同 notes `[原 total_params]` 一类）。
+- **MT-Bench 归一错位（1 条）**：`microsoft:wizardlm-2-8x22b` self_reported/MT-Bench 0.0912→0.912（条目 notes 自证 9.12 分，归一误除 100）。
+- **qwen3-5 缓存价知情置 null（5 条）**：全家族 `cached_input` 与 output 同值、为 input 的 6~8 倍，作缓存命中单价不可能（阿里云官方规则：缓存命中≈标准输入单价 10%，2026-09-05 网核；全库其余 150+ 条 cached/input 比值均在 0.03~0.5）。采集时计费表第三列语义歧义（"缓存命中/思考同价列"）、存档 raw_pages 未随机器带来，无法核实列归属 → 置 null 知情保留，待官方价格表重核。
+- **基准名大小写归一（5 条）**：`Mathvista(mini)`→`MathVista(mini)`（4）、`TAU-Bench Retail`→`TAU-bench Retail`（1，多数派写法）。
+
+**体检中核实后不动的**：release=2022-01 的 2 条属 D31「只要 2022+」边界值；5 条价格早于发布属预发布定价；5 条退役模型无 API 有历史价；llama-4-maverick/hunyuan-large 名字中的参数是激活参数非矛盾；LiveCodeBench Pro Elo 2887 为 D28 知情保留；13 条 Qwen/gemma 系「激活>总参」系名义值 vs 精确值精度差非硬错；160 条「知识截止早于发布」为正常语义（初版判据方向定反，已剔除）。**遗留拍板项**：7 组同厂商同名双 model_id 是否合并（涉及 id 命名空间，未动）。
+
 ### Fixed（viz 修复，2026-09-05）
 
 - **可视化 9 个页面空白修复**：`viz/viz_index.html` 甘特图自定义 series 的 `renderItem` 在元素被完全裁剪时返回 `{}`（无 `type`），echarts 内部断言抛 `Error("")`；页面初始化时各分区隐藏（0×0），甘特图矩形必被整体裁剪 → **每次加载必崩**，`refreshAll()` 自第 6 环 `renderTimelinePage()` 起中断，数据质量/数据缺口/厂商碎片/字段总览/图表工坊/明细浏览/跑分排行/Scaling Law/可信度 9 个页面从不渲染。修复两处：`renderItem` 裁剪时改返回合法空组 `{type:'group',children:[]}`；`refreshAll()` 每个渲染函数包 `_safeRender()`（try/catch 隔离，单页失败不再拖垮其他页面）。另修 `scripts/viz_transform.py` `build_lifecycle_gantt()` 重名类目（Claude Haiku 4.5 的 base 与 20251001 两条同 full_name 会互相覆盖 y 轴索引），重名追加 model_id 前缀。
