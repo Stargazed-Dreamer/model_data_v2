@@ -695,10 +695,10 @@ body.nav-collapsed .filter-bar{margin-left:48px}
     <div class="card"><h3>MoE 稀疏度散点 <small>active vs total params；斜率越低 MoE 稀疏度越高</small></h3><div class="chart tall" id="chMoEScatter"></div></div>
   </div>
   <div class="card" style="margin-top:14px">
-    <h3>价格×性能 4 象限图 <small>中位价格 $<span id="pqMedPrice">—</span>/M × 中位 Elo <span id="pqMedElo">—</span> 分割；点击点看档案</small></h3>
+    <h3>价格×性能 4 象限图 <small>中位价格 $<span id="pqMedPrice">—</span>/M × 中位 Elo <span id="pqMedElo">—</span> 分割；点击点看档案<span id="pqFreeNote" style="color:#d97706"></span></small></h3>
     <div class="grid cols4" id="pqStats" style="margin-bottom:10px"></div>
     <div class="chart tall" id="chPriceQuadrant" style="height:460px"></div>
-    <div class="hint">高性价比（低价高能）/ 低性价比（高价低能）/ 高端（高价高能）/ 低端（低价低能）；虚线=中位分割，实线=线性回归</div>
+    <div class="hint">高性价比（低价高能）/ 低性价比（高价低能）/ 高端（高价高能）/ 低端（低价低能）；虚线=中位分割，实线=对数回归（Elo ~ log₁₀价格）</div>
   </div>
 </section>
 
@@ -1534,15 +1534,17 @@ function renderPriceQuadrant(){
   $('#pqStats').innerHTML=cards.map(([l,v,c,d])=>`<div class="card kpi" style="border-left:3px solid ${c}"><div class="v" style="color:${c}">${v}</div><div class="l">${l}</div><div style="font-size:10px;color:#6b7280;margin-top:2px">${d}</div></div>`).join('');
   const quadColor={high_value:'#16a34a',premium:'#2563eb',low_value:'#dc2626',budget:'#6b7280'};
   const pts=pq.points.map(p=>({
-    value:[p.x,p.y],name:p.name,model_id:p.model_id,vendor:p.vendor,
+    value:[p.free?0.01:p.x,p.y],name:p.name,model_id:p.model_id,vendor:p.vendor,
+    free:p.free,
     quadrant:p.quadrant,
     symbolSize:p.params?6+Math.log(p.params)*1.5:8,
     itemStyle:{color:quadColor[p.quadrant],opacity:.75,borderColor:'#fff',borderWidth:1}
   }));
+  if(pq.points.some(p=>p.free))$('#pqFreeNote').textContent='；免费模型按 $0.01 绘制（对数轴）';
   const opt={
     grid:{left:70,right:30,top:40,bottom:60},
-    tooltip:{formatter:p=>{const d=p.data;return `<b>${d.name}</b><br>${d.vendor}<br>价格: $${d.value[0]}/M<br>Elo: ${d.value[1]}<br>点击看档案`}},
-    xAxis:{type:'value',name:'输入价 ($/M)',scale:true,nameLocation:'middle',nameGap:28,
+    tooltip:{formatter:p=>{const d=p.data;return `<b>${d.name}</b><br>${d.vendor}<br>价格: ${d.free?'免费（按 $0.01 绘制）':'$'+d.value[0]+'/M'}<br>Elo: ${d.value[1]}<br>点击看档案`}},
+    xAxis:{type:'log',min:0.01,name:'输入价 ($/M，对数轴)',scale:true,nameLocation:'middle',nameGap:28,
       axisLabel:{formatter:v=>'$'+v}},
     yAxis:{type:'value',name:'Arena Elo',scale:true,nameLocation:'middle',nameGap:50},
     series:[
@@ -1561,11 +1563,12 @@ function renderPriceQuadrant(){
   };
   // 回归线（用单独 series 的 markLine 或 line）
   if(pq.regression){
+    const r2txt=pq.regression.r2!=null?` (R²=${pq.regression.r2})`:'';
     opt.series.push({
       type:'line',data:pq.regression.line,lineStyle:{color:'#7c3aed',width:2,type:'solid'},
-      showSymbol:false,tooltip:{formatter:'线性回归线'},silent:true,
+      showSymbol:false,tooltip:{formatter:'对数回归（Elo ~ log₁₀ 价格）'},silent:true,
       markPoint:{symbol:'pin',symbolSize:0,data:[
-        {coord:pq.regression.line[1],label:{formatter:`y=${pq.regression.a}+${pq.regression.b}x`,color:'#7c3aed',fontSize:10,position:'top'}}
+        {coord:pq.regression.line[0],label:{formatter:`y=${pq.regression.a}+${pq.regression.b}·log₁₀x${r2txt}`,color:'#7c3aed',fontSize:10,position:'top'}}
       ]}
     });
   }
@@ -1629,23 +1632,25 @@ function renderPriceScatter(){
   const elosY=pts.map(p=>p.elo).sort((a,b)=>a-b);
   const medPrice=pricesX[Math.floor(pricesX.length/2)]||0;
   const medElo=elosY[Math.floor(elosY.length/2)]||0;
-  // 回归线（简单线性回归 y=elo, x=price）
+  // 回归线（对数回归：Elo ~ log₁₀价格；价格跨多个数量级，线性轴拟合无意义）
+  const lx=p=>p.x>0?Math.log10(p.x):Math.log10(0.01);
   const n=pts.length;
-  const sumX=pts.reduce((s,p)=>s+p.x,0),sumY=pts.reduce((s,p)=>s+p.elo,0);
-  const sumXY=pts.reduce((s,p)=>s+p.x*p.elo,0),sumX2=pts.reduce((s,p)=>s+p.x*p.x,0);
+  const sumX=pts.reduce((s,p)=>s+lx(p),0),sumY=pts.reduce((s,p)=>s+p.elo,0);
+  const sumXY=pts.reduce((s,p)=>s+lx(p)*p.elo,0),sumX2=pts.reduce((s,p)=>s+lx(p)*lx(p),0);
   const slope=n>0?(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX):0;
   const intercept=n>0?(sumY-slope*sumX)/n:0;
-  const xMin=Math.min(...pricesX),xMax=Math.max(...pricesX);
+  const lxA=Math.min(...pts.map(lx)),lxB=Math.max(...pts.map(lx));
+  const xMin=Math.pow(10,lxA),xMax=Math.pow(10,lxB);
   const dataPts=pts.map(p=>({
-    value:[p.x,p.elo],name:p.name,vendor:p.vendor,elo:p.elo,symbolSize:8+Math.log(p.elo||1)*2,
+    value:[p.x>0?p.x:0.01,p.elo],name:p.name,vendor:p.vendor,elo:p.elo,free:p.x<=0,symbolSize:8+Math.log(p.elo||1)*2,
     // 象限着色
     quad:p.x<medPrice&&p.elo>=medElo?'高性价比':(p.x<medPrice&&p.elo<medElo?'经济型':(p.x>=medPrice&&p.elo>=medElo?'旗舰型':'溢价型')),
   }));
   const quadColors={'高性价比':'#16a34a','经济型':'#0891b2','旗舰型':'#2563eb','溢价型':'#dc2626'};
   mkChart('chPriceScatter').setOption({
     grid:{left:70,right:30,top:30,bottom:50},
-    tooltip:{formatter:p=>{const d=p.data;return `<b>${d.name}</b><br>${d.vendor}<br>输入价: $${p.value[0]}/M<br>Elo: ${p.value[1]}<br>象限: ${d.quad}`}},
-    xAxis:{type:'value',name:'输入价($/M)',scale:true,axisLabel:{formatter:v=>'$'+v}},
+    tooltip:{formatter:p=>{const d=p.data;return `<b>${d.name}</b><br>${d.vendor}<br>价格: ${d.free?'免费（按 $0.01 绘制）':'$'+d.value[0]+'/M'}<br>Elo: ${d.value[1]}<br>象限: ${d.quad}`}},
+    xAxis:{type:'log',min:0.01,name:'输入价($/M，对数轴)',scale:true,axisLabel:{formatter:v=>'$'+v}},
     yAxis:{type:'value',name:'Arena Elo',scale:true},
     series:[
       // 散点（按象限着色）
@@ -1656,9 +1661,9 @@ function renderPriceScatter(){
       {type:'line',markLine:{silent:true,symbol:'none',
         data:[{xAxis:medPrice,label:{formatter:`中位价 $${medPrice.toFixed(1)}`}},],lineStyle:{color:'#d97706',type:'dashed'}}},
       // 回归线
-      {type:'line',data:[[xMin,slope*xMin+intercept],[xMax,slope*xMax+intercept]],
+      {type:'line',data:[[xMin,slope*Math.log10(xMin)+intercept],[xMax,slope*Math.log10(xMax)+intercept]],
         symbol:'none',lineStyle:{color:'#7c3aed',type:'solid',width:2},
-        name:'回归线',tooltip:{formatter:`Elo = ${slope.toFixed(2)}*价格 + ${intercept.toFixed(0)}`}},
+        name:'回归线',tooltip:{formatter:`Elo = ${slope.toFixed(2)}·log₁₀(价格) + ${intercept.toFixed(0)}`}},
     ],
     legend:{data:['高性价比','经济型','旗舰型','溢价型'],top:0,textStyle:{fontSize:10},
       formatter:name=>`${name}(${dataPts.filter(d=>d.quad===name).length})`},
@@ -2357,12 +2362,12 @@ function drawCustom(){
     }},
     legend:series.length>1?{}:{show:false},
     toolbox:{right:10,feature:{saveAsImage:{}}},
-    xAxis:{type:type==='bar'?'category':'value',
+    xAxis:{type:type==='bar'?'category':(logX?'log':'value'),
       name:xMeta?xMeta.label:'',nameLocation:'middle',nameGap:30,
       scale:true,axisLabel:{hideOverlap:true},
       data:type==='bar'?ySort.map(p=>p.name):undefined,
       axisLabel:{rotate:type==='bar'?45:0,hideOverlap:true,width:90,overflow:'truncate'}},
-    yAxis:{type:'value',scale:!logY,name:yMeta?yMeta.label:'',
+    yAxis:{type:(type==='bar'?'value':(logY?'log':'value')),scale:!logY,name:yMeta?yMeta.label:'',
       axisLabel:{}},
     series},true);
   c.off('click');

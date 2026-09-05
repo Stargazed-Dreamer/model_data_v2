@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from collections import Counter, defaultdict
@@ -1177,26 +1178,39 @@ def build_price_quadrant(rows: list[dict[str, Any]]) -> dict[str, Any]:
         return {"points": [], "med_price": None, "med_elo": None,
                 "regression": None, "quadrants": {}}
 
+    # log10 轴：价格跨 3 个数量级（免费~$75，中位 $1.1），线性轴会压扁九成点。
+    # 零价（免费模型）画在轴下限 $0.01（lx=-2）并打 free 标记，由前端注明。
+    LOG_FLOOR = -2.0  # $0.01
+    for p in pts:
+        p["free"] = p["x"] == 0
+        p["lx"] = LOG_FLOOR if p["free"] else round(math.log10(p["x"]), 6)
+
     prices = [p["x"] for p in pts]
+    lxs = [p["lx"] for p in pts]
     elos = [p["y"] for p in pts]
     med_p = _median(prices)
     med_e = _median(elos)
 
-    # 线性回归 price(x) -> elo(y)：y = a + b*x
+    # 回归改为 elo ~ log10(price)：y = a + b*lx（对数轴上线才是直线，线性轴上是曲线无意义）
     n = len(pts)
-    sx = sum(prices)
+    sx = sum(lxs)
     sy = sum(elos)
-    sxx = sum(x * x for x in prices)
-    sxy = sum(x * y for x, y in zip(prices, elos))
+    sxx = sum(x * x for x in lxs)
+    sxy = sum(x * y for x, y in zip(lxs, elos))
     denom = n * sxx - sx * sx
     if denom != 0:
         b = (n * sxy - sx * sy) / denom
         a = (sy - b * sx) / n
-        x_min, x_max = min(prices), max(prices)
+        lx_min, lx_max = min(lxs), max(lxs)
+        # R²（对数拟合优度，供前端副标题展示）
+        y_mean = sy / n
+        ss_tot = sum((y - y_mean) ** 2 for y in elos)
+        ss_res = sum((y - (a + b * lx)) ** 2 for y, lx in zip(elos, lxs))
+        r2 = round(1 - ss_res / ss_tot, 4) if ss_tot else None
         regression = {
-            "a": round(a, 4), "b": round(b, 6),
-            "line": [[round(x_min, 4), round(a + b * x_min, 1)],
-                     [round(x_max, 4), round(a + b * x_max, 1)]],
+            "a": round(a, 4), "b": round(b, 6), "r2": r2, "log": True,
+            "line": [[round(10 ** lx_min, 4), round(a + b * lx_min, 1)],
+                     [round(10 ** lx_max, 4), round(a + b * lx_max, 1)]],
         }
     else:
         regression = None
