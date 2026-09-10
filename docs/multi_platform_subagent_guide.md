@@ -163,9 +163,10 @@ git push
 ## 文件命名
 <batch_id>__<sanitized_model_id>.jsonl
 其中 sanitized_model_id 把 `:` 替换为 `__`，例如：
-  model_id = "google:gemini-3-5-flash-minimal:base"
-  文件名 = "b9w1-google__google__gemini-3-5-flash-minimal__base.jsonl"
+  model_id = "google:gemini-3.5-flash-minimal:base"
+  文件名 = "b9w1-google__google__gemini-3.5-flash-minimal__base.jsonl"
   JSON 内 model_id 保持原样三段式
+> 注（D42，2026-09-10）：示例原写作 `gemini-3-5-flash-minimal`。自 D42 起 family 段**小数点一律写 `.`**，`-` 只作 token 分隔（见 `docs/prompt.md` §6.4），故示例同步改为 `gemini-3.5-flash-minimal`。这是本文件中唯一被同步修改的示例 id；其余历史示例按「历史归档不改写」约定保持原样。
 
 ## 完成后自检
 写盘后用以下命令跑单文件门禁（Windows PowerShell；Linux/macOS 把 $env 改为 export）：

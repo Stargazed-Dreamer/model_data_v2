@@ -5,6 +5,50 @@
 - **D40 遗留待拍板（D41 全部结清）**：~~5 条 arena 段位错置~~ → **D41 移除 4 条**（实为 4 条，D40 报告标题「5 条」系笔误）；~~`bytedance:dola-seed-2-0-pro:base` 信息过薄是否保留~~ → **D41 裁定保留**并结构化补录 arena 三榜；~~vendor 大小写混乱~~ → **D41 统一为首字母大写品牌式**（229→198 种）；~~Qwen 命名双轨~~ → **D41 统一为 `qwen-3-*`**（40 条）；~~license 余 46 条空白~~ → **D41 留档** `docs/LICENSE_GAP_BACKLOG.md`。本行已无未结项。
 - **Wave-1 遗留待拍板（D40 全部结清）**：~~Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）属漏采待批~~ → **已在库**（`google:gemma-4-*` 6 条 / `stepfun:step-3-7-flash:base` 2026-05-29）；~~Cohere Parse 5 待批~~ → **D38 移除、D39 用户终裁维持移除**；~~Qwen3.7-Plus 思考档仍无独立口径证据~~ → **已在库**（`alibaba:qwen3-7-plus:base` 与 `alibaba:qwen3-7-plus-none:base`，2026-06-01）。本行已无未结项。
 
+- **D42 遗留待拍板（待下一轮）**：① s1 家族三兄弟（`s1` / `s1-1` / `s1-32b`）family 语义不自洽，需先定「family 是否编码参数量」再重命名（本轮显式排除）；② `saltlux:luxia-21-4b-alignment:base`（`21` 应为 `2-1`）、`allen-institute-for-ai:olmo-3-32b-instruct:base`（官方名 Olmo **3.1** Instruct）、`modelbest:minicpm-1-2b` / `minicpm-2-4b`（family 与 full_name 的参数量互相矛盾）四类**缺分隔符/缺版本位**的结构问题（非点号问题）；③ vendor 别名：`z-ai-zhipu-ai-tsinghua-university` 与 `zhipu` 下同时存在 `glm-4.5` / `glm-4.6`；④ 台账 `b60w1-google-deepmind-google` 批使用 `google-deepmind-google:` 前缀，与主库 `google:` 口径不一致（该批记录不在主库，D42 脚本已正确跳过）。
+
+## [D42] - 2026-09-10
+
+用户触发（原文「点号问题有什么解决方案吗，你设计一下然后一起改了」）：**`model_id` 点号口径统一 —— 小数一律写 `.`**。主库 **937 条不变**（零增删），门禁 **ERROR 0 / WARN 0**。
+
+### Added
+
+- **点号规范（`docs/prompt.md` §6.4 新增强制条款）**：`family` / `variant` 段中，凡**官方名称里的小数点一律写作 `.`**；`-` 只作 token 分隔符，不得代替小数点。
+  - 版本号含小数 → 点：`claude-opus-4.5`、`deepseek-v3.1`、`qwen-3.5-max-preview`、`gemini-2.5-pro`
+  - 参数量含小数 → 点：`qwen-3-1.7b`、`exaone-3.5-2.4b`、`qwen2.5-1.5b`、`granite-3.0-2b`
+  - 非小数点的连字符**一律保留**：快照日期（`2025-09-23`）、整数参数量（`qwen-2-57b-a14b` 的 `A14B`、`minimax-m1-40k`、`deepseek-coder-v2-236b`）、模型名内嵌数字（`baichuan2-13b`、`telechat2-115b`、`llama-2-70b`、`agentar-fin-r1-32b`）
+- **判据为「证据驱动」而非人工逐条判断**：对 `family` 中每处「数字-数字」连字符，取左右最大连续数字串 `a`、`b`，**仅当字面串 `a.b` 出现在 `basic_info.full_name` 或 `basic_info.version` 原文中**才判为小数点。天然排除日期、整数参数量、模型名内嵌数字。
+- **反例保护**：`qwen-3-8b`（Qwen3-8B，第 3 代 80 亿）`full_name` 不含 `3.8`，不会被误改为 `qwen-3.8b`；`gemma-2-2b`（Gemma 2 2B）同理。
+- 脚本 `scripts/d42_dots.py`（归一，含证据池 / 亲缘继承 / 下划线小数点 / 隐式排除 / 碰撞预检）、`scripts/d42_ledger_sync.py`（台账同步）、`scripts/d42_postcheck.py`（收尾自检 5 项）。
+
+### Changed
+
+- **`model_id` 改名 314 family / 317 条记录**（占全库 33.8%），family 含点号 **6 → 318**，重命名碰撞 **0**。证据来源：`full_name` 94 ／ `version` 10 ／ 两者兼有 206 ／ 亲缘继承 3 ／ 人工补录 1。
+  - 核心歧义消除：`alibaba:qwen-3-1-7b:base` → `alibaba:qwen-3-1.7b:base`（Qwen3-1.7B 不再可能读成 Qwen3.1-7B）；`alibaba:qwen-3-5-max-preview` → `qwen-3.5-max-preview`（Qwen3.5 世代显式化）
+  - 双小数还原：`lg:exaone-3-5-2-4b:base` → `lg:exaone-3.5-2.4b:base`
+  - 与无小数版本区分：`anthropic:claude-opus-4-5:20251101` → `claude-opus-4.5:20251101`，同族 `claude-opus-4-20250514-16k`（Opus 4）保持无点号
+  - 连缀小数：`openthaigpt-v1-0-0` → `openthaigpt-v1.0.0`（需前瞻匹配才能全部还原）
+  - 下划线小数点：`apple:openelm-1-1b:base` → `openelm-1.1b`、`alibaba:qwen-1-8b:base` → `qwen-1.8b`
+- 每条改名记录 `meta.notes` 追加 `【D42 点号归一】原 model_id: X → Y`。
+- `docs/batch_claim_ledger.jsonl`：**`models` 数组同步 156 处**（覆盖 b304–b332 共 20+ 批次，含其他平台登记的批次）；**`submitted_files` 保持历史文件名不改写**。
+- **`docs/prompt.md` §6.4「执行约束（P1 修复）」中「严禁把 v1 连字符 id 纠正为点号风格」的禁令已废止**（与新增点号条款直接冲突），并注明废止理由；保留其原本意图——采集 agent 仍不得自行改写 model_id、不得借改名绕过「同模型须合并而非新建」；**存量归一改由主 agent 在专项轮次执行**。决策表第 6 项同步补入口径。
+- **活文档残留旧 id 扫描与裁定**（沿用 D41 约定「历史归档与案例引用不改写」）：`docs/multi_platform_subagent_guide.md` 文件命名示例**同步改写**为 `google:gemini-3.5-flash-minimal:base` 并加 D42 注记（唯一被 agent 照抄的操作型模板）；其余 `docs/WORKBUDDY_AGENT_GUIDE.md` 7 处、`docs/prompt.md` L779、`docs/增量更新工作流.md` L103/L164、`scripts/d21_*`/`d41_*`、`intermediate/*` 均为历史案例/归档/中间态，**保持原样**。裁定明细见 `docs/D42_REPORT.md` §6.4。
+
+### Fixed
+
+- 修正 317 条记录中 `family` 段「小数点被写成连字符」导致的**数字连串不可机械切分**问题（详见 `docs/D42_REPORT.md` §二）。
+- 收尾自检 5 项 ALL PASS：`model_id` 唯一性 / 仅点号位变化（逐条验证 `新family.replace('.','-') == 旧family`，且 vendor 与 variant 段未动）/ 数组无缩水 / 记录数与字段数 / 可证伪的连字符残留 0 处。
+
+### Excluded（另行上报，非点号问题）
+
+- `allen-institute-for-ai:s1-1:base` —— s1 家族三兄弟（`s1` / `s1-1` / `s1-32b`）的 `-1` 语义不自洽：full_name 分别为 `s1-32B`(v1.0) / `s1.1-1.5B` / `s1.1-32B`，转成 `s1.1` 会与 `s1-32b` 的读法冲突。属**结构问题**（family 是否编码参数量未定），本轮显式排除。
+- `saltlux:luxia-21-4b-alignment:base`（`21` 应为 `2-1`）、`allen-institute-for-ai:olmo-3-32b-instruct:base`（官方发布名 Olmo **3.1** Instruct，HF 仓库 `allenai/Olmo-3.1-32B-Instruct`）、`modelbest:minicpm-1-2b` / `minicpm-2-4b`（family 与 full_name 的参数量互相矛盾）——均为**缺分隔符 / 缺版本位**，非点号转写问题。
+
+### Note
+
+- 归一后 family 数 919 → 917：`z-ai-zhipu-ai-tsinghua-university` 与 `zhipu` 两个 vendor 前缀下同时出现 `glm-4.5` / `glm-4.6`（family 名归一后重合，主键因 vendor 不同而不撞）。属 vendor 别名问题（D41 未合并的多主体联合串同类），非本轮范围。
+- 本轮只动 `family` 段：全库 `variant` 段仅 1 条含「数字-数字」（`cohere:command-r-plus:2024-08`，是月份段而非小数点），无需处理。
+
 ## [D41] - 2026-09-10
 
 用户触发，D40 报告 §七 五项遗留一次裁定并执行（原文「1. 移除 2. 保留 3. 统一首字母大写 4. 统一qwen-3 5. 留档后续再做」）：**① 移除 arena 段位错置条目 ② `dola-seed` 保留 ③ vendor 命名统一为首字母大写 ④ Qwen 3 世代命名统一为 `qwen-3-*` ⑤ license 缺口留档**。主库 **937 条不变**（本轮零增删记录，全部是字段级整改），门禁 **ERROR 0 / WARN 0**。

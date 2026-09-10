@@ -230,7 +230,7 @@ arena 条目总数：**662 → 658**（-4），另补 3 条（见 §五），**�
 
 ## 十、下一轮建议
 
-1. **点号口径统一**（见 §3.2 遗留）：`qwen-3-1-7b`（Qwen3-1.7B）vs `qwen-3-5-*`（Qwen3.5）字面歧义，建议一次性定清「点号→连字符」的转换规则。
+1. **点号口径统一**（见 §3.2 遗留）：`qwen-3-1-7b`（Qwen3-1.7B）vs `qwen-3-5-*`（Qwen3.5）字面歧义，建议一次性定清「点号→连字符」的转换规则。→ **已于 D42 落地**：不是「点号→连字符」，而是反向——**小数一律写 `.`**（`qwen-3-1.7b` / `qwen-3.5-max-preview`），判据为 `full_name`/`version` 原文含 `a.b` 才转换；定额 314 family / 317 条，见 `docs/D42_REPORT.md`。
 2. **license A 类 46 条**：其中 10 条无 HF repo 线索需人工定点，36 条可用 `scripts/d41_license_backlog.py` 配套方法批量补。
 3. **`bytedance:dola-seed-2-0-pro:base`**：仍缺 `release_date` / 定价 / 架构，AA 与 OpenRouter 均无，需换信源。
 4. **arena `vision` / `webdev` 段位**：库内仅 5 条，覆盖极低；`LiveCodeBench Pro` / `gdpval` 这类「Elo 量纲但非 arena 榜」的跑分，若后续要收，应明确落到 `independent` 段的哪个基准名下（本轮按裁定直接移除，未迁）。

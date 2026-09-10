@@ -19,7 +19,7 @@
 | 3. 定价字段扩展 | 结构化子对象扩展：`cache_write`（缓存写入价）、`promotions`（促销价）、`long_context`（长上下文溢价）；`cached_input` 明确为缓存读取价 | ✅ 已落地 |
 | 4. Arena 多子榜 | `arena_elo` 由单对象改为**对象数组**，每条含 `sub_benchmark`/`score`/`date` 等 | ✅ 已落地（结构性变更） |
 | 5. 退役模型采集范围 | **不区分是否退役，尽可能全量采集**；退役但 API 可用 → `verification_status="已过期"`；完全下线 → 保留记录并 `notes` 标「已下线」 | ✅ 已落地 |
-| 6. 版本号命名规范 | 三段式 `vendor:family:variant`：vendor 小写 slug、family 含主版本、variant 放营销代号/快照；`basic_info.version` 只填主版本号 | ✅ 已落地 |
+| 6. 版本号命名规范 | 三段式 `vendor:family:variant`：vendor 小写 slug、family 含主版本、variant 放营销代号/快照；`basic_info.version` 只填主版本号；**小数点一律写 `.`，`-` 只作 token 分隔（D42 定规）** | ✅ 已落地 |
 | 7. 执行顺序 / 页面不可读 | 官方页不可读时允许降级或放弃；无 Web 工具的 agent 仅记录可达数据、不伪造；不把「必须读官方页」设为硬性卡死 | ✅ 已落地 |
 
 > **数据 Schema 版本**：`schema_version` 由 `"1.0"` 升为 `"1.1"`，包含三处结构性变更（arena_elo 数组化、定价字段扩展、model_id 三段式），均不另起版本号。
@@ -679,6 +679,13 @@
 - `family`：模型家族 + 主版本号，如 `gpt-5.6` / `claude-opus` / `gemini-3.1` / `deepseek-v4`。  
 - `variant`：子型号 / 营销代号 / 快照日期，如 `sol` / `terra` / `luna` / `preview` / `2025-12-11`；无子型号时常与版本号重合（如 `4.7`）。  
 
+**小数点写法（D42 定规，强制）**：`family` 与 `variant` 段中，**凡官方名称里的小数点一律写作 `.`**；`-` 只作 token 分隔符，不得用来代替小数点。  
+- 版本号含小数 → 点：`claude-opus-4.5` / `deepseek-v3.1` / `qwen-3.5-max-preview` / `gemini-2.5-pro`  
+- 参数量含小数 → 点：`qwen-3-1.7b`（Qwen3-1.7B） / `exaone-3.5-2.4b` / `qwen2.5-1.5b`  
+- **不是小数点的连字符一律保留**：快照日期（`2025-09-23`、`claude-opus-4-20250514-16k`）、整数参数量（`qwen-2-57b-a14b` 的 `A14B`、`minimax-m1-40k`、`deepseek-coder-v2-236b`）、模型名内嵌数字（`baichuan2-13b`、`telechat2-115b`、`llama-2-70b`、`agentar-fin-r1-32b`）。  
+> 判据：对 `family` 中每一处「数字-数字」的连字符，取左右两侧最大连续数字串 `a`、`b`，**仅当字面串 `a.b` 出现在该记录的 `basic_info.full_name` 或 `basic_info.version` 原文中**才判为小数点（证据驱动，见 `scripts/d42_dots.py`）。无证据时保持连字符（宁缺勿错）。  
+> 反例（不要改）：`qwen-3-8b` 是 Qwen3-8B（第 3 代 80 亿参数），不是 Qwen 3.8——其 `full_name` 为 `Qwen3-8B`，不含 `3.8`。  
+
 示例：  
 - `openai:gpt-5.6:sol`（GPT-5.6 Sol，营销代号 Sol）  
 - `openai:gpt-5.6:terra`  
@@ -689,10 +696,11 @@
 
 `basic_info.version` **只填主版本号**（如 `5.6`、`4.7`）；营销代号（Sol/Terra/Luna）与快照日期写入 `variant` 段及 `notes`，不进入 `version`。版本号不透明时，以官方 Model Card / Release Note 内部代号为准，`notes` 说明。
 
-> **执行约束（P1 修复）**：上述三段式是「新模型如何命名」的生成规则，不是合并时的匹配依据。多 agent 协作时，**`roster.jsonl` / `roster.md` 花名册是 model_id 的唯一权威**：
-> - 花名册中 `in_v1` 的模型（v1 库存量，多为 `连字符 family + :base` 风格）：**原样沿用花名册中的 model_id**，严禁「纠正」为点号或营销代号风格——两种风格指向同一模型时必须合并而不是新建记录；
+> **执行约束（P1 修复，D42 修订）**：上述三段式是「新模型如何命名」的生成规则，不是合并时的匹配依据。多 agent 协作时，**`roster.jsonl` / `roster.md` 花名册是 model_id 的唯一权威**：
+> - 花名册中 `in_v1` 的模型（v1 库存量，多为 `连字符 family + :base` 风格）：**原样沿用花名册中的 model_id**，不得在采集期自行改写；两种写法指向同一模型时必须合并而不是新建记录；
 > - 花名册中 `to_add` 的模型：**原样使用花名册分配的 model_id**（本节三段式风格）；
 > - 采集 agent 不得自行发明、修改或重命名任何 model_id；发现花名册外的新旗舰/主线模型，先回报主 agent 补录花名册再采集。
+> - **与旧版 P1 的差异**：旧版禁止把 v1 连字符 id「纠正」为点号风格，该禁令**已于 D42 废止**——小数点用 `.` 现为全域强制规范。存量归一由主 agent 在专项轮次按 `scripts/d42_dots.py` 的证据驱动规则批量执行（含改名留痕、碰撞预检、台账同步），**采集 agent 仍不得自行改名**。
 
 ---
 
