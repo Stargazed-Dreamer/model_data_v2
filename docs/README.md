@@ -13,7 +13,10 @@
 | `执行细则.md` | 10 项执行层面细则：字段怎么填、冲突怎么记、输出怎么分批 |
 | `multi_platform_subagent_guide.md` | 多平台并发采集通用规范：批次认领协议（CAS）、subagent 派发、单文件门禁、落盘 |
 | `agent_prompt_per_model.md` | 单模型 subagent 任务书模板（M 型） |
-| `增量更新工作流.md` | 跟进新发布的持续循环：S0 发现 → S1 范围判定（`scripts/candidate_diff.py`）→ S2 采集 → S3 门禁合并 → S4 增量质检 → S5 发布；含首轮 Wave-1 候选实录 |
+| `增量更新工作流.md` | 跟进新发布的持续循环：S0 发现 → S1 范围判定（`scripts/candidate_diff.py`）→ S2 采集 → S3 门禁合并 → S4 增量质检 → S5 发布；含首轮 Wave-1 与 D38 实录 |
+| `跟踪源清单.md` | **S0 的唯一清单入口**（2026-09-10 建立，D40 更新）：网站四层 A–D + 厂商 P0/P1/P2 + 日期口径铁律 + 本机 curl 坑；含 DataLearner 榜单抓取要点（§C-1）与 **Artificial Analysis 免鉴权接入**（§C-2，API 401 但页面 flight 流可直读）；频率为用户触发 |
+| `数据增强方案_跑分与日期.md` | 跑分补全（epoch 本地 CSV 已补 30 条）与发布时间精确化（已精确化 298 条）的分层方案与风险；**L1 arena 重抓已于 D39 落地，AA 接入已于 D40 落地** |
+| `D39_ARENA_GAP_REPORT.md` | D39：arena 补全 296 条（覆盖 172→215 条）+ 榜单反推 84 条疑似漏采 + Cohere Parse 5 终裁留痕 |
 
 ### 平台专属
 
@@ -28,6 +31,7 @@
 | `GAP_SCAN_REPORT_D28.md` | D28 整改轮（17 批、门禁首次 ERROR 0 / WARN 0）的缺口扫描报告 |
 | `GAP_SCAN_REPORT_D31.md` | D31：删 2022 前老模型 + 厂商 × 字段缺口矩阵 |
 | `GAP_SCAN_REPORT_D32.md` | D32：8 项数据修复（license 填充 0.9%→51% 等）+ 数据集现状快照（891 条口径） |
+| `D40_REPORT.md` | D40：arena 快照瘦身 809→633 + Artificial Analysis 免鉴权接入（independent 37.2%→48.0%）+ Wave-1 增量 22 条入库 + license HF 权威补 36 条；**含 5 项遗留待拍板** |
 
 ### 数据档案（功能性文件，勿动勿删）
 

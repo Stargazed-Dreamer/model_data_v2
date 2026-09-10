@@ -2,7 +2,123 @@
 
 本变更日志记录 `model_data` 工作区数据集与可视化的演进。版本号采用 `D<轮次>` 形式，对齐整改轮。
 
-- **Wave-1 遗留待拍板**：P2 二查结果——Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）均早于采集窗口，属**漏采**待批；Cohere Parse 5 查实为 2.3B 文档 VLM（真模型但按页计价 $1.5/千页）待批；Qwen3.7-Plus 思考档仍无独立口径证据。
+- **Wave-1 遗留待拍板（D40 全部结清）**：~~Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）属漏采待批~~ → **已在库**（`google:gemma-4-*` 6 条 / `stepfun:step-3-7-flash:base` 2026-05-29）；~~Cohere Parse 5 待批~~ → **D38 移除、D39 用户终裁维持移除**；~~Qwen3.7-Plus 思考档仍无独立口径证据~~ → **已在库**（`alibaba:qwen3-7-plus:base` 与 `alibaba:qwen3-7-plus-none:base`，2026-06-01）。本行已无未结项。
+
+## [D40] - 2026-09-10
+
+用户触发，四项拍板一次执行（原文「1.是 2.是 3.看看能不能浏览器去连 4. AB的采集也可以一起做了」）：**① arena 快照瘦身 ② D40 候选开采 ③ Artificial Analysis 独立跑分接入 ④ A 类历史缺口 + B 类增量采集并行**。主库 915 → **937 条**（本轮 +22），门禁 **ERROR 0 / WARN 0**。
+
+### Added
+
+- **Artificial Analysis 免鉴权接入 + 独立跑分大批导入（本轮最大增量）**：
+  - **第 ③ 项拍板原话是「看看能不能浏览器去连」**——实测**不需要浏览器**：AA 官方 API `/api/v2/data/llms/models` 返 **401（需 key）**，但榜单页 `https://artificialanalysis.ai/leaderboards/models` 200 / 2.75 MB，**644 个模型的全部评测字段内嵌在 Next.js App Router 的 flight 流里**（`self.__next_f.push([1,"…"])`）。沿用 D39 的 flight 流提取法即可直读，比装 Chromium 更省。采集脚本固化 `scripts/d40_fetch_artificial_analysis.py`，产物 `temp/d40_aa_models.json`（735 条，644 带 `releaseDate`，633 带 `intelligenceIndex`）。
+  - **导入口径（保守）**：**仅精确匹配**（270 对；模糊匹配曾把 `command-a-plus` 误配到 `qwen-plus`，已弃用）；**仅对 `independent` 为空的记录写入**；`release_date` 仅在主库为月级且 AA 为同 `YYYY-MM` 的日级时才精化；**`intelligenceIndex` / `omniscience` 等复合指数一律不导入**（量程 3.75–53.37，非 0–1 准确率，混入会污染对比）。
+  - **结果**：写入 **99 条记录 / +913 条 independent 条目**，43 条 `release_date` 由月级精化到日。
+- **Wave-1 增量采集 22 条入库**（批次 `b329w1-openai` / `b330w1-alibaba` / `b331w1-tencent` / `b332w1-deepseek`，4 批次全部 submitted，22 文件单文件门禁 ERROR 0）：
+  - OpenAI/Anthropic/Google 6 条：GPT-5.5 Instant、GPT-4.1 Nano、GPT-5 Nano、Claude Mythos 5.1（Wave-1 遗留）、Gemini Advanced 0514、Gemini Pro Dev API；
+  - 阿里 5 条：Qwen3.5/3.6/3.7-Max-Preview、Qwen3.6-Plus-Preview、QwQ-32B-Preview；
+  - 腾讯 5 条：Hunyuan-Standard-256K / Hunyuan-Standard-20250210 / Hunyuan-Turbo-0110 / Hunyuan-Vision-1.5-Thinking / Hunyuan-Large-Vision；
+  - DeepSeek+Xiaomi+美团+字节 6 条：DeepSeek-V4-Flash/Pro-High-Preview、MiMo-V2-Flash、MiMo-V2-Omni、LongCat-Flash-Chat-2602-Exp、DOLA Seed 2.0 Pro。
+- **license 权威补全 36 条（A 类历史缺口 #5）**：改走 **HuggingFace API**（`huggingface.co/api/models/{repo}` 的 `tags` 里读 `license:` 标签）作为权威源，取代此前正则从 notes 抽取文本的做法（正则曾把 `HF`、`Under the MIT` 误判为许可证名）。配套**同尺寸一致性校验**：repo 与记录的参数规模 token 取交集，交集为空则拒写——成功拦下 `g42:jais-70b` ← `inception42/jais-13b` 这类错配。结果：写入 36 条 / 3 条尺寸不符拒写 / 11 条 repo 无 license 标签 / 32 条无 repo 可定位。
+
+### Changed
+
+- **arena_elo 快照瘦身（第 ① 项拍板）**：条目 **809 → 633**，同 `(model_id, sub_benchmark)` 仅保留最新 `date` 一条，历史快照移除（D39 遗留副作用就此清账）；同时归一 `is_primary`（仅 `text` 为 `true`，其余 `false`）——初版脚本曾把所有缺失值置 `true`，与库内惯例（text 266 True / coding·math 全 False）不符，已修正。删除前的全量快照存 `backups/model_data_v2.pre-d40-arena-slim-20260910-152340.jsonl`。
+- **日期精度**：`release_date` 到日 665 → **709**，到月 245 → 220，缺失 5 → 6（新增仅 `bytedance:dola-seed-2-0-pro:base` 无信源，见下）。
+- **跑分覆盖**：`independent` 340（37.2%）→ **450（48.0%）**；条目数 1,050 → **2,011**；完全无跑分 232 → **210**。`self_reported` 条目 4,256 → 4,284；`arena_elo` 条目 809 → 662（瘦身 -147、新增 +29）。
+- **license 填充率** 51.0% → **56.0%**。
+
+### Fixed —— 采集件归一（22 个文件全部 ERROR 0 / WARN 0 后方可合并）
+
+E/F/G 组采集 agent 产出的 22 个文件里有 **7 个未过门禁**，逐类修复（修复脚本 `temp/d40_fix_incoming.py` 等，采集原件留档 `temp/d40_incoming_orig/`）：
+
+| 类 | 处数 | 问题 | 处置 |
+|---|---|---|---|
+| `source_type` 枚举违规 | 25 | agent 自造 `官方发布页（自报）` / `行业媒体转述官方发布` / `LMArena`，不在受控枚举内（D26 起升 ERROR） | 按库内惯例归正：`confidence=T0-自报-转述` 主流配对 `行业媒体转述官方发布（自报）`（169 例） |
+| arena 段来源虚假 | 5 组 | `source_url` 指向新闻站（news.qq.com / ithome.com）或上游 `arena.ai`，`rank/votes/ci` 被塞进 `notes` 文本 | **整段以 DataLearner 本地快照（2026-09-02）权威值重建**，补齐 `rank` / `votes` / `ci_95` 独立字段 |
+| 日期格式 | 1 | `gemini-pro-dev-api` 的 `release_date='2024'` 非 ISO | 查证 Google 开发者博客：Gemini API 面向开发者开放日 **2023-12-13**，据此改精确到日，`verification_status` 改「已定死」 |
+| 字段键名漂移 | 1 | `pricing.long_context` 用 `input_multiplier`/`output_multiplier` | 改规范键 `input`/`output` 绝对价（$2.00/$12.00 per M），乘数留 notes |
+| 定价生效日缺失 | 6 | 有定价但无 `pricing.effective_date`（库内基线为 298/298 全有） | 锚定官方发布/版本标签日补齐；仅知月份用 `YYYY-MM` 并在 notes 注明周期（**不伪造到日**） |
+| 命名漂移 | 1 | `qwen-3-6-plus-preview` 与同族 `qwen3-6-plus` 及 qwen3-5/6/7-max-preview 不一致 | 归一为 `qwen3-6-plus-preview`（库内 `qwen3-*` 紧贴式 36 : 连字符式 3），台账同步 |
+
+**关键发现：采集 agent 写的 arena 分值与真值有偏差**——`qwen3-7-max-preview` coding 档 agent 记 1526（新闻转述），DataLearner 权威值 **1525**；`qwen3-5-max-preview` text 档记 1464，权威值 **1466**。核对后才写入，未沿用新闻口径。
+
+### 待拍板（留给下一轮）
+
+- **5 条 arena `sub_benchmark` 段位错置**：`search` / `LiveCodeBench Pro` / `gdpval` / `agent`（各 1 条）与 `vision`，其 `sub_benchmark` 取值不在库内主流枚举（text/coding/math/vision/webdev），且其中 4 条的 `source_type` 标为 `LMArena 镜像（DataLearner）` 但实际来源存疑。**属跨段位迁移还是移除，需用户裁定**，本轮未自动处置。
+- **`bytedance:dola-seed-2-0-pro:base` 信息过薄**：仅 arena 数据，无 `release_date` / 定价 / 架构（AA 与 OpenRouter 均无此模型），采集 agent 自评「可信度偏低」。是否保留待定。
+- **vendor 大小写混乱**：库内并存 `Google` / `google`、`Alibaba` / `Alibaba Cloud` / `Alibaba (Qwen Team)` 等写法，`model_id` 前缀与 `basic_info.vendor` 脱钩（D34 扫描 A7：85 条）。已列入 A 类报告，未批量整改。
+- **Qwen 命名双轨**：`qwen3-*`（36）vs `qwen-3-*`（3：`qwen-3-5-flash` / `qwen-3-6-27b` / `qwen-3-8-max`），建议下一轮统一。
+
+### 环境坑（建议入清单 §5）
+
+- **Artificial Analysis 的 API 401 不代表数据拿不到**：榜单页 flight 流里就是完整的 644 模型评测矩阵；直接 `curl --ssl-no-revoke` 即可，**无需装 agent-browser（≈500 MB Chromium）**。
+- **DataLearner 的 coding / math 榜没有独立 API**：`/api/leaderboards/external/text-generation-coding` 会返回 HTML 而非 JSON（用 `json.load` 会报 `Expecting value: line 1 column 1`），必须存成 `.html` 后解析表格——且**模型名可能只出现在 `<a href>` / `aria-label` 属性里**（如 Qwen3.6-Max-Preview 行），按可见文本匹配会漏掉整行。
+
+## [D39] - 2026-09-10
+
+用户触发。范围：Cohere Parse 5 终裁 + arena 跑分批量补全 + 榜单反推漏采线索。主库仍 **915 条**（本轮未增删记录），门禁 **ERROR 0 / WARN 0**。
+
+### Added
+
+- **arena_elo 批量补全（本轮主目标）**：从 DataLearner 镜像的 LM Arena 榜单（快照 `2026-09-02`，text 400 / coding 395 / math 383 条）批量补入 **296 条** arena 条目，覆盖 **100 个模型**（其中 **43 个此前完全没有 arena 数据**）。arena 覆盖 172（19.1%）→ **215 条（23.5%）**，条目数 513 → **809**。
+- **新数据源接入（免鉴权）**：
+  - 主榜 API：`https://www.datalearner.com/api/leaderboards/external/text-generation` —— 直返 JSON（`meta` + `columns` + `data` 400 行），含 `rank` / `modelName` / `modelCode` / `score` / `ci` / `votes` / `organization` / `license` / `thinkingMode`。**端点藏在页面 `<script type="application/ld+json">` 的 `distribution.contentUrl` 里**，不在页面导航中出现。
+  - 分类榜（coding / math）：**无独立 API**（404），数据内嵌在 Next.js App Router 的 flight 流（`self.__next_f.push([1,"..."])`，420 个块、约 1.1 MB），需拼接后按括号平衡提取。
+  - 图像/视频榜（`image-edit` / `text-to-image` / `image-to-video` / `video-generation`）已探到路径，本轮未采（主库以文本模型为主）。
+- **榜单反推漏采线索**：榜单 236 条未被主库命中 → 其中 **84 条疑似真漏采**（另有 152 条疑似"库内已有但命名不同"，difflib 模糊判定不可尽信）。真漏采里高价值的：GPT-5.2 Chat / GPT-5.5 Instant / GPT-5.3 Chat、Qwen3.5/3.6/3.7-Max-Preview（阿里）、ERNIE-5.1-Preview / ERNIE 5.0 Preview（百度）、Grok 4.1 Thinking / grok-4.20-multi-agent-beta、DOLA Seed 2.0 Pro（字节）、Kimi K2.5 Instant（月之暗面）、GLM-5V-Turbo（智谱）、mimo-v2-flash（小米）、hunyuan-vision-1.5-thinking（腾讯）、amazon-nova-experimental-chat-*、OpenAI o1/o3/o4-mini。明细落盘 `temp/d40_arena_gap_raw.json`，待 S0/S1 核实（榜单含匿名实验版代号，不可直接当正式模型采）。
+
+### Removed
+
+- `cohere:parse-v5-0:base` —— **D39 用户终裁：维持移除**。理由（用户口径）：**计费方式与主流不符（按页计费 $1.50/1,000 页，token 六键全 null），不像常规模型**。故 D37 Wave-2 二查的"2.3B 文档 VLM＝真模型"结论在"是否收为模型本体"这一判定上不构成保留依据——模型真伪与"是否符合本库收录口径"是两个层次的问题。回滚脚本 `temp/d38_restore_cohere_parse.py` **作废不再执行**；主库不受影响，隔离档 `docs/non_model_records.jsonl` 第 8 条为最终留档。
+
+### 方法学（本轮新增的两道保守过滤）
+
+批量补 arena 时，两类歧义一律**跳过而非猜测**，宁可留空：
+
+| 过滤 | 触发条件 | 跳过条目 | 理由 |
+|---|---|---|---|
+| 榜单重名 | 同类别下存在多条同名「无变体标记」条目 | 33 | 榜单自身重名（如 `Claude 3.5 Sonnet` 1374/1343），无法确定对应哪条 |
+| 版本差异 | 同一榜单条目被多个主库记录引用，且非仅上下文差异 | 63 | 如 `GPT-4` 被 0314/0613/1106/0125 四个快照共用；共用分数等同伪造 |
+| （放行）仅上下文差异 | 同一榜单条目被多记录引用，但去掉 `-32k/-64k` 后完全相同 | 6 | 同模型不同上下文窗口，基准分可共享 |
+
+- 变体口径：主库**无 thinking 标记**只取榜单「无变体标记」条目；主库含 `thinking/think/reasoning` 才取 `(thinking)/(high)/(xhigh)` 条目。
+- 追加而非覆盖：沿用库内先例（`alibaba:qwen-3-8-max` 已有 2026-08-25 / 08-06 两个快照），同 `sub_benchmark` 保留多快照序列，靠 `date` 区分。**副作用：arena 条目数从 513 涨到 809，若认为历史快照冗余，可另起一轮做快照瘦身。**
+
+### 环境坑（建议入清单 §5）
+
+- DataLearner 页面是 Next.js App Router，`grep "elo"` 命中数为 0——数据在 flight 流里被转义且分片，必须拼接 `self.__next_f.push([1,"…"])` 后再解析；直接正则找 `"elo"` 会误判为"页面无数据"。
+- 榜单 API 端点不在导航链接里，只在 `<script type="application/ld+json">` 的 `distribution.contentUrl` 字段。
+
+## [D38] - 2026-09-10
+
+用户触发。范围：新增源实测 + 跟踪清单固化 + 两个模型查证 + 跑分/日期增强 + Wave-2 采集。主库 900 → **915 条**，门禁 **ERROR 0 / WARN 0**。
+
+### Added
+
+- **Wave-2 候选 16 条全部采集入库**（批次 `b319w2`~`b328w2`，10 个批次全部 submitted）：Qwen3.8 Flash、Qwen3.8 2.4T A95B、Hy-MT2 三兄弟（1.8B/7B/30B-A3B）、Seed 2.1 Turbo、Seed-2.0-Code、Ling 3.0 Flash Sante/Fin、Nex-N2.5 Mini/Pro、Muse Glimmer 30B、Granite 4.2 8B、Sakana Namazu、LFM2.5-2.6B、Dots3-Note Preview。16 个文件单文件门禁均 ERROR 0，合并后无重复 model_id。
+- **epoch.ai 本地数据批量导入**：`external_sources/epoch_benchmark_data/`（75 CSV / 2,417 行 / 619 模型）→ 补 **30 条**记录的 `independent` 跑分（原计划 34 条，4 条因无任何来源 URL 被门禁挡下）；`epoch_ai_models` 的 `Publication date` → **298 条** `release_date` 由月级补为日级。
+- **新增跟踪源实测并固化 `docs/跟踪源清单.md`**：OpenRouter API（435 模型，带 `created`）与 HuggingFace API 均实测可用；新增「官方台账页映射表」（17 个 URL 批量实测，9 个 200 / 4 个连接失败 / 2 个 404 / OpenAI 403 反爬）。
+
+### Changed
+
+- **日期精度治理**：`release_date` 到日 368 → **665 条**，到月 532 → **245 条**。补日的一律在 `basic_info.notes` 标注「日期取自 epoch.ai Publication date（精度：日），官方发布日待核；原记录精度为月（YYYY-MM）」。
+- **跑分覆盖**：`independent` 310（34.4%）→ **340（37.2%）**；完全无跑分 235 → 238（新增 16 条里 3 条暂无跑分）。
+- **更新频率**：`docs/增量更新工作流.md` S0 改为**用户触发**，不再写"每周"。
+
+### Removed
+
+- `cohere:parse-v5-0:base` 移出主库、逐字节存入 `docs/non_model_records.jsonl`（第 8 条）。~~**⚠ 存争议**：D37 Wave-2 二查结论为「2.3B 文档 VLM，真模型」，与本轮「文档解析工具→非模型」判定冲突~~ → **D39 用户终裁：维持移除**（理由：计费方式与主流不符，按页计价、token 六键全 null，不像常规模型；见 [D39] Removed）。回滚脚本 `temp/d38_restore_cohere_parse.py` 已作废。
+
+### Fixed
+
+- `bytedance:seed-2-0-code:base` 有定价缺 `pricing.effective_date`（WARN 0 → 1），补 `2026-09-10` 并在 notes 注明"采集观察日，厂商真实调价日未披露"，基线回 WARN 0。
+
+### 环境坑（已入清单 §5）
+
+- 本机 curl 抓 HTTPS 必须加 `--ssl-no-revoke`，否则 `CRYPT_E_NO_REVOCATION_CHECK` 失败（HTTP 000）。此前"huggingface.co 直连必超时"的旧结论系此根因，已修正。
+- epoch CSV 分数列名不统一（`Percent correct`/`EM`/`Score`/`Accuracy`…），只认一种会漏掉 97% 数据。
+- epoch CSV 的 `Source link` 空时，URL 常藏在 `Source` 列（如 `artificialanalysis.ai`、`arcprize.org`）。
 
 ### Added（D37 Wave-2 二查缺口补采，2026-09-06）
 
