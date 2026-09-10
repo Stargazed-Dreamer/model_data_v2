@@ -2,7 +2,73 @@
 
 本变更日志记录 `model_data` 工作区数据集与可视化的演进。版本号采用 `D<轮次>` 形式，对齐整改轮。
 
+- **D40 遗留待拍板（D41 全部结清）**：~~5 条 arena 段位错置~~ → **D41 移除 4 条**（实为 4 条，D40 报告标题「5 条」系笔误）；~~`bytedance:dola-seed-2-0-pro:base` 信息过薄是否保留~~ → **D41 裁定保留**并结构化补录 arena 三榜；~~vendor 大小写混乱~~ → **D41 统一为首字母大写品牌式**（229→198 种）；~~Qwen 命名双轨~~ → **D41 统一为 `qwen-3-*`**（40 条）；~~license 余 46 条空白~~ → **D41 留档** `docs/LICENSE_GAP_BACKLOG.md`。本行已无未结项。
 - **Wave-1 遗留待拍板（D40 全部结清）**：~~Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）属漏采待批~~ → **已在库**（`google:gemma-4-*` 6 条 / `stepfun:step-3-7-flash:base` 2026-05-29）；~~Cohere Parse 5 待批~~ → **D38 移除、D39 用户终裁维持移除**；~~Qwen3.7-Plus 思考档仍无独立口径证据~~ → **已在库**（`alibaba:qwen3-7-plus:base` 与 `alibaba:qwen3-7-plus-none:base`，2026-06-01）。本行已无未结项。
+
+## [D41] - 2026-09-10
+
+用户触发，D40 报告 §七 五项遗留一次裁定并执行（原文「1. 移除 2. 保留 3. 统一首字母大写 4. 统一qwen-3 5. 留档后续再做」）：**① 移除 arena 段位错置条目 ② `dola-seed` 保留 ③ vendor 命名统一为首字母大写 ④ Qwen 3 世代命名统一为 `qwen-3-*` ⑤ license 缺口留档**。主库 **937 条不变**（本轮零增删记录，全部是字段级整改），门禁 **ERROR 0 / WARN 0**。
+
+### Removed
+
+- **arena 段位错置条目 4 条**（`sub_benchmark` 取值不属 LMArena 标准段位 text/coding/math/vision/webdev，用户裁定「移除」）：
+
+  | model_id | 被删 sub_benchmark | score | 原判断 |
+  |---|---|---|---|
+  | `baidu:ernie-5-1:base` | `search` | 1223 | 官方博客转述 Arena Search 榜，非库内标准段位 |
+  | `google:gemini-3-1-pro-preview-high:base` | `LiveCodeBench Pro` | 2887 | 第三方竞赛级编程榜，非 arena 榜 |
+  | `meta:muse-spark:base` | `gdpval` | 1444 | GDPval 办公任务评估，非 arena 榜 |
+  | `zhipu:glm-5-2-none:base` | `agent` | 1524 | 媒体博客转述，未经 LMArena 直证；该条为该记录唯一 arena 条目，删后 `arena_elo` 为空 |
+
+  每条 `meta.notes` 均写有 `【D41 arena 段位错置移除】` 留痕（含「如为独立榜单应迁 independent 段」的备注，本轮按裁定直接移除未迁移）。
+
+  > ⚠ **勘误**：D40 报告 §七.1 标题写「5 条」为笔误，正文表格与说明均为 4 条，实际亦为 4 条（已回填勘误注记）。
+
+### Added
+
+- **`bytedance:dola-seed-2-0-pro:base` 结构化补录 arena 三榜**（用户裁定「保留」）。**勘误**：D40 报告 §七.2 描述该记录「仅 arena 数据（text 1456 / coding 1513 / math 1451）」不准确——D40 采集 agent 把这 3 个 Elo 值**只写进了 `meta.notes` 散文**，`benchmarks.arena_elo` 实为空数组。本轮按同一权威快照结构化落地 3 条：
+  | sub_benchmark | score | rank | ci_95 | votes | is_primary |
+  |---|---|---|---|---|---|
+  | text | 1456.0 | 59 | ±3 | 74,277 | true |
+  | coding | 1513.0 | 43 | ±6 | 20,711 | false |
+  | math | 1451.0 | 66 | ±10 | 4,083 | false |
+
+  来源 `DataLearner 镜像 LM Arena`，快照 `versionTime=2026-09-02`，`confidence=T1`；三项数值已与 `temp/dl_pg_{text,coding,math}.html` 逐项核对，与采集时写入 notes 的散文值完全一致（**无新增事实，仅为已有事实的结构化落地**）。
+- **`docs/LICENSE_GAP_BACKLOG.md`（新建）**：第 ⑤ 项「留档后续再做」的产物。明确口径——「license 空白」不是全库 412 条（多数是闭源模型，本就无开源许可证），真实缺口为 **A 类：`open_weights=true` 但 license 空 46 条** + **B 类：`open_weights=null` 且 license 空 16 条**；并附后续补采方法（HF API `tags` 读 `license:` + 同尺寸一致性校验）。
+
+### Changed
+
+- **`basic_info.vendor` 命名统一（261 条 / 86 种源值）**。规则两层：① 同厂商多写法合并为单一品牌名；② 其余首字符为小写 ASCII 字母的值改为品牌惯用写法。
+  - **合并效果（按厂商聚合的漏计被消除）**：`Google DeepMind`→`Google`（37+36→**73**）、`Alibaba` 多写法 5 种→`Alibaba`（88→**98**）、`DeepSeek（深度求索）`→`DeepSeek`（29→**37**）、`Meta AI`/`Meta (Meta AI)`→`Meta`（19→**32**）、`Mistral AI`+`mistral`→`Mistral AI`（→**42**）、Zhipu 多写法 4 种→`Zhipu AI`（→**16**）、`allenai`+`allen-institute-for-ai`→`Allen Institute for AI`（→**19**）、`ByteDance Seed Team`/`ByteDance Seed`/`ByteDance (字节跳动)`→`ByteDance`、`Moonshot`/`Moonshot AI (月之暗面)`→`Moonshot AI`、`Sber（…）`3 种→`Sber`、`华为（…）`2 种+`huawei`→`Huawei`、`Xiaomi`/`xiaomi`→`Xiaomi`、`Meituan`/`meituan`→`Meituan`、`tsinghua`/`tsinghua-university`→`Tsinghua University`、`ModelBest` 4 种→`ModelBest`、`qihoo-360` 2 种→`Qihoo 360`、`4paradigm`→`4Paradigm`。
+  - **首字母大写（品牌惯用写法，非机械首字母）**：`lg`→`LG`、`tii`→`TII`、`sdaia`→`SDAIA`、`mbzuai`→`MBZUAI`、`lmsys`→`LMSYS`、`iflytek`→`iFlytek`、`stepfun`→`StepFun`、`sambanova`→`SambaNova`、`lighton`→`LightOn`、`nexusflow`→`NexusFlow`、`character-ai`→`Character.AI`、`sha-ai-lab`→`Shanghai AI Laboratory`、`nous`→`Nous Research`、`kunlun`→`Kunlun Tech`、`singapore-ai`→`AI Singapore`、`stability`→`Stability AI`、`voyage`→`Voyage AI`、`princeton`→`Princeton University`、`sk-telecom`→`SK Telecom`、`unicom`→`China Unicom` 等共 86 种源值。
+  - **保留品牌自身的小写首字母**：`xAI` 保持 `xAI`（用户选「保留品牌惯用写法」）。
+  - **多主体联合串不合并**：含 `+` / `/` / `,` 的联合研发串（如 `Microsoft + NVIDIA（联合开发）`、`RWKV Foundation / EleutherAI / …`）视为「研发主体描述」而非厂商，保持原文本不做合并与改写。
+  - 效果：`vendor` 取值 **229 种 → 198 种**；首字母小写 **62 种 → 2 种**（余 `xAI`、`iFlytek`，均为品牌自身写法）。
+  - 全 261 条 `basic_info.notes` 均追加 `【D41 vendor 归一】原 vendor: X→Y`。**脚本内置覆盖率断言**：任何首字母小写的 vendor 值若无显式映射即报错，不留静默兜底（该断言曾拦下漏配的 `huawei` / `salesforce`，及映射不一致的 `qihoo-360`→`Qihoo-360`）。
+- **`model_id` 前缀归一为小写 slug（56 条）**。按 `docs/prompt.md` §6 / §6.4「vendor 小写 slug」既有规范执行：`Alibaba`13 / `Google`8 / `Cohere`6 / `DeepSeek`4 / `Meta`3 / `IBM`3 / `Microsoft`3 / `ModelBest`3 / `Hugging Face`2 / `Databricks`2 / `Tencent`2 / `xAI`3 / `NVIDIA`1 / `Deep Cogito`1 / `Baidu`1 → 对应小写 slug（`Hugging Face`→`huggingface`（并入既有同名前缀记录）、`Deep Cogito`→`deep-cogito`）。
+  - **附带修正 1 处语义错误前缀**：`unknown:yue-ai:base` → `ireader-technology:yue-ai:base`（该记录 `basic_info.vendor` 本为 `IReader Technology（掌阅科技）`，前缀写 `unknown` 属明显缺陷）。
+  - 效果：前缀 **207 种 → 192 种**，首字母大写前缀 **14 种 → 0**；重命名碰撞预检 **0 组**。
+- **Qwen 3 世代 `model_id` 统一为 `qwen-3-*` 连字符式（40 条 / 39 个 family）**。按用户裁定「统一 qwen-3」，把 `qwen3-*` 全部改为 `qwen-3-*`：`qwen3-235b-a22b`→`qwen-3-235b-a22b`、`qwen3-5-max-preview`→`qwen-3-5-max-preview`、`qwen3-coder-480b-a35b`→`qwen-3-coder-480b-a35b`、`qwen3-embedding`/`qwen3-reranker`→`qwen-3-embedding`/`qwen-3-reranker` 等，与既有 `qwen-3-5-flash` / `qwen-3-6-27b` / `qwen-3-8-max` 三例合流。
+  - **⚠ 这是对 D40 处置的反转**：D40 曾把新入库的 `qwen-3-6-plus-preview` 归一为**紧贴式** `qwen3-6-plus-preview`（当时依「紧贴 36 : 连字符 3」的多数惯例）；本轮按用户终裁改为连字符式，该条随本轮一并改回 `qwen-3-6-plus-preview`。
+  - 转换后与既有 `qwen-3-*` 无碰撞（已逐条预检；`qwen3-6-27b-none` → `qwen-3-6-27b-none` 与既有 `qwen-3-6-27b` 为不同 family，不冲突）。
+  - **未改动的世代**：`qwen-*`（原始 Qwen：`qwen-7b` / `qwen-1-8b` / `qwen-plus` / `qwen-turbo-*`）、`qwen1-5-*`、`qwen2-*` / `qwen2-5-*` / `qwen2-math-*`、`codeqwen1-5-7b` 均按裁定范围（Qwen 3 世代）保持原样。
+  - 全 40 条 `meta.notes` 追加 `【D41 命名归一】原 model_id: X→Y（Qwen 3 世代统一为 qwen-3-* 连字符式）`。
+
+### Docs
+
+- `docs/D41_REPORT.md`（新建，本轮报告）；`docs/D40_REPORT.md` §七 加 D41 处置结论与两处勘误（「5 条」→4 条；`dola-seed` 的 arena 实为散文未结构化）。
+- `docs/batch_claim_ledger.jsonl`：7 个批次的 `models` 数组按新 `model_id` 同步（`submitted_files` 保持历史文件名不改写）。共 **15 处** model_id 改写（14 处 `qwen3-*`→`qwen-3-*` + 1 处 `unknown:yue-ai`→`ireader-technology:yue-ai`），涉及 b15w2 / b15w3 / b50w1 / b307w1 / b318w1 / b319w2 / b330w1 共 7 个批次。
+- `docs/WORKBUDDY_AGENT_GUIDE.md` §20 案例中的 `alibaba:qwen3-coder-480b-a35b` 加注 D41 已改名后的新 id（保留当时原文）。
+- `docs/README.md` 索引补 D41 报告与 license 留档。
+- 脚本固化到 `scripts/`（可审计 / 可复跑）：`d41_normalize.py`（vendor + 前缀 + Qwen 命名三项归一，含覆盖率断言与碰撞预检）、`d41_dola_arena.py`（dola-seed arena 结构化补录）、`d41_ledger_sync.py`（台账 model_id 同步）、`d41_license_backlog.py`（生成 license 留档）、`d41_postcheck.py`（收尾六项自检）。
+
+### Notes
+
+- **本轮零记录增删、零跑分/定价改动**：仅 `basic_info.vendor`、`model_id`、`meta.notes`、`benchmarks.arena_elo` 四处变动。数组缩水取证 **0 处**，撞键 **0 组**。
+- 备份：`backups/model_data_v2.pre-d41-normalize-*.jsonl`（三项归一前）、`backups/model_data_v2.pre-d41-dola-*.jsonl`（dola 补录前）。
+- `docs/archive/**`、`CHANGELOG.md` 历史条目中的旧 `model_id` 属**历史留痕，一律不回改**——归档记录反映当时状态，grep 旧 id 命中属预期。
+- `incoming/models/**` **提交快照文件一律不改写**（内容与文件名都保留提交当时状态）：它们记录的是「提交时是什么」，主库才是当前真相；`docs/batch_claim_ledger.jsonl` 的 `submitted_files` 亦保持原文件名与之对应。标识变更只体现在主库与台账 `models` 字段。因此 grep 到 `incoming/models/` 下的 `qwen3-*` 文件名属预期，不是残留。
+- D40 报告 §七 五项至此**全部结清**。
 
 ## [D40] - 2026-09-10
 

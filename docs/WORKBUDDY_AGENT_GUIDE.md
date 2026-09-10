@@ -708,7 +708,7 @@ Arena Elo（DataLearner 镜像 + 原始来源说明 + T1 + `is_primary` 标注�
 
 > 这个 6 只是 **D9 脚本改动范围内的数**（脚本只在它改过的 156 条记录里查重）。全库独立复扫是
 > **22 个数组 / 39 组重复键**：35 组同名不同分、4 组同名同分。典型的如同一基准挂着 3 个分数而 `config` 全为 `null`
-> （`alibaba:qwen3-coder-480b-a35b` 的 SWE-bench Verified 0.658/0.67/0.696、
+> （`alibaba:qwen3-coder-480b-a35b`（D41 起已归一为 `alibaba:qwen-3-coder-480b-a35b`，此处保留当时原文）的 SWE-bench Verified 0.658/0.67/0.696、
 > `deepseek-…:deepseekmath-7b` 的 MATH 0.362/0.517/0.609）——多数更像**该用 `config`/`date`/`notes` 区分的不同测量**，
 > 而不是「同一次测量记了两遍」。这又是一次「拿脚本自己的命中数当全库残留数」，与上面范围声明是同一个毛病：
 > **查重要求独立跑一遍全库，不能复用归一化脚本的中间结果。**

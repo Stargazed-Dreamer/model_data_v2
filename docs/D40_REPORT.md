@@ -120,6 +120,12 @@ D32 遗留 5 项，逐项核查后确认：
 
 ## 七、遗留待拍板（需用户裁定）
 
+> **【D41 已全部裁定并落地】** 用户裁定原文：`1. 移除 2. 保留 3. 统一首字母大写 4. 统一qwen-3 5. 留档后续再做`。
+> 本文以下四项全部处置完毕（第 5 项 license 46 条已留档至 `docs/LICENSE_GAP_BACKLOG.md`），
+> 处置结果见 `docs/D41_REPORT.md` 与 `CHANGELOG.md` [D41]。**注意**：本节 §七.1 标题写的「5 条」为笔误，
+> 实际非主流段位条目为 **4 条**（search / LiveCodeBench Pro / gdpval / agent 各 1 条，见下方表格），D41 已据此移除 4 条。
+> 另 §七.2 对 `dola-seed` 的描述亦有偏差：其 arena 分值当时只在 `meta.notes` 散文里，`benchmarks.arena_elo` 实为空数组，D41 已结构化补录。
+
 ### 1. 5 条 arena `sub_benchmark` 段位错置 ⚠ 需裁定
 
 | 取值 | 条数 | 问题 |

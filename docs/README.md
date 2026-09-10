@@ -31,7 +31,9 @@
 | `GAP_SCAN_REPORT_D28.md` | D28 整改轮（17 批、门禁首次 ERROR 0 / WARN 0）的缺口扫描报告 |
 | `GAP_SCAN_REPORT_D31.md` | D31：删 2022 前老模型 + 厂商 × 字段缺口矩阵 |
 | `GAP_SCAN_REPORT_D32.md` | D32：8 项数据修复（license 填充 0.9%→51% 等）+ 数据集现状快照（891 条口径） |
-| `D40_REPORT.md` | D40：arena 快照瘦身 809→633 + Artificial Analysis 免鉴权接入（independent 37.2%→48.0%）+ Wave-1 增量 22 条入库 + license HF 权威补 36 条；**含 5 项遗留待拍板** |
+| `D40_REPORT.md` | D40：arena 快照瘦身 809→633 + Artificial Analysis 免鉴权接入（independent 37.2%→48.0%）+ Wave-1 增量 22 条入库 + license HF 权威补 36 条；**5 项遗留已于 D41 全部结清** |
+| `D41_REPORT.md` | D41：移除 4 条 arena 段位错置 + `dola-seed` 保留并结构化补录 arena 三榜 + **vendor 命名统一首字母大写**（261 条 / 86 种源值，取值 229→198 种）+ **Qwen 3 统一 `qwen-3-*`**（40 条）+ model_id 前缀归一 56 条 + license 缺口留档；含 2 处 D40 报告勘误 |
+| `LICENSE_GAP_BACKLOG.md` | license 缺口留档（D41 第 ⑤ 项产物）：口径说明（A 类 `open_weights=true` 46 条 / B 类 16 条 / 闭源 350 条无意义）+ 逐条清单 + HF API 补采方法 |
 
 ### 数据档案（功能性文件，勿动勿删）
 
