@@ -5,7 +5,25 @@
 - **D40 遗留待拍板（D41 全部结清）**：~~5 条 arena 段位错置~~ → **D41 移除 4 条**（实为 4 条，D40 报告标题「5 条」系笔误）；~~`bytedance:dola-seed-2-0-pro:base` 信息过薄是否保留~~ → **D41 裁定保留**并结构化补录 arena 三榜；~~vendor 大小写混乱~~ → **D41 统一为首字母大写品牌式**（229→198 种）；~~Qwen 命名双轨~~ → **D41 统一为 `qwen-3-*`**（40 条）；~~license 余 46 条空白~~ → **D41 留档** `docs/LICENSE_GAP_BACKLOG.md`。本行已无未结项。
 - **Wave-1 遗留待拍板（D40 全部结清）**：~~Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）属漏采待批~~ → **已在库**（`google:gemma-4-*` 6 条 / `stepfun:step-3-7-flash:base` 2026-05-29）；~~Cohere Parse 5 待批~~ → **D38 移除、D39 用户终裁维持移除**；~~Qwen3.7-Plus 思考档仍无独立口径证据~~ → **已在库**（`alibaba:qwen3-7-plus:base` 与 `alibaba:qwen3-7-plus-none:base`，2026-06-01）。本行已无未结项。
 
-- **D42 遗留待拍板（待下一轮）**：① s1 家族三兄弟（`s1` / `s1-1` / `s1-32b`）family 语义不自洽，需先定「family 是否编码参数量」再重命名（本轮显式排除）；② `saltlux:luxia-21-4b-alignment:base`（`21` 应为 `2-1`）、`allen-institute-for-ai:olmo-3-32b-instruct:base`（官方名 Olmo **3.1** Instruct）、`modelbest:minicpm-1-2b` / `minicpm-2-4b`（family 与 full_name 的参数量互相矛盾）四类**缺分隔符/缺版本位**的结构问题（非点号问题）；③ vendor 别名：`z-ai-zhipu-ai-tsinghua-university` 与 `zhipu` 下同时存在 `glm-4.5` / `glm-4.6`；④ 台账 `b60w1-google-deepmind-google` 批使用 `google-deepmind-google:` 前缀，与主库 `google:` 口径不一致（该批记录不在主库，D42 脚本已正确跳过）。
+- **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
+
+## [D43] - 2026-09-11
+
+用户拍板四项全选推荐项：**D42 四类结构遗留落改 + zhipu 别名归并 + 台账 models 数组一次归位**。门禁 **ERROR 0 / WARN 0**，记录数 **937 → 935**。
+
+### Changed
+
+- **结构改名 6 条**：`allen-institute-for-ai:s1-1:base` → `s1.1-1.5b:base`、`s1-32b:base` → `s1.1-32b:base`（版本+参数式，与全库惯例一致）；`olmo-3-32b-instruct:base` → `olmo-3.1-32b-instruct:base`（官方发布名 Olmo 3.1，version 字段明写）；`saltlux:luxia-21-4b-alignment:base` → `luxia-2.1-4b-alignment:base`（full_name 明写 2.1）；`modelbest:minicpm-1-2b:base` → `minicpm-1b:base`、`minicpm-2-4b:base` → `minicpm-2b:base`（对齐官方名，精确参数量 1.2B/2.7B 本在 `architecture.total_params_b`）。
+- **vendor 别名归并**：`z-ai-zhipu-ai-tsinghua-university`（3 条）→ `zhipu`；其中 `glm-4.5`/`glm-4.6` 与 zhipu 侧重复档案**合并**——以 zhipu 侧为主档（benchmark 带 config/date），长前缀侧独有 benchmark 并入（glm-4.6 的 CC-Bench 胜率、Token 效率；glm-4.5 两侧 14 条同名同分零冲突）、null 字段补值、source_urls 并集、标量冲突保留主档并留痕。**937 → 935**。
+- **台账 models 数组一次归位 186 处（86 个批次）**：发现漂移是系统性的（多平台 agent 按批次原始 vendor 串登记 vs 主库 D41 归并口径）。解析链三步、每步要求唯一命中（0 歧义）：family+variant 唯一（131，vendor 漂移）、D42/D43 family 映射后唯一（53，连缀漂移）、同 vendor family 唯一（2，variant 漂移如 `claude-3-haiku:20240307`→`:base`）。`status`/`submitted_files`/批次 `vendor` 字段**逐字段核验零改动**。
+
+### Fixed
+
+- 收尾核验全过：model_id 唯一、9 个旧 id 零残留、`z-ai-zhipu` 前缀零残留、glm-4.6 合并内容抽查、台账 66 条真未入库条目保留原登记（远古批未合并/被拒候选/库内缺口）。
+
+### Note（台账暴露的库内真实缺口，下一轮候选）
+
+`google:gemma-4-31b:base`（基座缺，只有 -it）、`lg:exaone-3.5-r-2.4b`（R 系 2.4B 缺）、`google:gemini-3.6-flash-cyber`（3.5 有 3.6 无）、`meituan:longcat-flash`（仅日期 variant，二选一歧义）、`t-bank:t-pro`（库内只有 t-pro-2.0）等，详见 `docs/D43_REPORT.md` §四。
 
 ## [D42] - 2026-09-10
 
