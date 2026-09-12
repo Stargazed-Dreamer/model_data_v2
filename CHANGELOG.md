@@ -7,7 +7,24 @@
 
 - **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
 - **D44 遗留待拍板（D45+D46 全部结清）**：~~漏采线索 22 条待 S1 拍板~~ → **D45 采 9 / D46 复筛后采 6、排除 7 + dspark 身份核验并入**（22 条全部处置完毕，candidate_diff NEW 6→2 且剩余均为排除项）；~~fillplan 66 条抽验后写 import 落库~~ → **D45 落库 55 条**（ctx 8 / arch 48，只为空值补，抽验与 HF config 一致）；backlog 948 条存量长尾 → **仍开放**（缓采已清零，优先级降低）。
-- **D46 遗留待拍板**：r1 同厂商同名 3 组（`qwen2.5-coder-32b` vs `qwen2.5-coder`、minicpm-4 双档、`glm-5.2` vs `glm-5.2-none` 疑似 D34 改名未覆盖 full_name）；r2 基准名大小写异写 14 簇待归一清理；license 待回填 +2（llada-ui / ui-venus-2-9b 官方明示未定）。
+- **D46 遗留待拍板（D47 全部结清）**：~~r1 同厂商同名 3 组~~ → **D47 拍板处置**（qwen2.5-coder 与 minicpm-4 合并 -2、glm-5.2-none 改名「GLM-5.2（Non-Think）」）；~~r2 基准名大小写 14 簇~~ → **仍开放**（涉及跑分数组主键，待批处理轮）；~~license 待回填 +2~~ → 维持（官方明示未定，等发布）。
+
+## [D47] - 2026-09-13
+
+用户拍板（原文「1234都可，按顺序来」）：**r1 同名处置 + N2.5 日期 + AA 观测价准入 + 双源只补空值**。记录数 **950 → 948**，门禁 **ERROR 0 / WARN 0**（AA 导入当轮引起的 24 条 WARN 已修正归零）。
+
+### Changed
+
+- **r1 三组处置（`scripts/d47_merge_r1.py`）**：A 合并 `alibaba:qwen2.5-coder:base` → `-32b`（真同物，ind 并集 2+3、补 ap/version，epoch 日期冲突留痕）；B 合并 `openbmb-...:minicpm-4-8b` → `modelbest:minicpm-4`（正规 vendor 侧主档；license MIT vs Apache、ctx 32K vs 128K 硬冲突保留主档留痕待核）；C 改名 `glm-5.2-none` full_name →「GLM-5.2（Non-Think）」（思考/非思考两档，D34 先例不合并）。**950 → 948**，qa_outliers r1 归零。
+- **N2.5 mini/Pro release_date null → 2026-09 月级**（HF createdAt 锚定 + Max 国资委文佐证，notes 声明待官方精化）。
+- **AA 观测价 38 条（`scripts/d47_import_aa_price.py`）**：只补 pricing.input 空，T2 标注。四道护栏 56→38：0/0 占位价 / AA 同 canon 价格歧义 21 键 / flavor 错配 / vendor 等价组（拦 perplexity:r1 ← deepseek-r1）。导入引发的 24 条 WARN（旧「无官方价」标签矛盾 18 + 缺 effective_date 6）当轮修正：source_type 统一「独立评测平台」、effective_date=观测日。
+- **OpenRouter knowledge_cutoff 48 条（`scripts/d47_import_openrouter_kc.py`）**：T2 供应商申报值只补空。护栏：vendor 等价组拦 'large' 残片错配（hunyuan-large/yi-large ← mistral-large）+ 日期变体数字串校验（拦 mistral-large:2402 被现役条目污染）。别名表补 `z-ai`=智谱、`x-ai`=xAI。
+- **HF 版 fillplan（`scripts/d47_fetch_hf.py`）ctx 8 / arch 9**：19 白名单组织，granite 131072、Solar-Open2 1M、EXAONE-Deep 32K、gpt-oss→MoE、opt-66b→Dense 等；**gated 12 条（meta-llama/gemma 系 401）留人工**。
+
+### Note
+
+- 前后对比：kc 空 777→727、pricing.input 空 637→597、open_weights 空 ctx 59→51、ctx 总空 204→188、r1 同名组 3→0。
+- 遗留：gated 12 条待人工；apertus ×2 价格因 creator 不可识别未导；minicpm-4 的 license/ctx 冲突值待核；r2 基准名 14 簇待批处理轮。详见 `docs/D47_REPORT.md`。
 
 ## [D46] - 2026-09-13
 
