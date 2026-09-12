@@ -6,7 +6,27 @@
 - **Wave-1 遗留待拍板（D40 全部结清）**：~~Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）属漏采待批~~ → **已在库**（`google:gemma-4-*` 6 条 / `stepfun:step-3-7-flash:base` 2026-05-29）；~~Cohere Parse 5 待批~~ → **D38 移除、D39 用户终裁维持移除**；~~Qwen3.7-Plus 思考档仍无独立口径证据~~ → **已在库**（`alibaba:qwen3-7-plus:base` 与 `alibaba:qwen3-7-plus-none:base`，2026-06-01）。本行已无未结项。
 
 - **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
-- **D44 遗留待拍板（D45 部分结清）**：~~漏采线索 22 条待 S1 拍板~~ → **D45 拍板 9 采 13 缓**（9 条已入库，13 条缓：UI/OCR/领域特化/训练中间产物，名单留存）；~~fillplan 66 条抽验后写 import 落库~~ → **D45 落库 55 条**（ctx 8 / arch 48，只为空值补，抽验与 HF config 一致）；backlog 948 条存量长尾 → **仍开放**（非紧急）。
+- **D44 遗留待拍板（D45+D46 全部结清）**：~~漏采线索 22 条待 S1 拍板~~ → **D45 采 9 / D46 复筛后采 6、排除 7 + dspark 身份核验并入**（22 条全部处置完毕，candidate_diff NEW 6→2 且剩余均为排除项）；~~fillplan 66 条抽验后写 import 落库~~ → **D45 落库 55 条**（ctx 8 / arch 48，只为空值补，抽验与 HF config 一致）；backlog 948 条存量长尾 → **仍开放**（缓采已清零，优先级降低）。
+- **D46 遗留待拍板**：r1 同厂商同名 3 组（`qwen2.5-coder-32b` vs `qwen2.5-coder`、minicpm-4 双档、`glm-5.2` vs `glm-5.2-none` 疑似 D34 改名未覆盖 full_name）；r2 基准名大小写异写 14 簇待归一清理；license 待回填 +2（llada-ui / ui-venus-2-9b 官方明示未定）。
+
+## [D46] - 2026-09-13
+
+用户拍板（原文「直接做下一轮，并发加到 3」）：**D44 缓采复筛二批入库 + D34 离群体检器重建**。记录数 **944 → 950**，门禁 **ERROR 0 / WARN 0**。subagent 并发 3（用户放宽），7 个任务分三波。
+
+### Added
+
+- **`scripts/qa_outliers.py`（D34 失传体检器重建版）**：原脚本三处核实不可恢复（回收站系 rm 直删/工作区/git 历史），按 D34 CHANGELOG 留痕口径 + A 类报告方向重建——13 项注册检查 + r1/r2/v3 跨记录检查，`硬错`/`疑点`分级（D34 教训入注：倒挂精度差、知识截止语义均不硬报）。首轮基线：**硬错全 0**，r1=3 组同名簇、r2=13 簇基准名异写、v1=53 缩写对，报告落 `temp/d46_outliers_report.txt`。
+- **6 条新模型入库（批次 `b334w1-modelscope`）**：`inclusionai:llada-ui:base`（16.7B MoE **扩散** LLM UI-agent，GitHub release 09-09）、`inclusionai:ui-venus-2-9b:base`（Qwen3.5-9B 微调 GUI agent，arXiv 08-27，license 官方明示待定→null）、`inclusionai:armor-ocr:base`（Qwen3-VL-8B 微调 OCR **权重模型**非管线，三源同日 08-20）、`alibaba:qwen-drive-1.0-4b:base`（驾驶规划 VLM，Qwen3.5-4B 基座+流匹配 expert，发卡 ctx 32K）、`modelbest:mathform-8b:base`（NL→Lean 4 形式化，Qwen3-8B 微调）、`baai:recon2reason-reasoning-4b:base`（**新厂商 BAAI**，空间推理 VLM，Qwen3-VL-4B 微调）。全部过「模型/工具判定」（细则第 10 条 + D37 Parse 教训重点核对 OCR/UI 方向）。
+
+### Changed
+
+- **Ling-3.0-flash-dspark 身份核验后并入不单列**：官方 README 自证为 Ling-3.0-flash 的投机解码 speculator（1.36B/5 层 draft、依附主模型隐状态、无独立能力跑分），按 D35 一行一个测量身份不建条；关键信息 + 「acceptance length 5.29 属吞吐指标」防混淆注记并入 `inclusionai:ling-3.0-flash:base` notes（备份 `backups/model_data_v2.pre-d46-dspark-*.jsonl`）。
+- **D44 缓采 13 条复筛**：6 采（上）/ 7 永久排除（MiniCPM5-2B-{SFT,Base,Midtrain}、JustRL-II、Ling-3.0-flash-base-{midtrain,30T} 训练中间产物）。candidate_diff 复扫 **NEW 6 → 2** 且剩余均为排除项——D44 漏采线索 22 条全部处置完毕。
+
+### Note
+
+- 新 6 条零引入硬错（qa_outliers 复扫与基线持平）；r2 基准名大小写簇 13→14（新跑分表带入，入清理清单）。
+- license 待回填 +2：llada-ui（官方未披露）、ui-venus-2-9b（官方明示 pending final confirmation）。
 
 ## [D45] - 2026-09-13
 
