@@ -6,6 +6,24 @@
 - **Wave-1 遗留待拍板（D40 全部结清）**：~~Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）属漏采待批~~ → **已在库**（`google:gemma-4-*` 6 条 / `stepfun:step-3-7-flash:base` 2026-05-29）；~~Cohere Parse 5 待批~~ → **D38 移除、D39 用户终裁维持移除**；~~Qwen3.7-Plus 思考档仍无独立口径证据~~ → **已在库**（`alibaba:qwen3-7-plus:base` 与 `alibaba:qwen3-7-plus-none:base`，2026-06-01）。本行已无未结项。
 
 - **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
+- **D44 遗留待拍板**：漏采线索 22 条（NEW 11 / CHECK_VARIANT 10 / EXISTS 1，`temp/d44_msscope_candidates.jsonl`）待 S1 拍板；fillplan 66 条（ctx 64 / arch 55）抽验后写 import 落库；backlog 948 条存量长尾待人工过。
+
+## [D44] - 2026-09-13
+
+用户触发（原文「魔搭社区有很多模型的参数和信息，你看看我们能不能用上」）：**ModelScope（魔搭）以免鉴权结构化 JSON API 接入跟踪源清单 A 层**。S0 探测轮，**主库零改动**（935 条不变，门禁 ERROR 0 / WARN 0），产物全落 `temp/`。
+
+### Added
+
+- **A 层新源（`跟踪源清单.md` §A-1）**：`PUT /api/v1/dolphin/models`（SortBy 枚举 Default/DownloadsCount/StarsCount/GmtModified，Default 实测最新优先）+ 详情接口 + config.json 仓库文件接口，免鉴权 200。**国内厂商版图首次有结构化发现源**（inclusionAI/OpenBMB/openmoss/01ai/nex-agi 等 OpenRouter 缺失厂商均在魔搭有官方组织）。实测三坑：无组织过滤参数（只能 Name 前缀搜索 + Path 客户端过滤）、组织名大小写敏感（openmoss）、列表 item 的 model_size 常空需补拉详情。
+- **`scripts/d44_fetch_modelscope.py`**：22 官方组织白名单 → 2,979 仓库快照 → canon 精确匹配 → 漏采线索 22 条（candidate_diff 判定 NEW 11 / CHECK_VARIANT 10 / EXISTS 1，真缺口含 DeepSeek-V4.1-Flash、Ling-3.0 flash/tiny/VL 本体系、Qwen3.8-Flash-Next、MiniCPM5-2B 系、Nex-N2.5-Max、LongCat-Flash-Lite-Sparse）+ open_weights 空字段补全候选 66 条（ctx 可补 64 / arch_type 可判 55，覆盖全库 67 条 open_weights 空 ctx 的 95%）+ backlog 948 条。dry-run 不写库，`--skip-fetch` 可复用快照。
+
+### Changed
+
+- **`modelscope_model_update/SKILL.md`（兄弟工作区）**：阶段 3 增加 JSON API 快速路径（含 Path 过滤/大小写警告），DOM 选择器（`acss-17aobl4`，自标改版风险）降为兜底；风险条目 1 同步。
+
+### Note
+
+- 口径红线沿用并固化进脚本：CreatedTime=仓库创建日非发布日（§4）、镜像/社区组织不收、量化变体并入不单列（§3）、model_size 是字节数非参数量、匹配仅 canon 精确（D40）。详见 `docs/D44_REPORT.md`。
 
 ## [D43] - 2026-09-11
 
