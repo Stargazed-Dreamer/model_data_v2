@@ -6,7 +6,28 @@
 - **Wave-1 遗留待拍板（D40 全部结清）**：~~Gemma 4（2026-04-16，5 尺寸，Apache 2.0）与 Step 3.7 Flash（2026-05-28，198B/11B MoE VLM）属漏采待批~~ → **已在库**（`google:gemma-4-*` 6 条 / `stepfun:step-3-7-flash:base` 2026-05-29）；~~Cohere Parse 5 待批~~ → **D38 移除、D39 用户终裁维持移除**；~~Qwen3.7-Plus 思考档仍无独立口径证据~~ → **已在库**（`alibaba:qwen3-7-plus:base` 与 `alibaba:qwen3-7-plus-none:base`，2026-06-01）。本行已无未结项。
 
 - **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
-- **D44 遗留待拍板**：漏采线索 22 条（NEW 11 / CHECK_VARIANT 10 / EXISTS 1，`temp/d44_msscope_candidates.jsonl`）待 S1 拍板；fillplan 66 条（ctx 64 / arch 55）抽验后写 import 落库；backlog 948 条存量长尾待人工过。
+- **D44 遗留待拍板（D45 部分结清）**：~~漏采线索 22 条待 S1 拍板~~ → **D45 拍板 9 采 13 缓**（9 条已入库，13 条缓：UI/OCR/领域特化/训练中间产物，名单留存）；~~fillplan 66 条抽验后写 import 落库~~ → **D45 落库 55 条**（ctx 8 / arch 48，只为空值补，抽验与 HF config 一致）；backlog 948 条存量长尾 → **仍开放**（非紧急）。
+
+## [D45] - 2026-09-13
+
+用户拍板（原文「能继续就继续采集」）：**魔搭补全落库 + D44 漏采线索首批 9 模型采集入库**。记录数 **935 → 944**，门禁 **ERROR 0 / WARN 0**。约束：subagent 并发 ≤2（用户指定），9 个采集 agent 分五波。
+
+### Added
+
+- **9 条新模型入库（批次 `b333w1-modelscope`）**：`deepseek:deepseek-v4.1-flash:base`（552B MoE CED，官方新闻稿 09-10）、`deepseek:deepseek-v4-flash-vision-exp:base`（08-21 发布、09-10 官宣退役→「已过期」）、`inclusionai:ling-3.0-flash:base`（124B/A5.1B KDA+Gated MLA Hybrid）、`inclusionai:ling-3.0-flash-vl:base`（124B/A5.5B 原生视频输入）、`inclusionai:ling-3.0-tiny:base`（7.9B/A1.3B）、`modelbest:minicpm-5-2b:base`（2.52B Dense，GitHub News 09-07）、`nex-agi:nex-n2.5-max:base`（1.6T/A49B，基于 DeepSeek-V4-Pro-Base 后训练，国资委会 09-09 首发文）、`alibaba:qwen-3.8-flash-next:base`（180B=125B LM+51B N-gram+4B MTP /A6B，Gated DeltaNet+QSA Hybrid，原生 262K/YaRN 1M）、`meituan:longcat-flash-lite-sparse:base`（69B/A3B，LSA 稀疏注意力，1M）。
+- release_date 全部回官方一手或诚实降级：4 条日级（官方 news 页×2、国资委会文、GitHub News）+ 1 条日级媒体当日转述（标待验证）+ 4 条月级（仅仓库/论文锚点）。2 条 Elo 型绝对分（Codeforces 3471、GDPval-AA 1713）按门禁不入 benchmarks、留 notes。
+
+### Changed
+
+- **魔搭补全落库 55 条（`scripts/d45_import_modelscope.py`，只为空值补）**：`context_window_tokens` 补 8、`architecture_type` 补 48（config.json 结构判据，Hybrid 不导）；抽验 6 条：5 条与 HF config 全等、1 条 gated 按公开规格吻合；MS 仓库 URL 入 source_urls、notes 留痕。
+- **口径发现**：config.json `max_position_embeddings` 是**原生标称**，主库口径是**最大可支持**——56 条旁证比对 36 同 / 28 差，差值全为口径差非错误，验证「只为空值补、不覆盖」正确；D44 报告「ctx 可补 64」实为证据可得数，真空值仅 8（详见 `docs/D45_REPORT.md` §一）。
+- **D44 候选复扫**：`candidate_diff.py` NEW 11 → 6（入库 9 条全转 EXISTS/CHECK_VARIANT）。
+
+### Note
+
+- N2.5 家族 mini/Pro 的 release_date 仍 null（HF createdAt 09-07/08 属仓库创建日口径，§4 铁律不采，待官方公告）。
+- 13 条缓采 + backlog 948 条长尾留存 `temp/d44_msscope_candidates.jsonl` / `d44_msscope_backlog.jsonl`；全库离群体检脚本（D34 31 项口径）待重建，本轮以 9 条新记录针对性体检替代（0 真问题）。
+- **subagent 并发 ≤2** 为用户额度约束，后续采集轮沿用。
 
 ## [D44] - 2026-09-13
 
