@@ -7,7 +7,30 @@
 
 - **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
 - **D44 遗留待拍板（D45+D46 全部结清）**：~~漏采线索 22 条待 S1 拍板~~ → **D45 采 9 / D46 复筛后采 6、排除 7 + dspark 身份核验并入**（22 条全部处置完毕，candidate_diff NEW 6→2 且剩余均为排除项）；~~fillplan 66 条抽验后写 import 落库~~ → **D45 落库 55 条**（ctx 8 / arch 48，只为空值补，抽验与 HF config 一致）；backlog 948 条存量长尾 → **仍开放**（缓采已清零，优先级降低）。
-- **D46 遗留待拍板（D47 全部结清）**：~~r1 同厂商同名 3 组~~ → **D47 拍板处置**（qwen2.5-coder 与 minicpm-4 合并 -2、glm-5.2-none 改名「GLM-5.2（Non-Think）」）；~~r2 基准名大小写 14 簇~~ → **仍开放**（涉及跑分数组主键，待批处理轮）；~~license 待回填 +2~~ → 维持（官方明示未定，等发布）。
+- **D47 遗留待拍板（D48 全部结清）**：~~gated 12 条（Llama/Gemma ctx）~~ → **D48 核实为误报**（8 月采集时已填，本轮 T1 官方源独立复核 14/14 与库内一致，零写入）；~~apertus ×2 价格~~ → 维持（creator「Swiss AI Initiative」识别不了，留官方价）；~~minicpm-4 license/ctx 冲突值待核~~ → **仍开放**；~~r2 基准名 14 簇~~ → **D48 归一 41 处**（残留 7 簇为新采集带入，下轮续）。
+- **D48 遗留待拍板**：OpenCompass 导入（探路已过，半天工作量，国内 independent 最大增量）；缓采线索（agnes-alpha 权属、dots 家族 jazz/aria、schematron 等）留 `temp/d48_leads.jsonl`；c5 定位口径批注方案。
+
+## [D48] - 2026-09-14
+
+用户授权夜间自主批（原文「继续更新和抓取…直到没数据或早上八点」，后修订「并发减到3，8:30 收尾，绝对 DDL 9 点」）：**双源漏采 11 模型入库 + 双重复折并 + 三项质检基建**。记录数 **948 → 958**，门禁 **ERROR 0 / WARN 0** 全程保持。subagent 并发 3，五波 15 任务。
+
+### Added
+
+- **11 模型入库（批次 b335/b336/b337-multi，AA/OR 双源漏采扫描 528 条线索 → S1 拍板）**：`sakana:fugu-ultra-v2`/`fugu-max`（**库内首条 Sakana AI**，官方博客 09-11，编排模型按模型收录先例）、`meta:muse-spark-1.3`（09-02，官方刊例）、`alibaba:qwen-3.8-max-0902`（台账页 T0 09-02，2.4T/A95B）、`mbzuai:k2-horizon-375b-a23b`（IFM 新闻稿 09-03）、`inception-labs:mercury-2.5`（扩散 LLM，09-08 带促销价）、`upstage:solar-pro4`（512K，官方与 AA 口径矛盾按官方）、`ibm:granite-4.2-30b`/`-3b`（HF 卡明示 08-25）、`sapiens-ai:agnes-2.5-pro-beta`（**新厂商 Sapiens AI**，新加坡，官方文档 T0，排除智谱代号传闻）、`dots-studio:dots-3-note-preview`（**身份更正：小红书旗下**，280B/A16B 多模态）。11 条中 7 条带官方刊例。
+- **`scripts/d48_scan_leads.py`（固化）**：AA+OR 双源 ↔ 主库 canon diff → `temp/d48_leads.jsonl`（528 条线索）。
+- **OpenCompass C 层验证可用**（`跟踪源清单.md` 已更新）：cdn 静态 JSON 免鉴权 + 16 期月度快照，覆盖国内旗舰 independent 缺口；探路报告 `temp/d48_opencompass_probe.md`，导入留下轮。
+
+### Changed
+
+- **r2 基准名归一（`scripts/d48_normalize_bench_names.py`）**：多数派写法改写 41 处、撞键合并 0（残留 7 簇为新采集带入）。
+- **两次同物折并（D35 口径）**：`lfm-2.5-2.6b`（OR 拼写）折入库内 D42 拼写 `lfm2.5-2.6b`（官方日期 08-04 + 自报 13 条）；`dots-3-note-preview`（连字符）折入库内官方拼写 `dots3-note-preview`（自报 8+43=51）。**重复 id 均未保留**。
+- **Arena 快照 09-02 → 09-11**：`d39_import_arena_elo` 幂等导入 24 条新 elo（8 条记录首获 arena 段）。
+- **vision-exp 防重留痕**：AA `deepseek-v4-flash-vision`（无 -Exp）核验为库内 exp 条目收录别名，notes 留痕。
+
+### Note
+
+- gated 14 条核实为 D47 误报（ctx 8 月已填），本轮 T1 官方源独立复核 14/14 与库内一致——顺带完成一轮交叉验证。
+- qa_outliers 终态：硬错全 0、r1 归零、o1=4（历史空日期）、c5=18（口径疑点）。详见 `docs/D48_REPORT.md`。
 
 ## [D47] - 2026-09-13
 
