@@ -40,9 +40,17 @@
 - 本轮新记录的定价覆盖好：11 条中 7 条带官方刊例（fugu×2/muse-spark/qwen-0902/mercury/solar/agnes）。
 - D48 净变化：记录 948→958；arena_elo +24 条；基准名归一 41 处；新固化脚本 2 个（d48_scan_leads / d48_normalize_bench_names）+1 个归一器复用。
 
-## 五、遗留（按优先级）
+## 五、第二阶段（05:40–06:50）：OpenCompass 落库 + 魔搭重扫收官
 
-1. **OpenCompass 导入**（探路已过，半天工作量，国内模型 independent 的最大增量）；
+1. **OpenCompass 首批落库**（`scripts/d48_import_opencompass.py`）：学术榜 REALTIME + CompassBench v2 26-07，剥 (high)/-Thinking 变体、歧义跳过、只补空 → `tencent:hunyuan-a13b:base` +6 基准（T1）。**深挖版**（`scripts/d48_import_oc_deep.py`，16 期历史快照 + mm 榜，动态列）：再落 5 条（qwen2-7b / minimax-text-01 / glm-4-32b:0414 / yi-1.5-9b / glm-4-plus，含 2024-07 老快照回溯）；LongCat 三日期变体共用一条 OC 评测按歧义红线整组跳过。**收益小的原因是口径正确**：国内旗舰的 independent 已被 AA 填过；管道已固化，后续新模型进来即自动可补。
+2. **魔搭重扫（过夜增量）**：candidates 22 → 8（本晚采集消掉了大头）；**Intern-S2-397B**（09-13 建仓，Intern-S2 正式版旗舰，官方文档 T0：397B MoE 512 专家 Hybrid、256K ctx、Apache-2.0）采集入库；其余 7 条均为已排除的训练产物。
+3. **fillplan 复核**：qwen-3.5 系等 9 条 ctx 候选全部已有值，0 写入（口径差侧证，与 D47 结论一致）。
+
+**终态统计**：记录 **948 → 959**（+12 新模型 −1 dots 折并）；independent 空 512 → 506；门禁 ERROR 0 / WARN 0；qa_outliers 硬错全 0。
+
+## 六、遗留（按优先级）
+
+1. **OpenCompass 持续导入**（管道已固化 `d48_import_opencompass.py` / `d48_import_oc_deep.py`，后续新模型即自动可补；「OC 作为多来源并集而非只补空」是否放开为口径拍板项）；
 2. r2 残留 7 簇基准名归一（同 D46 口径）；
 3. 缓采线索：agnes-2-5-pro-alpha（open-weights 权属待考）、dots-3 家族另两成员（jazz/aria）、schematron、apodex、quasar、k-exaone-0803 变体、lfm 小型号等——全部留在 `temp/d48_leads.jsonl`；
 4. backlog 948 条长尾（魔搭存量，优先级最低）；

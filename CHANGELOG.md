@@ -27,6 +27,9 @@
 - **Arena 快照 09-02 → 09-11**：`d39_import_arena_elo` 幂等导入 24 条新 elo（8 条记录首获 arena 段）。
 - **vision-exp 防重留痕**：AA `deepseek-v4-flash-vision`（无 -Exp）核验为库内 exp 条目收录别名，notes 留痕。
 
+- **OpenCompass C 层验证可用并首批落库**（`跟踪源清单.md` 已更新）：`scripts/d48_import_opencompass.py`（学术榜 T1 + v2 综合榜 T2，只补空）落 hunyuan-a13b 6 基准；`scripts/d48_import_oc_deep.py`（16 期历史快照 + mm 榜，动态列）再落 5 条（qwen2-7b / minimax-text-01 / glm-4-32b:0414 / yi-1.5-9b / glm-4-plus）；LongCat 三日期变体共用一条评测按歧义红线整组跳过。国内旗舰 independent 已被 AA 覆盖故本轮收益 6 条——管道固化，后续新模型自动可补。
+- **魔搭过夜重扫**：candidates 22→8；`sha-ai-lab:intern-s2-397b:base` 入库（09-13 Intern-S2 正式版旗舰，官方文档 T0：397B MoE 512 专家 Hybrid、256K ctx、Apache-2.0，与 Preview-397B 前后关系已厘清）。**959 条终态**。
+
 ### Note
 
 - gated 14 条核实为 D47 误报（ctx 8 月已填），本轮 T1 官方源独立复核 14/14 与库内一致——顺带完成一轮交叉验证。
