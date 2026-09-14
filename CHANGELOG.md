@@ -8,7 +8,21 @@
 - **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
 - **D44 遗留待拍板（D45+D46 全部结清）**：~~漏采线索 22 条待 S1 拍板~~ → **D45 采 9 / D46 复筛后采 6、排除 7 + dspark 身份核验并入**（22 条全部处置完毕，candidate_diff NEW 6→2 且剩余均为排除项）；~~fillplan 66 条抽验后写 import 落库~~ → **D45 落库 55 条**（ctx 8 / arch 48，只为空值补，抽验与 HF config 一致）；backlog 948 条存量长尾 → **仍开放**（缓采已清零，优先级降低）。
 - **D47 遗留待拍板（D48 全部结清）**：~~gated 12 条（Llama/Gemma ctx）~~ → **D48 核实为误报**（8 月采集时已填，本轮 T1 官方源独立复核 14/14 与库内一致，零写入）；~~apertus ×2 价格~~ → 维持（creator「Swiss AI Initiative」识别不了，留官方价）；~~minicpm-4 license/ctx 冲突值待核~~ → **仍开放**；~~r2 基准名 14 簇~~ → **D48 归一 41 处**（残留 7 簇为新采集带入，下轮续）。
-- **D48 遗留待拍板**：OpenCompass 导入（探路已过，半天工作量，国内 independent 最大增量）；缓采线索（agnes-alpha 权属、dots 家族 jazz/aria、schematron 等）留 `temp/d48_leads.jsonl`；c5 定位口径批注方案。
+- **D48 遗留待拍板（D49 全部结清）**：~~OC 多来源并集口径~~ → **D49 拍板放开**（`--union` 模式落 109 条基准/20 记录，与 AA 以 config/date 键共存）；~~r2 残留 7 簇~~ → **D49 归一 13 处**（本晚新采集带入）；~~缓采清单~~ → **D49 拍板**：8 条具名缓采中 7 条放弃（小众/变体/歧义）、`gpt-6-astra-pro`（OpenAI 高端档）保留待下轮 S0 优先核，backlog 948 条**正式关闭**（扫描管道兜底，冒头自动重捞）。
+
+## [D49] - 2026-09-14
+
+用户三连拍板（OC 并集 / 基准名归一 / 缓采放弃）：**OC 多来源并集 + 基准名归一续 + 缓采清单拍板关闭**。记录 **959 条不变**，门禁 **ERROR 0 / WARN 0**。
+
+### Changed
+
+- **`d48_import_opencompass.py --union`**：OC 与 AA 等来源以 `(benchmark,config,date)` 键共存。落 **109 条基准 / 20 条记录**（glm-5.3、qwen-3.8-max、minimax-m2/m2.5/m3、deepseek-v3.2、r1:0528、step-3.5-flash 等）。新增护栏：反向 flavor（库内 `-high` 变体不配 OC 无标注条目）、基准名对齐库内多数派写法（防 r2 回归）、幂等重跑。
+- **r2 归一续 13 处**（SWE-Bench Verified 等，本晚新采集带入的异写）。
+- **缓采清单拍板**：具名缓采 8 条中 7 条放弃（schematron ×2 / apodex / g9v3 / quasar / k-exaone-0803 变体 / muse-glimmer 歧义），仅 `gpt-6-astra-pro` 保留待核；**backlog 948 条正式关闭**。安全性依据：`d48_scan_leads.py` 管道可重复，被放弃模型若冒头会自动重捞。
+
+### Note
+
+- **backlog 948 条正式关闭**（原 D44 开放项）——放弃非删除：`temp/d44_msscope_backlog.jsonl` 与 leads 文件仍在，下次扫描自动增量。
 
 ## [D48] - 2026-09-14
 

@@ -14,6 +14,7 @@
   ⑥ date=快照 update_time；source_url=对应榜单页；notes 声明快照日/repeat/重定基口径。
 用法：PYTHONUTF8=1 python scripts/d48_import_opencompass.py [--apply]
 """
+import argparse
 import collections
 import json
 import os
@@ -130,9 +131,27 @@ def norm_date(s):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--union', action='store_true',
+                    help='多来源并集（D49 拍板）：已有多来源 independent 的记录也追加 OC 条目，'
+                         '与 AA 等来源以 (benchmark,config,date) 键共存；缺省仍只补空')
+    ap.add_argument('--apply', action='store_true')
+    args = ap.parse_args()
+    UNION = args.union
+
     research = json.load(open(os.path.join(ROOT, 'temp', 'oc_research_rt.json'), encoding='utf-8'))
     v2 = json.load(open(os.path.join(ROOT, 'temp', 'oc_llmv2_data.json'), encoding='utf-8'))
     rows = [json.loads(l) for l in open(MAIN, encoding='utf-8') if l.strip()]
+
+    # 库内既有基准名规范化映射（防 r2 回归：OC 列名对齐库内多数派写法）
+    bench_norm = collections.defaultdict(collections.Counter)
+    for r in rows:
+        for seg in ('self_reported', 'independent', 'arena_elo'):
+            for b in (r.get('benchmarks') or {}).get(seg) or []:
+                n = b.get('benchmark')
+                if isinstance(n, str) and n:
+                    bench_norm[re.sub(r'[^a-z0-9]', '', n.lower())][n] += 1
+    bench_major = {k: c.most_common(1)[0][0] for k, c in bench_norm.items()}
 
     # OC 侧扁平化：(name, org, benchmark, score, config, date, conf, src_url)
     flat = []
@@ -166,7 +185,7 @@ def main():
                              '司南自建综合榜（按期重定基）'))
 
     # 索引
-    oc_by = collections_ = {}
+    oc_by = {}
     for name, org, b, s, cfg, d, conf, url, tag in flat:
         eff = re.search(r'\((high|low|thinking|non-thinking)\)', str(name), re.I)
         if eff:
@@ -176,10 +195,10 @@ def main():
             continue
         oc_by.setdefault(c, []).append((name, org, b, s, cfg, d, conf, url, tag))
 
-    plan, skipped_vendor = [], []
+    plan, skipped_vendor, skipped_flavor = [], [], []
     for r in rows:
         ind = (r.get('benchmarks') or {}).get('independent')
-        if ind:                                        # 只补空白（D40 口径）
+        if ind and not UNION:                          # 缺省只补空白（D40 口径）；--union 并集（D49）
             continue
         mid = r.get('model_id') or ''
         fam = mid.split(':')[1] if ':' in mid else mid
@@ -198,6 +217,12 @@ def main():
                 if not vendor_ok(vendor, org):
                     skipped_vendor.append((mid, name, org))
                     continue
+                # 反向 flavor 护栏：库内高档变体（-high 等）不配 OC 无标注条目（档位分不可混）
+                if (re.search(r'-(high|xhigh|low)$', fam.lower() + '-' + (var or ''))
+                        and not re.search(r'\((high|low|xhigh)\)', name, re.I)):
+                    skipped_flavor.append((mid, name))
+                    hit = None
+                    break
                 hit = oc_by[key]
                 break
         if hit:
@@ -216,11 +241,15 @@ def main():
     plan = final
 
     n_bench = sum(len(h) for _, h in plan)
+    mode = '并集' if UNION else '只补空'
     print(f'OC 条目 {len(flat)}（剥变体后可用键 {len(oc_by)}）；'
-          f'independent 空的主库记录命中 {len(plan)} 条 / {n_bench} 个基准'
-          f'（vendor 错配跳过 {len(skipped_vendor)} / 歧义跳过 {len(skipped_ambig)} 组）')
+          f'main 命中 {len(plan)} 条 / {n_bench} 个基准（{mode} 模式；'
+          f'vendor 错配跳过 {len(skipped_vendor)} / flavor 错配跳过 {len(skipped_flavor)} / '
+          f'歧义跳过 {len(skipped_ambig)} 组）')
     for name, ids in skipped_ambig:
         print(f'  [歧义跳过] {name} <- {ids}')
+    for m, s in skipped_flavor:
+        print(f'  [flavor跳过] {m:44s} <- {s}')
     for m, s, o in skipped_vendor[:8]:
         print(f'  [vendor跳过] {m:44s} <- {s} (org={o})')
     for r, hit in plan:
@@ -230,27 +259,36 @@ def main():
         return
 
     os.makedirs(BACKUP_DIR, exist_ok=True)
-    bk = os.path.join(BACKUP_DIR, f'model_data_v2.pre-d48-oc-{TS}.jsonl')
+    bk = os.path.join(BACKUP_DIR, f'model_data_v2.pre-d49-oc-{TS}.jsonl')
     shutil.copy2(MAIN, bk)
+    written = 0
     for r, hit in plan:
-        items = []
+        arr = r.setdefault('benchmarks', {}).setdefault('independent', [])
+        have = {(b.get('benchmark'), b.get('config'), b.get('date')) for b in arr}
+        added = 0
         for name, org, b, s, cfg, d, conf, url, tag in hit:
-            items.append({
-                'benchmark': b, 'score': round(s, 4), 'score_type': 'accuracy',
+            bname = bench_major.get(re.sub(r'[^a-z0-9]', '', b.lower()), b)   # 对齐库内多数派写法
+            k = (bname, cfg, d or TODAY)
+            if k in have:
+                continue                                                      # 已有（含本轮 OC 重跑幂等）
+            have.add(k)
+            arr.append({
+                'benchmark': bname, 'score': round(s, 4), 'score_type': 'accuracy',
                 'config': cfg, 'date': d or TODAY,
                 'source_url': url, 'source_type': '独立评测平台',
                 'confidence': conf, 'gap_to_self_reported': None,
                 'notes': f'OpenCompass（司南）独立评测，快照日 {d}；{tag}；百分制÷100；'
                          f'按月重定基跨期弱可比（{TODAY} 导入）。',
             })
-        r.setdefault('benchmarks', {})['independent'] = items
+            added += 1
+        written += added
         su = r.setdefault('meta', {}).setdefault('source_urls', [])
-        for u in {i['source_url'] for i in items}:
+        for u in {t[7] for t in hit}:
             if u not in su:
                 su.append(u)
     with open(MAIN, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(json.dumps(r, ensure_ascii=False) for r in rows) + '\n')
-    print(f'\n已写入 {len(plan)} 条记录 / {n_bench} 个基准 | 备份 -> {os.path.relpath(bk, ROOT)}')
+    print(f'\n已写入 {written} 个基准条目（记录 {len(plan)} 条）| 备份 -> {os.path.relpath(bk, ROOT)}')
 
 
 if __name__ == '__main__':
