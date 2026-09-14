@@ -8,7 +8,26 @@
 - **D42 遗留待拍板（D43 全部结清）**：~~① s1 家族三兄弟语义不自洽~~ → **D43 拍板版本+参数式**（`s1-1`→`s1.1-1.5b`、`s1-32b`→`s1.1-32b`）；~~② luxia-21-4b / olmo-3-32b / minicpm 两类结构问题~~ → **D43 按官方名落改**（`luxia-2.1-4b-alignment`、`olmo-3.1-32b-instruct`、`minicpm-1b`/`minicpm-2b`）；~~③ vendor 别名 z-ai-zhipu-ai-tsinghua-university vs zhipu~~ → **D43 统一为 `zhipu`**（3 条改挂 + glm-4.5/glm-4.6 重复档案合并，937→935）；~~④ 台账 google-deepmind-google 前缀漂移~~ → **D43 台账 models 一次归位 186 处**（86 批次，0 歧义）。本行已无未结项。
 - **D44 遗留待拍板（D45+D46 全部结清）**：~~漏采线索 22 条待 S1 拍板~~ → **D45 采 9 / D46 复筛后采 6、排除 7 + dspark 身份核验并入**（22 条全部处置完毕，candidate_diff NEW 6→2 且剩余均为排除项）；~~fillplan 66 条抽验后写 import 落库~~ → **D45 落库 55 条**（ctx 8 / arch 48，只为空值补，抽验与 HF config 一致）；backlog 948 条存量长尾 → **仍开放**（缓采已清零，优先级降低）。
 - **D47 遗留待拍板（D48 全部结清）**：~~gated 12 条（Llama/Gemma ctx）~~ → **D48 核实为误报**（8 月采集时已填，本轮 T1 官方源独立复核 14/14 与库内一致，零写入）；~~apertus ×2 价格~~ → 维持（creator「Swiss AI Initiative」识别不了，留官方价）；~~minicpm-4 license/ctx 冲突值待核~~ → **仍开放**；~~r2 基准名 14 簇~~ → **D48 归一 41 处**（残留 7 簇为新采集带入，下轮续）。
-- **D48 遗留待拍板（D49 全部结清）**：~~OC 多来源并集口径~~ → **D49 拍板放开**（`--union` 模式落 109 条基准/20 记录，与 AA 以 config/date 键共存）；~~r2 残留 7 簇~~ → **D49 归一 13 处**（本晚新采集带入）；~~缓采清单~~ → **D49 拍板**：8 条具名缓采中 7 条放弃（小众/变体/歧义）、`gpt-6-astra-pro`（OpenAI 高端档）保留待下轮 S0 优先核，backlog 948 条**正式关闭**（扫描管道兜底，冒头自动重捞）。
+- **D49 遗留待拍板（D50 全部结清）**：~~gpt-6-astra-pro 核实~~ → **定论不采**（OR 官方描述：与 GPT-6 Astra 同模型 + reasoning.mode=pro 服务档，库内 astra 记录已加防重留痕）；~~minicpm-4 冲突值待核~~ → **已核**（license 官方标注 apache-2.0，原 MIT 系误读已改；ctx 维持 32768 原生口径）；~~c5 批注方案~~ → **已落地**（13 条轻量档 MoE 加口径批注）。
+
+## [D50] - 2026-09-14
+
+用户指令（原文「先把你说的小的做了，然后扫一轮」）：**三件小事清账 + 全量 S0 扫描**。记录数 **959 → 960**，门禁 **ERROR 0 / WARN 0**；qa_outliers r1=0 / r2=0 / 硬错全 0。
+
+### Fixed
+
+- **minicpm-4 license 修正**：官方仓（魔搭 OpenBMB/MiniCPM4-8B）License 字段 = **apache-2.0**，D47 r1 合并保留的主档值「MIT License (ModelBest)」系采集误读，已改（ctx 维持 32768 原生口径，config 带 LongRoPE 但扩展上限无官方数字，donor 131072 不采）。
+- **c5 定位口径批注 13 条**：「轻量」按厂商口径指激活参数/家族档位（longcat-flash 560B、v4.1-flash 552B、glm-5.3-flash 320B 等 MoE），非数据矛盾；4 条 family-flagship 官方自述维持不动。
+- **gpt-6-astra-pro 防重留痕**：OR 官方描述确证为 GPT-6 Astra 的 pro 推理档服务实例，非独立模型。
+
+### Added
+
+- **`alibaba:qwen-flash-character:base`**（S0 唯一真线索）：角色扮演特化（Qwen 角色扮演系列，qwen-flash 特化版推断留痕）；release_date **2026-01**（修正 S0 单区域视角：01-13 新加坡/北京首发，08-30 仅美区扩展）；动态版 ctx 32,768；美区 $0.034/$0.203；官方无基准发布 → 数组留空。
+- **S0 全量扫描无其他新增**：A 层四源（AA/Arena/MS/OR）重抓零新增；B 层阿里云台账/智谱发布记录/Moonshot 文档全部在库；DeepSeek news 页已变为文档页（入口失效记入下轮待办）。
+
+### Note
+
+- **无待办积压**：下次数据来源 = 厂商新发布（S0 用户触发制）。可选未排期：qa_outliers 扩容至 D34 原 31 项口径、DeepSeek news 入口修复。
 
 ## [D49] - 2026-09-14
 
