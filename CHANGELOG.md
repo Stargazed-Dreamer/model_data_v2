@@ -13,6 +13,39 @@
 - **D50 遗留待拍板（D51 结清 1 项）**：~~DeepSeek news 入口失效需换探测方式~~ → **D51 已解**（机制查明：`/news/` 与任意 `/news/newsXXXXXX` 均返回同一份 48 KB Docusaurus 客户端壳，HTTP 200 是假信号；替代入口 = `api-docs.deepseek.com/sitemap.xml` 枚举 + 单篇详情取正文，已写回 `跟踪源清单.md` §B2）；~~qa_outliers 扩容至 31 项~~ → **D52 已做**（16 → 31 项）。
 - **D51 遗留待拍板（D52 全部结清）**：~~xAI 更名 SpaceXAI 是否做 vendor 归一~~ → **D52 已做**（21 条 `basic_info.vendor` 显示名 xAI→SpaceXAI，`model_id` 前缀 `xai:` 保留；判据 = 库内 295 条「前缀 ≠ vendor 显示名」反例）；~~`muse-spark-1.3` 家族行定价疑为 contributor 刊例误读~~ → **D52 证实并改判**；~~`glm-5.3-max` 漏项是否补派~~ → **D52 立行入库**（b347w1），并把 S0 口径升级为「差集式 + 榜单全量反推」双轨。**另 D51 Note 的「S0 方法学缺口」同轮闭环**。
 
+- **D52 遗留待拍板（D53 未涉及，2 项仍开放）**：~~库内 32 条 `pricing.confidence=T0` 却挂非官方源的系统性归因缺陷~~ → **仍开放**（D52 已在 notes 留痕，建议专项）；~~backlog 948 条存量长尾补全~~ → **仍开放**（D52 C4 未选）。
+
+## [D53] - 2026-10-01
+
+用户拍板（原文「这几个待条件全要。另外这里有一个私榜…我认为可信度较高，请你假设它是权威信源…对比一下，看看有多大的偏差，包括收录情况和能力排行评分情况」）：**D 类 12 条真候选采集入库 + 私榜对标分析**。记录数 **982 → 993（+11）**，门禁 **ERROR 0 / WARN 0**；qa_outliers **r1=0 / r2=0**，硬错为既有存量 `o1=4` / `c4=2`。详见 `docs/D53_REPORT.md`。
+
+### Added
+
+- **D 类 11 行入库（`b349w1`）**，来源 = D52 C1「Arena 榜单全量反推」四分类的 **D 类真候选**：
+  - `openai:gpt-5.3:base` —— GPT-5.3 通用（Chat/Instant 形态），rd 2026-03-03、ctx 128K、**$1.75/$14/$0.175**（T0 官方帮助中心价目表）、elo text 1450/coding 1498/math 1431；**已过期**（官方弃用页 2026-05-08 弃用、2026-08-10 关停，替代 `gpt-5.6-sol`）。
+  - `openai:gpt-5-pro:base` —— rd 2025-08-07、ctx 400K、**$15/$120**（batch $7.5/$60，cache 均 null；T1 两源交叉）、elo text 1435；**已过期**（官方标 Deprecated，计划退役 2026-12-11、API 仍可调）。
+  - `baidu:ernie-5.0:base` —— 文心 5.0（**MoE 2.4T**），rd 2025-11-13、ctx 128K、**$0.89/$3.56**（¥ 刊例折算，T0）、elo text 1449；命名**归一去 `Preview` 后缀**（沿用 D52 `ERNIE-5.1-Preview` 先例）。
+  - `zhipu:glm-5v-turbo:base` —— rd 2026-04-02、ctx 200K、**$0.7418/$3.2641/$0.178**（国内刊例折算，T0；国际 Z.ai $1.2/$4.0 留痕）、elo text 1433/coding 1488/math 1437；`open_weights=false` **经 HF 官方组织直查确认**。
+  - `amazon:nova-2-lite:base` —— rd 2025-12-02、ctx **1M**、**$0.33/$2.75/$0.0825**（us-east-1 In-Region；global CRIS $0.30/$2.50 留痕）、elo text 1335/coding 1393/math 1332。
+  - `stepfun:step-1o-turbo:base` —— `Step-1o Turbo Vision`，rd 2025-02-14、ctx 32768、**$0.3709/$1.1869/$0.0742**（T0）、elo text 1320；命名不挂 `-vision`（与库内 stepfun 主名口径一致）。
+  - **`reka` 厂商节点首次建立（3 行）**：`reka:reka-core-20240904:base`（$2/$6，elo text 1288/coding 1316/math 1246）、`reka:reka-flash-20240904:base`（21B Dense，$0.8/$2，elo text 1272/coding 1292/math 1232）、`reka:reka-flash-21b-20240226:base`（21B Dense，$0.8/$2，elo text 1227）；三者均**闭源**（Reka 开放权重始于 2025 年 Flash 3 系）且**均已退役**（官方 Gateway 下架 + AA 明示 deprecated）⇒ `verification_status=已过期`。
+  - `cohere:aya-vision-32b:base` / `cohere:aya-vision-8b:base` —— rd 2025-03-04、ctx 16K、pricing 全 null（无官方刊例价）、license **CC-BY-NC 4.0（含 Cohere Labs 可接受使用政策）**、elo text 1267 / 1223。
+
+### Changed
+
+- **`-online` 变体裁定为「不立行」（新增服务档判例）**：Arena 榜上 `reka-flash-21b-20240226-online`（text r322 elo 1234）与 base（r327 elo 1227）**各有独立 elo**，但经裁定为**同一模型的联网检索/在线服务配置**（服务档）⇒ 只进 `reka-flash-21b-20240226` 的 `meta.notes` 防重。判据：① LMSYS 原始榜表该行「知识截止」列写 `Online` 且来源链指向 Reka HTTP API 文档；② 官方文档逐字 `use_search_engine: Optional, boolean, whether to use a search engine.`（同一 `model_name: "reka-flash"` 的请求级参数，无独立 model id / 定价 / model card）；③ explainx.ai 官网链同指该 API 页。**在 D51「effort 档立行」之外多划一条边界：非 effort 档的服务配置即使有独立 elo 也不立行**。
+- **`glm-5v-turbo` 的 HF 降级声明修正**：采集时 `curl huggingface.co` 返 HTTP 000（**代理未清所致的假阴性**）；本轮 `unset` 后直访成功，全站搜 `GLM-5V-Turbo`/`5V-Turbo`/`glm-5v` **命中 0 个官方仓库**、官方组织 `zai-org` 下无 `GLM-5V` 系 ⇒ `open_weights=false` 与「无开放权重」**确认成立**，作为【后续独立复核】追加进 `meta.notes`。
+
+### Fixed
+
+- **`reka-core-20240904` / `reka-flash-20240904` 补 `pricing.effective_date`**：原带门禁 **WARN 1**（有定价缺生效日；全库 379 条有价记录零缺失 ⇒ 硬约束）。官方页未标价生效日 ⇒ 按库内惯例（D47）取采集核对日 **2026-10-01**，与同厂商 `reka-flash-21b` 条目同口径。
+- **基准名大小写归一（消 qa `r2` 回归）**：`reka-flash-21b-20240226` 的 `MT-bench` / `Perception-test` 归一为 **`MT-Bench`**（库内 24 条一律大写 B）/ **`Perception-Test`**（与同源同分的 `reka-core/-flash 20240904` 条目一致，同为 arXiv:2404.12387 Table 5）⇒ `r2` **2 → 0**。
+
+### Note
+
+- **私榜对标（用户任务②，假定 `atmeplz.github.io/ai-test-prompt` 为权威信源）**：**收录** —— 30 个基础模型库内**已收 23 个（76.7%）**，未匹配 7 条中 2 条匿名（`stealth`，非采）、2 条实为已收（`DSV4F0731`=缩写、`DSV4F-VE-ocgo`=同族），**真缺口仅 2–3 条**（`gpt-5.6-cyber`、`seed-2.1-pro`、待核 `gpt-5.6-sol-0829`）。**排行** —— 可比 14 样本上私榜总分 vs 库内 LMArena text elo **Spearman ρ=+0.767**（同测文字能力 ρ=+0.653），**11/14 位移 ≤3 位**、最大 6 位，方向零反转；结构性差异源于私榜含**工程题**（后端强的 `glm-5.3-flash` 被抬高、纯对话强的 `muse-spark-1.2` 被压低），属尺子差异非数据错误。**厂商面** —— 私榜 17 个 vendor 库内已覆盖 16 个（仅匿名 `stealth` 无）。**库内短板** —— 全库 elo 覆盖率 **256/993 = 25.8%**（`arena_elo` 共 740 条）。
+- **本轮新发现（待议）**：① 门禁 `validate_model_data.py` **不校验** `arena_elo[].sub_benchmark` 枚举（写成 `"LMArena text"` 仍回 ERROR 0，本批靠人工复核抓到）；② `open_weights` 的 HF 核验受网络影响，假阴性会写成错误降级声明（建议把「先 `unset` 代理并自证 curl 返回码」写进采集提示词）；③ `gpt-5-pro` 仅「Deprecated 未退役」却记 `已过期`，口径偏严（存疑留痕，本轮不动）。
+
 ## [D52] - 2026-10-01
 
 用户拍板（原文「A 全 / B 全 / C 前三 / 按序开始做」）：**D51 三遗留清账 + S0 口径升级 + 体检器扩容 + G3/G4 处置**。记录数 **977 → 982（+5）**，门禁 **ERROR 0 / WARN 0**；qa_outliers **r1=0 / r2=0**，硬错为既有存量 `o1=4` / `c4=2`。详见 `docs/D52_REPORT.md`。
