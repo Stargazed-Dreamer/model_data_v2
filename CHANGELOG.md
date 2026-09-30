@@ -10,6 +10,39 @@
 - **D47 遗留待拍板（D48 全部结清）**：~~gated 12 条（Llama/Gemma ctx）~~ → **D48 核实为误报**（8 月采集时已填，本轮 T1 官方源独立复核 14/14 与库内一致，零写入）；~~apertus ×2 价格~~ → 维持（creator「Swiss AI Initiative」识别不了，留官方价）；~~minicpm-4 license/ctx 冲突值待核~~ → **仍开放**；~~r2 基准名 14 簇~~ → **D48 归一 41 处**（残留 7 簇为新采集带入，下轮续）。
 - **D49 遗留待拍板（D50 全部结清）**：~~gpt-6-astra-pro 核实~~ → **定论不采**（OR 官方描述：与 GPT-6 Astra 同模型 + reasoning.mode=pro 服务档，库内 astra 记录已加防重留痕）；~~minicpm-4 冲突值待核~~ → **已核**（license 官方标注 apache-2.0，原 MIT 系误读已改；ctx 维持 32768 原生口径）；~~c5 批注方案~~ → **已落地**（13 条轻量档 MoE 加口径批注）。
 
+- **D50 遗留待拍板（D51 结清 1 项）**：~~DeepSeek news 入口失效需换探测方式~~ → **D51 已解**（机制查明：`/news/` 与任意 `/news/newsXXXXXX` 均返回同一份 48 KB Docusaurus 客户端壳，HTTP 200 是假信号；替代入口 = `api-docs.deepseek.com/sitemap.xml` 枚举 + 单篇详情取正文，已写回 `跟踪源清单.md` §B2）；~~qa_outliers 扩容至 31 项~~ → **仍开放**。
+
+## [D51] - 2026-09-30
+
+用户触发（原话「看一下这个任务是不是该更新了」）：**16 天空窗后的全量 S0 + G1/G2 增量采集**。记录数 **960 → 977（+17）**，门禁 **ERROR 0 / WARN 0**；qa_outliers 硬错全 0、r1=0、r2=0，**17 条新行未触发任何体检项**。详见 `docs/D51_REPORT.md`。
+
+用户本轮拍板两条口径：① 采集范围 = G1（国际旗舰新代际）+ G2（国产/亚洲新档）；② 变体按**「独立测量身份」分判**——Arena 有独立 elo 的 effort 档立行（沿用 `gpt-5.6-sol-max` / `claude-opus-5-max` / `grok-4.6-high` 先例），OR 自述 `same underlying model`/`same checkpoint` 的服务档只进 notes（沿用 D50 `gpt-6-astra-pro` 判例）。
+
+### Added
+
+- **OpenAI GPT-6 新代际 5 行**：`gpt-6-sol` / `gpt-6-sol-max` / `gpt-6-luna` / `gpt-6-luna-max` / `gpt-6.1-sol`（官方域 403，release_date 定 **T2** 09-22 / 09-29，媒体转述 + OR 同日上架互证，全部 `待验证`）。
+- **Anthropic 3 行**：`claude-opus-5.5`（接替 Opus 5）/ `claude-opus-5.5-high`（Arena text rank1 elo 1509）/ `claude-sonnet-5.5`（接替 Sonnet 5）——官方 news 页与 `claude.com/pricing` 直读，**T0**。
+- **xAI 2 行**：`grok-4.7` / `grok-4.7-xhigh`（接替 4.6；官方域全 000，日期 **T3** 09-21 多源媒体一致）。
+- **Xiaomi 开源权重 2 行**：`mimo-v2.6-pro`（1.02T/42B MoE）/ `mimo-v2.6-flash`（309B/15B，技术报告写 310B 已记分歧）；HF 卡片 + 技术报告 PDF + 厂商自有刊例 API，**T0**，license 两仓分别核实为 MIT。
+- **2 行新家族**：`upstage:solar-mini4`（Upstage Console 模型史 `solar-mini4-260922`，**T0**；官方从未写 MoE，`architecture_type=MoE` 系 OR 自述 T2 并分级标注）/ `alibaba:qwen-3.8-omni-flash`（阿里 zh/en 台账 09-17，**T0**，首个原生音视频 agentic Qwen，模态字段全部有官方出处）。
+- **3 行已有家族补档**：`anthropic:claude-fable-5-high` / `meta:muse-spark-1.3-max` / `deepseek:deepseek-v4.1-flash-max`；立行判据取自 Arena 09-25 快照的 `modelCode=null` + `thinkingMode` 有值（同榜 31 个 code 名下挂 ≥2 条不同 thinkingMode 的独立 elo ⇒ 榜单按档拆条）。
+- **Arena elo 导入 33 条**（`d39_import_arena_elo.py --apply`，幂等）涉及 12 条记录，含 `solar-pro4`、`granite-4.2-*` 等旧行首次补上 elo。
+
+### Changed
+
+- **服务档 notes 留痕 7 项不立行**：主库既有 3 行新增【D51 服务档留痕】notes（`zhipu:glm-5.3`←GLM-5.3-Prime、`zhipu:glm-5.3-flash`←FlashX、`alibaba:qwen-3.8-max`←Max Prime）；新行 notes 另记 `gpt-6-sol-pro` / `gpt-6-luna-pro` / `gpt-6.1-sol-pro` / `mimo-v2.6-pro-ultraspeed` / `qwen3.8-27b:free`。Max Prime 判据为硬证据：阿里云《Prime 模式》文档正文两处「模型支持的能力、使用限制与原版模型相同」，台账 538 个 model ID 无此条目，计费表把 Prime 与「Batch 半价/缓存折扣」并注 ⇒ 计费模式非型号身份。
+- **`跟踪源清单.md` 三处更新**：DeepSeek 行的替代入口（sitemap）、Alibaba 台账改为 zh/en 页并标注 **TC 繁体页语言滞后**、§B2 追加 09-30 官方域复测结果（xAI/Meta 仍 000、OpenAI 新增 403 样本）+ OR 464 模型 + AA 收录滞后约 3 周。
+
+### Fixed
+
+- **本轮自引入的基准名漂移**：b343 将 `xai:grok-4.7:base` 的基准名写成 `GDPVal`，与库内 37 条（D40 AA 导入批）主流写法 `GDPval` 不一致，致 qa_outliers `r2` 由 0 升至 1；已按库内主流写法归一（带逐行断言的脚本 `temp/d51_fix_gdpval_case.py`），复检 `r2=0`。
+
+### Note
+
+- **S0 方法学缺口（下轮补）**：本轮差集式发现只覆盖「相对 09-14 基线新增」的条目，`glm-5.3-max` 在 Arena 09-25 榜上有独立 elo（text r24 / coding r29 / math r16）但 09-11 已上榜 ⇒ 差集捞不到，按本轮口径属**应立行的漏项**；同类「基线期已上榜未采」需改用 D39 式全量榜单反推。
+- **3 项待用户裁决**（均已 notes 留痕、未擅自处理）：xAI 更名 SpaceXAI 的 vendor 归一、`muse-spark-1.3` 家族行 $0.10/$0.20 疑为 contributor 刊例误读（与 AA/OR 观测 $1.25/$4.25 差 12.5×）、`glm-5.3-max` 漏项是否补派。
+- **零改动项**：G3 新厂商 7 条（Perceptron Mk1.5 / Fireworks Ember-1 / PrismML Ternary-Bonsai-2-27B / BAAI AREX-2 / Realtime-Venus / Unbiased Pareto / Qwen3.8-27B free）与 G4 组件并入 2 条（Nex-N2.5 DSpark）本轮按用户点单**未采**，明细留在 `temp/d51_candidates.jsonl`；舍项含 13 条 `NCP_ArchPreview` 训练 checkpoint、`jev-router`（路由聚合）、`space-bunny-alpha`（匿名实验代号）、`aion-3.5` 两型（自述「built on the GLM family」⇒ §3 非模型判定）。
+
 ## [D50] - 2026-09-14
 
 用户指令（原文「先把你说的小的做了，然后扫一轮」）：**三件小事清账 + 全量 S0 扫描**。记录数 **959 → 960**，门禁 **ERROR 0 / WARN 0**；qa_outliers r1=0 / r2=0 / 硬错全 0。
