@@ -10,7 +10,42 @@
 - **D47 遗留待拍板（D48 全部结清）**：~~gated 12 条（Llama/Gemma ctx）~~ → **D48 核实为误报**（8 月采集时已填，本轮 T1 官方源独立复核 14/14 与库内一致，零写入）；~~apertus ×2 价格~~ → 维持（creator「Swiss AI Initiative」识别不了，留官方价）；~~minicpm-4 license/ctx 冲突值待核~~ → **仍开放**；~~r2 基准名 14 簇~~ → **D48 归一 41 处**（残留 7 簇为新采集带入，下轮续）。
 - **D49 遗留待拍板（D50 全部结清）**：~~gpt-6-astra-pro 核实~~ → **定论不采**（OR 官方描述：与 GPT-6 Astra 同模型 + reasoning.mode=pro 服务档，库内 astra 记录已加防重留痕）；~~minicpm-4 冲突值待核~~ → **已核**（license 官方标注 apache-2.0，原 MIT 系误读已改；ctx 维持 32768 原生口径）；~~c5 批注方案~~ → **已落地**（13 条轻量档 MoE 加口径批注）。
 
-- **D50 遗留待拍板（D51 结清 1 项）**：~~DeepSeek news 入口失效需换探测方式~~ → **D51 已解**（机制查明：`/news/` 与任意 `/news/newsXXXXXX` 均返回同一份 48 KB Docusaurus 客户端壳，HTTP 200 是假信号；替代入口 = `api-docs.deepseek.com/sitemap.xml` 枚举 + 单篇详情取正文，已写回 `跟踪源清单.md` §B2）；~~qa_outliers 扩容至 31 项~~ → **仍开放**。
+- **D50 遗留待拍板（D51 结清 1 项）**：~~DeepSeek news 入口失效需换探测方式~~ → **D51 已解**（机制查明：`/news/` 与任意 `/news/newsXXXXXX` 均返回同一份 48 KB Docusaurus 客户端壳，HTTP 200 是假信号；替代入口 = `api-docs.deepseek.com/sitemap.xml` 枚举 + 单篇详情取正文，已写回 `跟踪源清单.md` §B2）；~~qa_outliers 扩容至 31 项~~ → **D52 已做**（16 → 31 项）。
+- **D51 遗留待拍板（D52 全部结清）**：~~xAI 更名 SpaceXAI 是否做 vendor 归一~~ → **D52 已做**（21 条 `basic_info.vendor` 显示名 xAI→SpaceXAI，`model_id` 前缀 `xai:` 保留；判据 = 库内 295 条「前缀 ≠ vendor 显示名」反例）；~~`muse-spark-1.3` 家族行定价疑为 contributor 刊例误读~~ → **D52 证实并改判**；~~`glm-5.3-max` 漏项是否补派~~ → **D52 立行入库**（b347w1），并把 S0 口径升级为「差集式 + 榜单全量反推」双轨。**另 D51 Note 的「S0 方法学缺口」同轮闭环**。
+
+## [D52] - 2026-10-01
+
+用户拍板（原文「A 全 / B 全 / C 前三 / 按序开始做」）：**D51 三遗留清账 + S0 口径升级 + 体检器扩容 + G3/G4 处置**。记录数 **977 → 982（+5）**，门禁 **ERROR 0 / WARN 0**；qa_outliers **r1=0 / r2=0**，硬错为既有存量 `o1=4` / `c4=2`。详见 `docs/D52_REPORT.md`。
+
+### Added
+
+- **`zhipu:glm-5.3-max:base`（B3，补 D51 漏项）**：取值依据 = Arena 2026-09-25 快照三榜独立 elo（text r24 **1480** / coding r29 **1522** / math r16 **1497**，`thinkingMode=max`）；按「独立测量身份」口径立行（b347w1）。其余字段继承同族 `zhipu:glm-5.3:base`（753B/40B MoE、ctx 1M、$1.1255/$3.9394/$0.2814、MIT）。
+- **G3 立行 4 条（C3，b348w1）**：
+  - `baai:arex-2:base` —— 27.36B Dense 多模态 agent 模型（Qwen3.8-27B 基座 + linear/full 混合注意力），ctx 262144，6 条自报（GAIA 0.922 / BrowseComp 0.84 等），ModelScope 官方卡 **T0**。
+  - `fireworks:ember-1:base` —— Fireworks 自研（官方「Fireworks Research」），MoE **2.78T**，基座 Kimi K3 后训练；ctx 1048576，$3.0/$15.0/$0.3，官方博客 + 模型页 **T0**；首次立 `fireworks` 厂商节点。
+  - `inclusionai:realtime-venus:base` —— 9B 原生全模态（any-to-any，SigLIP2 + Whisper-Medium + 离散语音 token），ctx 40960，**25 条**自报（arXiv:2609.13814 Table 2–8），Apache-2.0。
+  - `perceptron:perceptron-mk1.5:base` —— 具身 agent 模型，ctx 36864，$0.15/$1.5/$0.0375，官方模型卡 **T0**（跑分因官方以图片发布、经媒体转述标 `T0-自报-转述`）；首次立 `perceptron` 厂商节点。
+
+### Changed
+
+- **B1 · xAI → SpaceXAI vendor 归一（21 条）**：只改 `basic_info.vendor` 显示名，`model_id` 前缀 `xai:` **保留**。判据 = 库内存在 295 条「前缀 ≠ vendor 显示名」反例 ⇒ 前缀是**短品牌 slug**、不随厂商改名漂移（避免主键/台账/脚本文档大范围漂移）。同步更新 `docs/prompt.md`（3 处）与 `docs/跟踪源清单.md`（4 处）。
+- **B2 · `muse-spark-1.3` 家族定价改判**：base 由 `$0.10/$0.20/$0.01` 改判为 **`$1.25/$4.25/$0.15`**、confidence `T0→T1`、source_url 转 AA、`effective_date 2026-10-01`；1.1/1.2 同批把 confidence 归位（`T0→T1`）并换掉 `m.toutiao.com` 源（金额不变）。决定性证据 = OpenRouter 快照 `meta/muse-spark-1.3-contributor` = `$0.10/$0.20/$0.01`，与库内三值**逐一全等** ⇒ 当年把 contributor 刊例误读成 base 刊例；AA（slug `muse-spark-1-3`）亦给 `$1.25/$4.25/$0.15`。
+- **G4 · 组件并入 2 条（不立行）**：`nex-agi:nex-n2.5-max` ← **Nex-N2.5-Max-DSpark**（77.5B / BF16 / draft block 5）、`nex-agi:nex-n2.5-pro` ← **Nex-N2.5-Pro-DFlash**（1.29B / BF16 / draft block 16）。官方 ModelScope/HF README 逐字：「A DSpark **draft model** for speculative decoding with Nex-N2.5-Max」「This repository contains only the draft model. **It is not a standalone language model** … The output distribution is that of Nex-N2.5-Max; the draft model only reduces latency」⇒ 投机解码草稿模型、非独立测量身份（同 D46 `inclusionai:ling-3.0-flash` ← `Ling-3.0-flash-dspark` 判例），关键信息并入 notes。
+- **C1 · S0 口径升级为「差集式 + 榜单全量反推」双轨**：D39 的一次性方法（`temp/d39_gap_from_arena.py`，被 temp 清理后方法失传，致后续几轮退回差集式）固化为常驻工具 **`scripts/arena_gap_reverse.py`**，并写进 `增量更新工作流.md` §1.2 标为**必做**（不是可选）；工具新增 `ANON`（匿名/实验代号）与 `LEGACY`（老社区模型）自动打标。
+- **C2 · `qa_outliers.py` 扩容 16 → 31 项**：补回 D34 原口径的 `a2`–`a8` / `p1`–`p2` / `b1`–`b2` / `n1` / `a6`（口径来源 = 幸存的 `temp/d34_a_class_report.md` + `temp/d34_scan_a_class.py`），docstring 重写并标注每项来源与本轮校准结论。
+
+### Fixed
+
+- **体检器判据缺陷三处校准（C2 当轮自引入、当轮修正）**：`p1`（初版把嵌入模型误报为「价格半填」——嵌入模型本无输出价；改为跳过**非生成式模型** + 降为「疑点」，命中 16 → 7）/ `p2`（`>=` 改严格 `>`，因 `doubao-function-call-model` 批量价等于标准价有 T0 官方注证，命中 3 → 2）/ `a4b`（pdf 口径差 + 采集缺口，降为「疑点」）。
+- **`a8a` 的 `NC ` 误报**：原判据对全部模式做大小写不敏感子串匹配，`'NC '` 会命中**域名里的 "inc "**（实测 `sales@perceptron.inc 获取商业许可` 被判「可能含非商用条款」）⇒ `'NC '` 改为**区分大小写的词边界正则** `\bNC\b`。**影响面实测：全库 0 条**记录仅靠该子串命中 ⇒ 纯消误报、不动基线。
+- **r2 漂移当轮归零**：新入库 `inclusionai:realtime-venus` 的 `MMAU-Pro` 与库内 `dots-studio:dots3-note-preview` 的 `MMAU-PRO` 构成「基准名仅大小写异写」簇，使 `r2` 0→1；按**官方名**（arXiv:2508.13992「MMAU-Pro: A Challenging and Comprehensive Benchmark…」+ 项目页 `sonalkum.github.io/mmau-pro`）与库内 **188+ 条 `-Pro` 惯例**（MMLU-Pro 135 / MMMU-Pro 46 / ScreenSpot-Pro / SWE-Pro / KMMLU-Pro…）归一到 `MMAU-Pro`，复检 `r2=0`。
+
+### Note
+
+- **G3 两条剔除（非范围，未立行、未写记录）**：`unbiased:pareto` —— 官方条款逐字「**combines outputs from multiple underlying large language models** … and synthesizes such outputs into a single response」+ 官网「runs a mix of frontier and open source models against each other on every request」⇒ 命中 §23(b)「模型组合 / ensemble / 路由聚合 / mixture-of-models」；`prism-ml:ternary-bonsai-2-27b` —— 官方博客逐字「**Based on Qwen3.8 27B**」「Introducing Bonsai 2 27B: **Near-Lossless Compression**」+ HF 仓仅 `-gguf`（PTQ1_0 / PQ2_0 / MLX）⇒ 纯量化压缩产物，按 `prompt.md` L41「排除量化变体」剔除。⚠ **`ternary-bonsai` 存在反例** `meta:llama-4-maverick-17b-128e-instruct-fp8`（Meta 自家官方 FP8 版当年独立立行）⇒ 是否按 §23 登记入 `docs/non_model_records.jsonl` **待用户拍板**（本轮按 D51「留痕不擅自处理」惯例未写入）。
+- **C1 反推出的真漏采候选待用户点单**：快照 2026-09-25、未命中 216 条 → 命名差异 146 / **真漏采 70**（匿名 6 / 社区 19 / 待核 45），明细 `temp/d52/arena_gap_candidates.jsonl`；其中 `Opus 4.5` 属误判（库内已有 `anthropic:claude-opus-4.5-20251101-32k:base`）、`glm-5.2-max` 落在「命名差异」档（库内已有 `zhipu:glm-5.2:base`）。
+- **B2 副产品（未批量改，超本轮范围）**：发现库内 **32 条** `pricing.confidence=T0` 却挂评测平台/非官方源的系统性归因缺陷（含 1.1/1.2 两条），已在 notes 留痕，建议下轮专项。
+- **零改动项**：`qwen3.8-27b:free`（D51 第 7 条 G3 候选）D51 已按服务档 notes 留痕处理，本轮不重复。
 
 ## [D51] - 2026-09-30
 

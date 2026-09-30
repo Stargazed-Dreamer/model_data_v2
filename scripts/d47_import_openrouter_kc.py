@@ -65,7 +65,7 @@ ALIAS_GROUPS = [
     ('liquid', ('liquid', 'lfm')),
     ('openai', ('openai', 'gpt')),
     ('anthropic', ('anthropic', 'claude')),
-    ('xai', ('xai', 'x-ai', 'grok')),
+    ('xai', ('xai', 'x-ai', 'grok')),   # D52：xAI 已更名 SpaceXAI；'spacexai' 含 'xai' 子串，自动落本组
 ]
 
 

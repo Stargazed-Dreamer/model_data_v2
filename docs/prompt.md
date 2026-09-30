@@ -71,7 +71,7 @@
 2. Anthropic
 3. Google DeepMind
 4. Meta
-5. xAI
+5. SpaceXAI（原 xAI，2026-07 更名）
 6. Mistral AI
 7. Cohere
 8. Inflection AI
@@ -108,7 +108,7 @@
 需采集字段：
 
 - **模型全名与版本号**：如 "Claude Opus 4.7"、"DeepSeek V4-Pro"、"GPT-5.2 Preview"。  
-- **所属厂商/实验室**：Anthropic、OpenAI、Google DeepMind、DeepSeek、阿里通义、月之暗面、智谱、Meta、xAI、Mistral 等。  
+- **所属厂商/实验室**：Anthropic、OpenAI、Google DeepMind、DeepSeek、阿里通义、月之暗面、智谱、Meta、SpaceXAI（原 xAI）、Mistral 等。  
 - **发布日期**：精确到月即可，ISO 8601 格式，如 `2026-06`。  
 - **定位标签**：旗舰 / 中端 / 轻量 / 推理增强 / 多模态 / 工具调用增强。可多选。  
 - **获取方式**：仅 API / 开放权重 / API + 权重。需分别记录 `open_weights`、`api`、`local_deployment` 三个布尔字段。
@@ -338,7 +338,7 @@
 {
   "full_name": "模型全名，如 Claude Opus 4.7",
   "version": "主版本号，如 4.7、5.6（营销代号 Sol/Terra/Luna、快照日期不填入此字段，见 model_id 三段式规则）；若版本不透明则填 null 并在 notes 说明",
-  "vendor": "厂商英文名或通用名，如 Anthropic / OpenAI / Google DeepMind / DeepSeek / Alibaba / Moonshot AI / Zhipu AI / Meta / xAI / Mistral AI",
+  "vendor": "厂商英文名或通用名，如 Anthropic / OpenAI / Google DeepMind / DeepSeek / Alibaba / Moonshot AI / Zhipu AI / Meta / SpaceXAI / Mistral AI",
   "release_date": "ISO 8601，精确到月，如 2026-06",
   "positioning": ["旗舰", "推理增强"],
   "access": {
