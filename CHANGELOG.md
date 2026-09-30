@@ -25,6 +25,8 @@
   - `fireworks:ember-1:base` —— Fireworks 自研（官方「Fireworks Research」），MoE **2.78T**，基座 Kimi K3 后训练；ctx 1048576，$3.0/$15.0/$0.3，官方博客 + 模型页 **T0**；首次立 `fireworks` 厂商节点。
   - `inclusionai:realtime-venus:base` —— 9B 原生全模态（any-to-any，SigLIP2 + Whisper-Medium + 离散语音 token），ctx 40960，**25 条**自报（arXiv:2609.13814 Table 2–8），Apache-2.0。
   - `perceptron:perceptron-mk1.5:base` —— 具身 agent 模型，ctx 36864，$0.15/$1.5/$0.0375，官方模型卡 **T0**（跑分因官方以图片发布、经媒体转述标 `T0-自报-转述`）；首次立 `perceptron` 厂商节点。
+- **补录 62 个历史采集文件（2026-10-01 追加指令）**：`incoming/models/` 顶层磁盘 414 个 vs 已跟踪 352 个 ⇒ D44 起各平台普遍漏 `git add -f`（`.gitignore:32` 的 `/incoming/models/*.jsonl` 整类排除），原始采集证据未进版本库。一次性补齐（62 files / 0.57 MiB）后 **414 = 414**；其中 **13 个为同物旧拼写版本**——D42 归一拼写（点号版）之前的连字符拼写产物，归一化后与库内点号版**全等** ⇒ **非新增模型**（`seed-2-0-code` ↔ `seed-2.0-code`、`nex-n2-5-mini` ↔ `nex-n2.5-mini` 等）。提交 `779197f`。
+- **两条非范围剔除登记入 `docs/non_model_records.jsonl`（2026-10-01 追加指令）**：`unbiased:pareto:base`（§23(b) 组合 / 编排体）与 `prism-ml:ternary-bonsai-2-27b:base`（`prompt.md` L41 量化变体）。归档 **8 → 10 行**、既有 8 行**逐字节不变**（前缀比对 True）；新增两条门禁 **0 问题**（初版 1 ERROR「source_type 未在受控枚举」+ 1 WARN「参数量全空未声明未披露」已修），归档整体 ERROR 7→6 / WARN 10→9。
 
 ### Changed
 
@@ -42,8 +44,11 @@
 
 ### Note
 
-- **G3 两条剔除（非范围，未立行、未写记录）**：`unbiased:pareto` —— 官方条款逐字「**combines outputs from multiple underlying large language models** … and synthesizes such outputs into a single response」+ 官网「runs a mix of frontier and open source models against each other on every request」⇒ 命中 §23(b)「模型组合 / ensemble / 路由聚合 / mixture-of-models」；`prism-ml:ternary-bonsai-2-27b` —— 官方博客逐字「**Based on Qwen3.8 27B**」「Introducing Bonsai 2 27B: **Near-Lossless Compression**」+ HF 仓仅 `-gguf`（PTQ1_0 / PQ2_0 / MLX）⇒ 纯量化压缩产物，按 `prompt.md` L41「排除量化变体」剔除。⚠ **`ternary-bonsai` 存在反例** `meta:llama-4-maverick-17b-128e-instruct-fp8`（Meta 自家官方 FP8 版当年独立立行）⇒ 是否按 §23 登记入 `docs/non_model_records.jsonl` **待用户拍板**（本轮按 D51「留痕不擅自处理」惯例未写入）。
-- **C1 反推出的真漏采候选待用户点单**：快照 2026-09-25、未命中 216 条 → 命名差异 146 / **真漏采 70**（匿名 6 / 社区 19 / 待核 45），明细 `temp/d52/arena_gap_candidates.jsonl`；其中 `Opus 4.5` 属误判（库内已有 `anthropic:claude-opus-4.5-20251101-32k:base`）、`glm-5.2-max` 落在「命名差异」档（库内已有 `zhipu:glm-5.2:base`）。
+- **G3 两条剔除（非范围）→ 已登记入 `docs/non_model_records.jsonl`（第 9 / 10 行）**：
+  - `unbiased:pareto` —— 命中 §23(b)「模型组合 / ensemble / 路由聚合 / mixture-of-models」。**一手证据**（本轮直取官方，替代原先的第三方转述页）：官方服务条款定义条款逐字「"Pareto" means Company's proprietary **blended AI model** … which **combines outputs from multiple underlying large language models** … and **synthesizes such outputs into a single response**」（`unbiased.ai/terms/`，T0 直读）+ 官网「Under the hood it **runs several models on your request** and keeps the best answer」「**Not a router**」。
+  - `prism-ml:ternary-bonsai-2-27b` —— 按 `prompt.md` L41「排除量化变体」剔除。**一手证据更正**（原引「官方博客逐字 Based on Qwen3.8 27B」系二手转述）：HF 官方元数据标签**同时**含 `base_model:Qwen/Qwen3.8-27B` 与 **`base_model:quantized:Qwen/Qwen3.8-27B`**（`quantized:` 由权重上传者自声明）+ README 逐字「Full 27B-class reasoning in **ternary transformer weights**」「**98.2% of FP16 intelligence retained**」「a true **1.72 bits per weight**」+ 该组织下**无 unpacked 原始权重仓**（对照同组织 Bonsai-8B/4B-unpacked 皆存在）。
+  - ⚠ **边界留痕**：与库内 `meta:llama-4-maverick-17b-128e-instruct-fp8`（Meta **自家**官方 FP8 版、独立立行）的口径差异（第三方 PTQ 压缩包 vs 发布方正式发布轨）已写进该条 `meta.notes`，供将来统一口径时复核。
+- **C1 反推出的 70 条候选已复核完成（四分类）**：**A 已在库 24 / B 非范围 25 / C 同族变体未采 9 / D 真候选 12**（快照 2026-09-25）。原「未命中 216 → 命名差异 146 / 真漏采 70」的粗分类已细化：A 类的差异集中在**档位 / 日期 / 服务后缀**（`GPT-5.2 Chat`=`gpt-5.2:base`、`Opus 4.5`=`claude-opus-4.5-20251101-16k:base`〔原写 32k 为笔误〕）；B 类 = 社区微调 19 + 边界 2 + LMArena **匿名实验快照** 6（`amazon-nova-experimental-chat-*`）；D 类 12 条 = `GPT-5.3 Chat`、`GPT-5-Pro`、`ERNIE 5.0 Preview`、`GLM-5V-Turbo`、`Nova 2 Lite`、`step-1o-turbo-202506`、**Reka AI ×4（库内尚无该厂商节点）**、`C4AI Aya Vision 32B` / `8B`。⚠ 复核中修正首版脚本两处判据缺陷（核心 token 过短致**跨厂商误匹配**、排除表把 Reka/AI21/TII/Databricks 等**厂商主线**误判社区微调），明细 `temp/d52/gap_candidates_final.json`。
 - **B2 副产品（未批量改，超本轮范围）**：发现库内 **32 条** `pricing.confidence=T0` 却挂评测平台/非官方源的系统性归因缺陷（含 1.1/1.2 两条），已在 notes 留痕，建议下轮专项。
 - **零改动项**：`qwen3.8-27b:free`（D51 第 7 条 G3 候选）D51 已按服务档 notes 留痕处理，本轮不重复。
 

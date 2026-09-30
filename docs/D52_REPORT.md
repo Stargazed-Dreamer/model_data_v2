@@ -203,9 +203,11 @@ D51 报告 §一 写「G3 新厂商 **7 条**」，但其 §七 只列出 **6 �
 
 ## 十、遗留与待裁决
 
-1. **C1 反推出的 70 条真漏采候选**（`temp/d52/arena_gap_candidates.jsonl`，快照 2026-09-25）：命名差异 146 / 真漏采 70（匿名 6 / 社区 19 / 待核 45）——**待用户点单**。
-2. **`prism-ml:ternary-bonsai-2-27b` 的处置去向待拍板**：已按 `prompt.md` L41「排除量化变体」剔除，但库内存在**反例** `meta:llama-4-maverick-17b-128e-instruct-fp8`（Meta 自家官方 FP8 版当年独立立行）⇒ 是否按 §23 登记入 `docs/non_model_records.jsonl`、以及「自有官方量化版 vs 第三方 PTQ 压缩」的边界是否为现行口径，需用户裁示。本轮按 D51「留痕不擅自处理」惯例**未写入任何 registry**。
-3. **`unbiased:pareto` 的登记**：判定为 §23(b) 非模型组合体，同样**未写入** `docs/non_model_records.jsonl`，待一并拍板。
+> 本节原第 1–3 项为待拍板事项；2026-10-01 用户追加指令「补录 62 个历史采集文件 + 登记两条剔除 + 检查待采集候选」后**三项全部结清**，执行与证据见**第十二节**。
+
+1. ~~C1 反推出的 70 条真漏采候选待点单~~ → **已检查完成**（§12.3）：四分类 **A 已在库 24 / B 非范围 25 / C 同族变体未采 9 / D 真候选 12**。
+2. ~~`prism-ml:ternary-bonsai-2-27b` 的登记去向~~ → **已登记**（`docs/non_model_records.jsonl` 第 10 行）。⚠ 证据同时更正：本节原引「官方博客逐字 Based on Qwen3.8 27B」属**二手转述**，已换成一手（HF 元数据 `base_model:quantized:Qwen/Qwen3.8-27B` + README 逐字）。
+3. ~~`unbiased:pareto` 的登记~~ → **已登记**（第 9 行），证据升为一手官方条款（unbiased.ai/terms/ 定义条款逐字，**原引「combines outputs from multiple underlying LLMs」出自第三方转述页，现已直取官方原文核实一致**）。
 4. **32 条 `pricing.confidence=T0` 归因缺陷**（B2 副产品）：单价取自评测平台/非官方源却标 T0，建议下轮专项批量修正。
 5. **backlog 948 条存量长尾**：本轮按用户选择**不做**（C 清单第 4 项未勾选），维持开放。
 6. **`baai:arex-2` 的 `backbone_type=Hybrid` 属保守判断**：官方 README 只写「Dense Qwen3.8-compatible multimodal model」，采集 agent 由官方 `config.json` 明见的 linear + full 注意力并存结构判定为 `Hybrid`（未按模型名反推），原架构表述已照抄进 `architecture.notes`；若评审口径更严可下调为 `Unknown`。
@@ -224,3 +226,39 @@ D51 报告 §一 写「G3 新厂商 **7 条**」，但其 §七 只列出 **6 �
 | 脚本 | `temp/d52/` 下：`d52_vendor_norm.py`、`d52_musespark_price.py`、`d52_build_glm53max.py`、`d52_g4_component_notes.py`、`d52_r2_fix_mmau.py`、`d52_ledger_append.py`、`d52_normalize_incoming_format.py`、`d52_fix_ember1_license.py`、`d52_a8a_nc_impact.py` |
 | 备份 | `backups/model_data_v2.jsonl.d52g4-*`、`.d52r2-*`、`backups/batch_claim_ledger.jsonl.d52-*`；`temp/d52/pre_*.jsonl` |
 | 报告 | `temp/d52/outliers_report.txt`（31 项体检终态） |
+
+---
+
+## 十二、追加：补录 / 登记 / 候选复核（2026-10-01 用户追加指令）
+
+### 12.1 补录 62 个历史采集文件
+
+- **起因**：`incoming/models/` 磁盘顶层 414 个 vs 已跟踪 352 个 ⇒ D44 起各平台普遍漏 `git add -f`（`.gitignore:32` 的 `/incoming/models/*.jsonl` 把采集产物整类排除），原始采集证据未进版本库。
+- **内容核对**：62 个全部为合法单行 JSON（逐个解析，0 异常）。批次分布 b319×2、b320×3、b321×2、b322×2、b323×2、b324–b328 各 1、b333×9、b334×6、b335×8、b336×2、b337×1、b338×1、b340×1、b341×5、b342×3、b343×2、b344×2、b345×2、b346×3、`duplicate-folded`×1。
+- **13 个为同物旧拼写版本（非新增模型）**：D42 归一拼写（点号版）之前的连字符拼写产物，按「去 vendor 前缀 + 去全部非字母数字」归一后与库内点号版**全等**（脚本 `temp/d52/d52_triage_unmerged.py`，结果 **同物重复 13 / 无同物对应 0**）：
+  `qwen3-8-2-4t-a95b`、`qwen3-8-flash`、`hy-mt2-1-8b`、`seed-2-0-code`、`seed-2-1-turbo`、`ling-3-0-flash-fin`、`ling-3-0-flash-sante`、`nex-n2-5-mini`、`nex-n2-5-pro`、`granite-4-2-8b`、`lfm2-5-2-6b`、`dots-3-note-preview`、`lfm-2.5-2.6b`。
+  例：`seed-2-0-code` ↔ 库内 `bytedance:seed-2.0-code:base`；`nex-n2-5-mini` ↔ `nex-agi:nex-n2.5-mini:base`。主库无对应属预期（同物折叠，见 D48 报告「两次同物折并」）。
+- **提交** `779197f`（62 files changed, 62 insertions）。验收：顶层已跟踪 **414 = 磁盘 414**。
+
+### 12.2 两条非范围剔除登记入 `docs/non_model_records.jsonl`
+
+| 对象 | 判定依据 | 决定性**一手**证据 |
+|---|---|---|
+| `unbiased:pareto:base` | §23(b) 非模型**组合 / 编排体** | 官方服务条款定义条款逐字：「"Pareto" means Company's proprietary **blended AI model** … which **combines outputs from multiple underlying large language models** … and **synthesizes such outputs into a single response**」（`unbiased.ai/terms/`，T0 直读）；官网并称「Under the hood it **runs several models on your request** and keeps the best answer」、「**Not a router**」 |
+| `prism-ml:ternary-bonsai-2-27b:base` | `prompt.md` L41 **排除量化变体** | HF 官方元数据标签**同时**含 `base_model:Qwen/Qwen3.8-27B` 与 **`base_model:quantized:Qwen/Qwen3.8-27B`**（`quantized:` 由上传者自行声明）；README 逐字「Full 27B-class reasoning in **ternary transformer weights**」「**98.2% of FP16 intelligence retained**」「a true **1.72 bits per weight**」；该组织下仅有 GGUF / MLX 量化包，**无 unpacked 原始权重仓**（对照同组织 Bonsai-8B/4B-unpacked 皆存在） |
+
+- **格式**：沿用归档骨架（完整 schema 字段以 `null` / `[]` 为主，证据写进各级 notes），带空格分隔符 + LF + 末尾换行；**既有 8 行逐字节不变**（前缀比对 `True`）。脚本 `temp/d52/d52_register_nonmodel.py` 带 4 重自证（行数守恒 / 前缀不变 / 往返解析 / 换行守恒）。
+- **归档门禁**：新增两条最终 **0 问题**。初版引入 1 ERROR + 1 WARN 已修：① `source_type` 写成「官方模型卡」不在受控枚举（应为「官方 Model Card」）；② 参数量全空但 `architecture.notes` 未声明「未披露」（判据 = `未[^\s，。；;、]{0,3}披露|待补`）。归档整体 **ERROR 7→6 / WARN 10→9**（余下均为 D25 前的存量记录）。
+- **边界留痕**：与库内 `meta:llama-4-maverick-17b-128e-instruct-fp8`（Meta **自家**官方 FP8 版、独立立行）的口径差异（第三方压缩包 vs 发布方正式发布轨）已写进该条 `meta.notes`，供将来统一口径时复核。
+
+### 12.3 70 条待采集候选复核（四分类）
+
+| 类 | 条数 | 说明 |
+|---|---|---|
+| **A 已在库** | **24** | 榜单 run name 与库内主键的差异集中在**档位 / 日期 / 服务后缀**：`GPT-5.2 Chat`=`openai:gpt-5.2:base`、`OpenAI o1/o3/o3-mini/o4-mini`=`openai:o{1,3,3-mini,4-mini}-…-high:base`、`Kimi K2.5 Instant`=`moonshot:kimi-k2.5:base`、`ERNIE-5.1-Preview`=`baidu:ernie-5.1:base`、`deepseek-v4-pro-high-20260813`=`deepseek:deepseek-v4-pro:0813`、`M2.1`=`minimax:minimax-m2.1:base`、`C4AI Command A`=`cohere:cohere-command-a:base`、`Opus 4.5`=`anthropic:claude-opus-4.5-20251101-16k:base`、`trinity-large-*`=`prime-intellect-arcee-ai:arcee-trinity-large:base`、`dbrx/falcon-180b/snowflake-arctic/mpt-30b/mpt-7b/vicuna-13b/yi-lightning/mercury` 等 |
+| **B 非范围** | **25** | 社区微调 **19** 条（zephyr×3、vicuna-7b、alpaca、guanaco、dolphin、openchat×2、starling×2、openhermes、nous-hermes、stripedhyena-nous、oasst-pythia、fastchat-t5、gemma-2-9b-it-simpo、zephyr-orpo）+ 边界 2 条（NexusFlow Athene×2）+ LMArena **匿名实验快照** 6 条（`amazon-nova-experimental-chat-*`，无正式发布名、非独立模型） |
+| **C 同族已有·该变体未采** | **9** | `mercury-2`（库内有 mercury-2.5）、`step-2-16k-exp-202412`（有 step-2）、`grok-2-mini-2024-08-13`（有 grok-2:1212）、`jamba-1.5-mini`（有 jamba-1.5-large）、`solar-10.7b-instruct-v1.0`（Upstage 有 5 条 solar 系）、`vicuna-7b`（只 13b）、`SmolLM2-1.7B`（有 SmolLM-1.7B）、`RWKV-4-Raven-14B`（有 rwkv-5/6）、`stablelm-tuned-alpha-7b`（有 stablelm-2-1.6b） |
+| **D 真候选** | **12** | `GPT-5.3 Chat`（库内仅 gpt-5.3-codex）、`GPT-5-Pro`、`ERNIE 5.0 Preview`、`GLM-5V-Turbo`（无 V 版）、`Nova 2 Lite`（仅 nova-2-pro）、`step-1o-turbo-202506`、**Reka AI ×4**（`reka-core-20240904` / `reka-flash-20240904` / `reka-flash-21b-20240226` / `-online`，**库内尚无该厂商节点**）、`C4AI Aya Vision 32B` / `8B`（库内是 Aya Expanse） |
+
+> ⚠ **首版脚本两处判据缺陷已修正并留痕**（脚本 `d52_gap_candidates_triage.py` → `_v2` → `_v3` → `_final`）：① **跨厂商误匹配**——核心 token 过短导致 `GPT-5-Pro` 命中 `yandex:yandexgpt-5-pro`、`Nova 2 Lite` 命中 `nova-2-pro` ⇒ 改为**同厂商池内匹配**；② **排除表过粗**——把 Reka / AI21 Jamba / 01.AI Yi / TII Falcon / Databricks DBRX 等**厂商主线**误判为社区微调 ⇒ 改为「只输出事实（库内有无同族 + 该厂商是否已在库）」，口径判定交用户。
+> 三版脚本的演进与最终映射表：`temp/d52/d52_check_candidates_v2.py`、`_v3.py`、`d52_gap_candidates_final.py`（含 70 条逐条判读映射，带覆盖自证）；明细 `temp/d52/gap_candidates_final.json`。
