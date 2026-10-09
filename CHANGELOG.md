@@ -15,6 +15,33 @@
 
 - **D52 遗留待拍板（D53 未涉及，2 项仍开放）**：~~库内 32 条 `pricing.confidence=T0` 却挂非官方源的系统性归因缺陷~~ → **仍开放**（D52 已在 notes 留痕，建议专项）；~~backlog 948 条存量长尾补全~~ → **仍开放**（D52 C4 未选）。
 
+## [D54] - 2026-10-10
+
+用户交付清单（`F:\project_temp\localAgent\temp\model_ctx_gap_20261010\GAP_LIST.md`）：**ctx 缺口补缺 + 聚合商别名裁定**（触发源 = localAgent `wip_chat_3directions` 要接「压缩主动触发」）。记录数 **993 → 995（+2）**，门禁 **ERROR 0 / WARN 0**；qa_outliers **r1=0 / r2=0**，硬错 `o1=5`（**4→5**，见下）/ `c4=2`。**6 条清单：5 条解决、1 条无法映射。** 详见 `docs/D54_REPORT.md`，消费方回填答复见 `temp/model_ctx_gap_20261010/GAP_LIST_ANSWER.md`。
+
+### Added
+
+- **`sha-ai-lab:intern-s2-preview:base`（b350w1）** —— 上海AI实验室 Intern-S2 **35B-A3B** 科学多模态基座（预览档）。**identity 裁定**：localAgent 在用的裸名 `Shanghai_AI_Laboratory/Intern-S2-Preview` **≠** 库内 `intern-s2-397b`，两者 config 架构不同（`intern_s2_preview` hidden 2048/40 层/256 专家 **vs** `qwen3_5_moe` hidden 4096/60 层/512 专家）⇒ 独立成行。rd 2026-05-15（ModelScope 建仓日）、ctx **262144**、total 35B（官方 README）、active null（官方未披露）、Hybrid（`layer_types` = linear×3 + full×1）、Apache-2.0、含独立时序模块 `ts_config` 与 MTP 层。
+- **`sapiens-ai:agnes-2.5-flash:base`（b350w1）** —— Sapiens AI/Agnes AI 文本模型。**identity 裁定**：**独立模型**，非 `agnes-2.5-pro-beta` 的别名 —— 官方描述 Flash 为 *"Generally available upgrade of Agnes 2.0 Flash"*，Pro 才是 pro-beta 的商业稳定版。ctx **512000**、max_output **65536**、定价（list）**$0.05 / $0.15 / cached $0.005**（当前价 $0 限时免费，同时覆盖 `agnes-3.0-flash`）、闭源 API、reasoning true。
+
+### Changed
+
+- **`nvidia:nemotron-3.5-lightning:base` 补 `context_window_tokens`：null → 1000000**（本记录唯一空字段）。证据 = NVIDIA 官方 HF 模型卡 `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16` 逐字 *"Context Length | Up to 1M tokens (for single H100 deployment, we use 256K)"*；该仓 `config.json` 的 `max_position_embeddings=262144` 只是 BF16 单卡部署默认（官方 README 明示 1M 需 8×H100/GB200/B200），沿用库内同系列 Nano/Super/Ultra 的 1,000,000 口径。取证段落写入 `architecture.notes` / `meta.notes`。
+
+### 别名裁定（不落库，产出映射表）
+
+- `nemotron-3.5-lightning-free`（opencode）→ `nvidia:nemotron-3.5-lightning:base`，ctx **1000000**（`-free` = 免费额度**服务档**，按 D51–D53 口径不立行）。
+- `deepseek-flash`（opencode zen go）→ `deepseek:deepseek-v4.1-flash:base`，ctx **1048576**（依据 OpenRouter `~deepseek/deepseek-flash-latest` 的 `alias_target`；两候选 ctx 同值故取值无歧义）。
+- `gpt-5.6-luna`（ice/renice）→ `openai:gpt-5.6-luna:base`（无法确认时兜底 `-max`），ctx **1050000**（库内四变体 ctx 全同）。
+- `big-pickle`（opencode zen）→ **无法映射**：官方匿名 stealth 模型，无 model 目录/模型卡，库内与主流聚合源 0 命中 ⇒ 不入库、不给 ctx。
+
+### Notes
+
+- ⚠ **`o1` 4→5 的增量须解释**：新增命中 = `sapiens-ai:agnes-2.5-flash:base`（官方页未标注发布/上线日、AA 无此模型页 ⇒ 按「查不到=null、不伪造」留空）。属 `o1` 类别「官方未公告的新模型」的定义内命中，**非数据缺陷**；待官方给出日期后补。
+- §4 全库层面 `context_window_tokens` 缺口**未处理**（清单标「非本任务必需」）：现库 **187/995（18.8%）** 缺失，top = `google`(13)/`microsoft`(6)/`alibaba`(5)/`openai`(5)…。
+- 顺带发现的额外缺口（本轮未采，仅登记）：`sha-ai-lab:intern-s2-preview-397b`、`sapiens-ai:agnes-2.5-pro`（GA）、`sapiens-ai:agnes-3.0-flash` / `agnes-3.0-flash-max`。
+- 采集提示词加固建议：本机 HF 直连需先 `unset HTTP_PROXY HTTPS_PROXY`（本轮 1 个 subagent 因死代理返回 000，改用 hf-mirror 绕过）。
+
 ## [D53] - 2026-10-01
 
 用户拍板（原文「这几个待条件全要。另外这里有一个私榜…我认为可信度较高，请你假设它是权威信源…对比一下，看看有多大的偏差，包括收录情况和能力排行评分情况」）：**D 类 12 条真候选采集入库 + 私榜对标分析**。记录数 **982 → 993（+11）**，门禁 **ERROR 0 / WARN 0**；qa_outliers **r1=0 / r2=0**，硬错为既有存量 `o1=4` / `c4=2`。详见 `docs/D53_REPORT.md`。
