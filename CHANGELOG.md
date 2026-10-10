@@ -14,6 +14,39 @@
 - **D51 遗留待拍板（D52 全部结清）**：~~xAI 更名 SpaceXAI 是否做 vendor 归一~~ → **D52 已做**（21 条 `basic_info.vendor` 显示名 xAI→SpaceXAI，`model_id` 前缀 `xai:` 保留；判据 = 库内 295 条「前缀 ≠ vendor 显示名」反例）；~~`muse-spark-1.3` 家族行定价疑为 contributor 刊例误读~~ → **D52 证实并改判**；~~`glm-5.3-max` 漏项是否补派~~ → **D52 立行入库**（b347w1），并把 S0 口径升级为「差集式 + 榜单全量反推」双轨。**另 D51 Note 的「S0 方法学缺口」同轮闭环**。
 
 - **D52 遗留待拍板（D53 未涉及，2 项仍开放）**：~~库内 32 条 `pricing.confidence=T0` 却挂非官方源的系统性归因缺陷~~ → **仍开放**（D52 已在 notes 留痕，建议专项）；~~backlog 948 条存量长尾补全~~ → **仍开放**（D52 C4 未选）。
+- **D56 遗留待拍板（8 项开放，`docs/D56_REPORT.md` §4）**：`gemini-4-argon` 型号名待 Google 一手页确认（ai.google.dev 本环境不可达）；`qwen-3.5-plus` 的 rd 2026-02-15 为快照推导值；`alibaba:qwen-3.5-flash:base` 的 Epoch AI 三条跑分原始 Model version 实为 qwen3.5-plus（疑似历史错配，建议另案核查）；`cognition:swe-2` 的 ctx / max_output 官方未列；`stepfun:step-5-preview` 承诺 2026-10-15 放权重（兑现后需重采 access/license）；`sensetime:sensenova-6.8-flash-lite` 定价待官方付费档上线；`bytedance` 4 条因文档页 JS 渲染只能定 T1；**arenaofbias / galbands 与库内 LMArena Elo 的能力偏差分析未做**（可另起一轮）。
+
+## [D56] - 2026-10-11
+
+D55 检出的前沿缺口**全量采集**（用户裁决「全部采」）。记录数 **995 → 1015（+20）**；**门禁 ERROR 0 / WARN 0**（源文件 20/20 同样 0/0）；qa_outliers **r1=0 / r2=0**，`o1` **5→9**（+4 为官方未标注发布日，按红线留 null），`c5` 19→20（`ling-3.1-flash` 轻量档 + 560B 总参，稀疏 MoE 疑点级）。详见 `docs/D56_REPORT.md`。
+
+### Added（20 条，batch `b351w1`）
+
+- **Google ×2**：`google:gemini-4-argon:base`（**Gemini 4 世代首发**，rd 2026-09-30、ctx 1M、max_out 1M、$2/$10/cached $0.10 推广价，T1）；`google:gemini-3.5-flash-lite:base`（rd 2026-07-21、ctx 1,048,576、$0.30/$2.50/cached $0.03 + batch $0.15/$1.25，价 T1 / 规格 T3）。
+- **ByteDance ×4**：`seed-2.1-pro`（ctx 1,048,576、¥6/¥30 折算 $0.8911/$4.4557）、`seed-2.1-lite`（$0.1188/$0.4010）、`seed-2.0-lite`（ctx 262,144、$0.0891/$0.5347）、`seed-2.0-mini`（$0.0297/$0.2970）——均为 T1（火山方舟文档页 JS 渲染，正文不可直访），`seed-2.1-lite` / `seed-2.0-lite` / `seed-2.0-mini` 三条 release_date 官方未标注 ⇒ **null**。
+- **Liquid AI ×2**：`liquid:lfm2.5-8b-a1b`（8B/A1.5B、ctx 131,072、LFM Open License 1.0）、`liquid:lfm2.5-vl-3b`（3.1B dense VLM、ctx 32,768）——**T0**，各带 10 / 19 项官方自报跑分。
+- **Poolside ×2**：`poolside:laguna-xs-2.1`（33B/A3B、ctx 262,144）与 `poolside:laguna-s-2.1`（118B/A8B、ctx 1,048,576），OpenMDW-1.1，$0.10/$0.20，**T0**。
+- **其余 10 条**：`anthropic:claude-haiku-5.5`（rd 2026-10-07、ctx 1M、$0.10/$0.50，T1）、`alibaba:qwen-3.5-plus`（**T0**，ctx 1M、思维链 81,920、$0.115/$0.688 + cache_write/batch 齐）、`meituan:longcat-2.5-preview`（**T0**，官方页自带 USD 栏 $0.30/$1.20）、`stepfun:step-5-preview`（**T0**，ctx 1M、$1.00/$2.70）、`sensetime:sensenova-6.8-flash-lite`（**T0**，SenseNova 6.8 版本号经官方域 + GitHub 组织双重确证，定价全 null＝付费档未上线）、`inclusionai:ling-3.1-flash`（560B/A25B、ctx 1M/体验期 262,144、$0.30/$0.90，T1）、`cognition:swe-2`（**T0**，Kimi K3 2.8T 基座 RL 后训练、$3/$15、首个支持推理力度档位的 SWE 模型）、`nvidia:nemotron-3-nano-omni-30b-a3b`（**T0**，31B/A3B、原生视听文、NVIDIA Open Model License）、`china-telecom:xing4.0-29b-a4b`（**存疑项核属实**，中国电信星辰、29B/A4B、Apache-2.0）、`sha-ai-lab:atria-dawn-preview`（**存疑项核属实**，上海 AI Lab Atria 系列、744B/A40B、MIT、ctx 256K）。
+
+### 别名裁定（不落库）
+
+- `gpt-6-chat`（galbands #5）→ **`openai:gpt-6-sol:base`**（库内已有）：官方发布说明「Plus/Pro/Business/Enterprise use GPT‑6 Sol; Free and Go use GPT‑6 Luna」，ChatGPT 侧「GPT-6」非独立模型；`chat-latest` 为滚动别名。⚠ 反证 techpulse.press 称的 plain `gpt-6`（10M/$5/$25）含伪造 API 参数且与官方时间线冲突，**未采**。
+- `Doubao Seed Evolving`（arenaofbias + galbands #14）→ **`bytedance:seed-2.1-pro:base`**（本轮新建）：官方「统一 Model ID 自动获取最新版本」的滚动入口，非独立 checkpoint；价格与 2.1-pro 同轴。
+
+### Changed
+
+- **基准名大小写归一 4 处**（否则跨记录检查 r2 由 0 变 3）：`SWE-bench Pro`→`SWE-Bench Pro`（atria-dawn-preview）、`Tau3-Bench`→`TAU3-Bench`（xing4.0）、`BFCL V4`→`BFCLv4`（lfm2.5-vl-3b）、`BFCL v4`→`BFCLv4`（atria-dawn-preview）。主库与 `incoming/` 源文件**同步**修改。
+- `cognition:swe-2` 的 `architecture.notes` 修正「Kimi K33」笔误为「Kimi K3」（官方原句其余 12 处均为 K3）。
+
+### Notes
+
+- ⚠ **`o1` 5→9 的增量须解释**：4 条新增命中全部是「官方未标注发布日」留 null（`seed-2.1-lite` / `seed-2.0-lite` / `seed-2.0-mini` / `step-5-preview`），属 `o1` 定义内命中，**非数据缺陷**。
+- 人民币定价统一按 **1 USD = 6.7330 CNY**（外汇交易中心 2026-10-09 中间价）折算，原价写入各条 `pricing.notes`，未静默改单位。
+- 本轮 `huggingface.co` 全程不可达（hf-mirror 302 回原站），所有 HF 侧参数改由厂商官方文档 / 模型卡正文取得并逐条写明降档理由。
+
+## [D55] - 2026-10-10
+
+接入两个新私榜为 **S0 发现源**（用户「也可以作为来源」），**本轮无数据变更**（主库维持 995 条）。`docs/跟踪源清单.md` §C 新增 **C-3 arenaofbias**（真端点 `api.arenaofbias.icu/api/bootstrap`，978 KB / 59 模型 / 927 works；**不含票矩阵故无法离线复算 Elo**，只作发现源不作排行源）与 **C-4 galbands**（`/api/leaderboard` + `/api/models`，396 模型 / 五榜；行名带 `Vendor: ` 前缀，比对前须剥）。收录对齐：arenaofbias 40/59 = 67.8%，galbands 综合评分榜 98/124 = 79.0%。产出 ~22 条前沿缺口候选 → **D56 全量采集**。详见 `docs/D55_REPORT.md`。
 
 ## [D54] - 2026-10-10
 
