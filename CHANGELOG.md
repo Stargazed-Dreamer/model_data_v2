@@ -16,6 +16,32 @@
 - **D52 遗留待拍板（D53 未涉及，2 项仍开放）**：~~库内 32 条 `pricing.confidence=T0` 却挂非官方源的系统性归因缺陷~~ → **仍开放**（D52 已在 notes 留痕，建议专项）；~~backlog 948 条存量长尾补全~~ → **仍开放**（D52 C4 未选）。
 - **D56 遗留待拍板（8 项开放，`docs/D56_REPORT.md` §4）**：`gemini-4-argon` 型号名待 Google 一手页确认（ai.google.dev 本环境不可达）；`qwen-3.5-plus` 的 rd 2026-02-15 为快照推导值；`alibaba:qwen-3.5-flash:base` 的 Epoch AI 三条跑分原始 Model version 实为 qwen3.5-plus（疑似历史错配，建议另案核查）；`cognition:swe-2` 的 ctx / max_output 官方未列；`stepfun:step-5-preview` 承诺 2026-10-15 放权重（兑现后需重采 access/license）；`sensetime:sensenova-6.8-flash-lite` 定价待官方付费档上线；`bytedance` 4 条因文档页 JS 渲染只能定 T1；**arenaofbias / galbands 与库内 LMArena Elo 的能力偏差分析未做**（可另起一轮）。
 
+## [D57] - 2026-10-31
+
+D56（10-11）以来 19 天窗口的**新主线模型全量补采** + Qwen3-VL 存量缺口首批。记录数 **1015 → 1028（+13）**；另 3 条变体挂现有记录 notes（不立行）。**门禁 ERROR 0 / WARN 0**（源文件 13/13 同样 0/0）；qa_outliers **硬错零增长**（o1=9 / c4=2 不变，其余硬错 0）、**r1=0 / r2=0**（修 9 处基准名异写）。详见 `docs/D57_REPORT.md`。
+
+### Added（13 条，batch `b352w1`）
+
+- **Meta ×1**：`meta:muse-wonder:base`（rd 2026-10-12，ctx 1,048,576，$4/$20/cached $0.20；参数量官方未披露；Arena 三榜 #3/#8/#23，T3＝官方定价页不可达，价取 OpenRouter）。
+- **OpenAI ×1**：`openai:gpt-6.1-terra:base`（rd 2026-10-26，ctx 1,050,000、max_out 128K，$1/$5/cached $0.05/batch $0.5-2.5；12 条官方自报，T1）。
+- **Moonshot ×1**：`moonshot:kimi-k3.1-pro:base`（rd 2026-10-23，**2800B 总 / 104B 激活 MoE**，ctx 1,048,576，$2/$10/cached $0.20，33 条自报，**T0**；权重承诺 11-04 前释出，采集时 open_weights=false）。
+- **Mistral ×1**：`mistral:mistral-large-4:base`（rd 2026-10-27，**1050B / 49B MoE**，ctx 1,000,000，$0.70/$2.10，**Mistral Ecosystem Open-Weight License（modified MIT）**，T1；参数量三口径已留痕）。
+- **MiniMax ×1**：`minimax:minimax-m3.1-flash:base`（rd 2026-10-19，**428B / 23B MoE**，ctx 1,000,000，$0.15/$0.60/cached $0.015，**T0**）。
+- **DeepSeek ×1**：`deepseek:deepseek-v4.1-flash:1017`（rd 2026-10-17，552B / 16B，ctx 1,048,576、max_out 393,216，$0.30/$1.20（空闲减半），MIT，**T0**；与 09-10 版的差异与"定价不变"均留痕）。
+- **NVIDIA ×1**：`nvidia:nemotron-3.5-super-vl:base`（rd 2026-10-15，**120B / 12B MoE**，ctx 1,000,000，$0.15/$0.50/cached $0.02，OpenMDW-1.1，36 条自报）。
+- **Inception Labs ×1**：`inception-labs:mercury-3:base`（rd 2026-10-19，**diffusion-based LM**，ctx 1,000,000，$0.20/$0.70/cached $0.02（首发 5 折 0.10/0.35），**T0**）。
+- **Reflection AI ×1**（新厂商首条）：`reflection:beam-1.0-501b-a23b:base`（rd 2026-10-16，**501.3B / 23.4B MoE**，ctx 1,048,576，Apache-2.0，**T0**；官方 API 免费公测无刊例价 ⇒ pricing 全 null）。
+- **Alibaba ×4**（Qwen3-VL 存量缺口首批）：`qwen-3-vl-235b-a22b:instruct` / `:thinking`（rd **2025-09-23**）与 `qwen-3-vl-30b-a3b:instruct` / `:thinking`（rd **2025-10-04**），均 235B/22B 与 30B/3B、ctx 1,000,000（256K 原生 + 扩展）、Apache-2.0、**T0**。⚠ 日期按官方 GitHub News 更正，非媒体推测的 2026-10。
+
+### Changed
+
+- **基准名大小写归一 9 处**（否则跨记录检查 r2 由 0 变 9）：`SWE-bench Pro`→`SWE-Bench Pro`、`tau2-bench telecom`→`Tau2-bench Telecom`、`CharXiv reasoning`→`CharXiv Reasoning`、`AA-Omniscience accuracy`→`AA-Omniscience Accuracy`（nemotron-3.5-super-vl）；`GDP.pdf`→`GDP.PDF`、`MMMU-Pro (w/ python)`→`MMMU-Pro (w/ Python)`、`CharXiv (RQ, w/ python)`→`CharXiv (RQ, w/ Python)`（kimi-k3.1-pro）；`Vals Finance Agent V2`→`Vals Finance Agent v2`（muse-wonder）；`τ³-bench Banking`→`τ³-Bench Banking`（mercury-3）。主库与 `incoming/` 源文件同步修改。
+- **3 条变体挂现有记录 notes**（用户裁决不立行）：Muse Spark Open → `meta:muse-spark:base`；LFM2.5-24B-A2B → `liquid:lfm2.5-8b-a1b:base`；Ling-3.1-flash-1019 → `inclusionai:ling-3.1-flash:base`。
+
+### 观察清单（未采）
+
+Unbiased Pareto 26.9/26.10（疑聚合路由）、Particle-1（DeepSeek 衍生）、Elorian Glimpse、Moondream 3.1、Recursive Flint、PrismML Ternary Bonsai；智谱 GLM-5.4/5.5 与小米新模型截至 10-30 未发布。
+
 ## [D56] - 2026-10-11
 
 D55 检出的前沿缺口**全量采集**（用户裁决「全部采」）。记录数 **995 → 1015（+20）**；**门禁 ERROR 0 / WARN 0**（源文件 20/20 同样 0/0）；qa_outliers **r1=0 / r2=0**，`o1` **5→9**（+4 为官方未标注发布日，按红线留 null），`c5` 19→20（`ling-3.1-flash` 轻量档 + 560B 总参，稀疏 MoE 疑点级）。详见 `docs/D56_REPORT.md`。
