@@ -18,6 +18,8 @@ from typing import Any
 
 BASE_DIR = Path(__file__).resolve().parent.parent  # model_data 根目录
 DEFAULT_JSONL = BASE_DIR / "model_data_v2.jsonl"
+# 外部小众榜（atmeplz / galbands …）的页面数据；由 scripts/build_niche_boards.py 生成
+NICHE_SOURCES = BASE_DIR / "viz/data/niche/sources.json"
 
 # ---------------------------------------------------------------------------
 # 字段字典：宽表列 -> (中文翻译, 类型, 说明)
@@ -1380,6 +1382,14 @@ def _norm_bench_name(s: str) -> str:
     return s[:30]
 
 
+def _load_niche_boards() -> list[dict[str, Any]]:
+    """读外部小众榜（atmeplz / galbands …）。缺失时静默返回空表，不影响主流程。"""
+    try:
+        return json.loads(NICHE_SOURCES.read_text(encoding="utf-8")).get("boards") or []
+    except (OSError, ValueError):
+        return []
+
+
 def build_leaderboard(rows: list[dict[str, Any]], raw_records: list[dict[str, Any]] | None = None,
                       top_n: int = 30) -> dict[str, Any]:
     """跑分排行总榜：按 benchmark 维度切换 Top N
@@ -1421,7 +1431,8 @@ def build_leaderboard(rows: list[dict[str, Any]], raw_records: list[dict[str, An
     for bn in list(bench_top.keys()):
         seen: dict[str, dict] = {}
         for it in bench_top[bn]:
-            mid = it["model_id"]
+            # 未收录行的 model_id 为 None，不能拿 None 当键（会把所有未收录行并成一条）
+            mid = it["model_id"] or f"site:{it.get('site_name') or it.get('full_name') or ''}"
             if mid not in seen or it["score"] > seen[mid]["score"]:
                 seen[mid] = it
         bench_top[bn] = sorted(seen.values(), key=lambda x: -x["score"])[:top_n]
@@ -1469,6 +1480,36 @@ def build_leaderboard(rows: list[dict[str, Any]], raw_records: list[dict[str, An
         "致知·逻辑榜": {"label": "致知·逻辑榜", "group": "小众榜", "unit": "分", "scale": 100},
         "致知·视觉榜": {"label": "致知·视觉榜", "group": "小众榜", "unit": "分", "scale": 100},
     }
+
+    # 外部小众榜（D58 修订）：atmeplz / galbands 等**不进主库**，数据在 viz/data/niche/sources.json。
+    # 用户口径：小众榜 = 我们跟踪的一类非官方榜，只是本页下拉里的一个分组，不另设页面。
+    for nb in _load_niche_boards():
+        key = nb.get("key")
+        if not key:
+            continue
+        bench_meta[key] = {
+            "label": nb.get("label") or key,
+            "group": "小众榜",
+            "unit": nb.get("unit") or "分",
+            "scale": nb.get("scale") or 1,
+            **({"min": nb["min"]} if isinstance(nb.get("min"), (int, float)) else {}),
+        }
+        bench_top[key] = [
+            {
+                "model_id": r.get("model_id"),
+                "full_name": r.get("full_name") or r.get("site_name") or "",
+                "vendor": r.get("vendor") or "未知",
+                "score": float(r["score"]),
+                "source_url": nb.get("url") or "",
+                "source_type": "第三方非官方榜",
+                "confidence": nb.get("confidence") or "T3",
+                "in_lib": bool(r.get("in_lib")),
+                "site_name": r.get("site_name") or "",
+                "note": nb.get("board_note") or "",
+            }
+            for r in (nb.get("rows") or [])
+            if isinstance(r.get("score"), (int, float))
+        ]
 
     # 合并所有可用 benchmark key + 数量 + 是否有数据
     all_benches = []

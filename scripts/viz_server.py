@@ -29,14 +29,18 @@ _cache: dict | None = None
 
 
 def _data() -> dict:
-    """现读现转 + 短缓存；抓取进程更新 JSONL 后刷新页面即生效。"""
+    """现读现转 + 短缓存；抓取进程更新 JSONL 或小众榜快照后刷新页面即生效。"""
     global _cache
     jsonl = vt.DEFAULT_JSONL
     with _lock:
-        try:
-            mtime = jsonl.stat().st_mtime_ns
-        except OSError:
-            mtime = 0
+        # 缓存键要同时纳入小众榜快照：只盯 jsonl 会让 sources.json 的改动不生效
+        stamps = []
+        for p_ in (jsonl, vt.NICHE_SOURCES):
+            try:
+                stamps.append(p_.stat().st_mtime_ns)
+            except OSError:
+                stamps.append(0)
+        mtime = tuple(stamps)
         if _cache is None or _cache.get("_mtime") != mtime:
             raw_records = vt.load_raw_records(jsonl)
             rows = [vt.flatten_record(r) for r in raw_records]
@@ -68,15 +72,6 @@ def api_schema():
 @app.get("/api/extended")
 def api_extended():
     return JSONResponse(_data()["extended"])
-
-
-@app.get("/api/niche")
-def api_niche():
-    """小众榜（D58 接入「致知」榜）：直接读脚本生成好的快照，避免每个请求都重算匹配。"""
-    path = VIZ_DIR / "data" / "niche" / "zhizhi.json"
-    if not path.exists():
-        return JSONResponse({"meta": {}, "boards": []})
-    return JSONResponse(json.loads(path.read_text(encoding="utf-8")))
 
 
 @app.get("/", response_class=HTMLResponse)

@@ -1,9 +1,10 @@
-# D58 报告 · 接入「致知」小众榜（llm2014/llm_benchmark）
+# D58 报告 · 小众榜：致知入库 + 归拢已跟踪的非官方榜
 
-> **轮次**：D58 ｜ **日期**：2026-11-04
-> **触发**：用户「看一下这个网址 `https://llm2014.github.io/llm_benchmark/`，适配到 model_data 工作区作为小众榜」→ S1 拍板「**入库 + 榜单页**」「取**最新一期三榜**」
+> **轮次**：D58 ｜ **日期**：2026-11-04（同日二次修订）
+> **触发**：用户「看一下这个网址 `https://llm2014.github.io/llm_benchmark/`，适配到 model_data 工作区作为小众榜」
+> **口径修订**：初版按「入库 + 独立榜单页」落地；用户澄清「**我说的小众榜是那些非官方的榜，我们不是有跟踪好几个吗，不是要作为一个独立入口啊**」⇒ 改为「**跑分排行下拉里的一个分组**」，侧边栏独立页与 `/api/niche` 撤除
 > **基线**：主库 `model_data_v2.jsonl` = **1028 条**（D57 收官），`independent` 条目 **2159**
-> **结果**：新增 benchmark 两个（致知·逻辑榜 / 致知·视觉榜）、**38 个模型各 +1 条跑分**（2159 → 2197）；新增可视化页「小众榜」；门禁 **ERROR 0 / WARN 0** 不变
+> **结果**：致知进主库（新增 benchmark 2 个、**38 个模型各 +1 条跑分**，2159 → 2197）；atmeplz / galbands / arenaofbias **只在页面呈现**；跑步排行下拉「小众榜」分组共 **12 个榜**；门禁 **ERROR 0 / WARN 0** 不变
 
 ---
 
@@ -52,7 +53,7 @@
 ① 库里会出现一个**没有任何第三方出处**的数值分，违反「跑分必须可溯源」；
 ② 该指数与 MMLU/GPQA 等百分比口径相差一个语义层，会被下游当成同尺度比较。
 
-⇒ **只在「小众榜」页呈现任务级评级**（Pass/Fail/Skip + 等级色标），不写主库。若日后站点发布合成分，再按 §2.1 补录。
+⇒ **不写主库**。评级原文留在快照 `viz/data/niche/zhizhi/2026-11/code_v3.csv`（以及 `zhizhi.json`），**页面暂不设入口**——它出不了排行，塞进「按分数排序」的榜单里只会制造一个假的数值轴。若日后站点发布合成分，再按 §2.1 补录。
 
 ### 2.3 身份粒度规则（沿用 D53/§21 的教训）
 
@@ -104,21 +105,52 @@
 
 ---
 
-## 5. 产物清单
+## 5. 小众榜四家的处置（这次修订的核心）
 
-| 类型 | 路径 | 说明 |
+| 非官方榜 | 跟踪轮次 | 进主库 | 页面 | 理由 |
+|---|---|---|---|---|
+| **致知** `llm2014/llm_benchmark` | D58 | ✅ 38 条 `independent` | 下拉 2 个榜（逻辑 30 / 视觉 7） | 有明确分数与口径，可溯源到站点 CSV → T3 |
+| **atmeplz** `ai-test-prompt` | D53 | ❌ | 下拉 5 个榜（综合 + 4 方向） | 「客户端 × 档位」的端到端工程产出，D53 已裁定不构成立行依据 |
+| **galbands**（RP 竞技场） | D55 | ❌ | 下拉 5 个榜（综合 / 同人 / 原创 / 长程 / 翻译） | OpenRouter 目录镜像，混入大量非前沿与聚合器路由，D55 定为发现源 |
+| **arenaofbias**（亿模亿样） | D55 | ❌ | **不出排行** | `bootstrap` 只有每任务计数、**不含票矩阵**，无法离线复算 Elo |
+
+> 落点：**跑分排行页的 `<optgroup>` 分组**，不是侧边栏入口。`build_leaderboard()` 把 `sources.json` 的榜合并进 `leaderboards`，主库一行不改。
+
+### 5.1 匹配规则（只做确定性判定，不用相似度）
+
+| 规则 | 说明 |
+|---|---|
+| ① 精确 | 清洗后归一相等（剥 `Vendor: ` 前缀、`Doubao Seed → Seed`、`Hy4 → Hunyuan Hy4`、去 ` Contributor` 后缀） |
+| ② 型号 + 档位 | atmeplz 把档位放在 `effort` 字段（`claude-fable-5` + `max`），拼成 `claude-fable-5-max` 后**唯一**命中才采用 |
+| ③ 白名单后缀 | 站点名是主库 family 前缀、剩余部分 ∈ `{high,low,none,max,xhigh,minimal,thinking,instant,preview,base,chat,turbo}` / 8 位日期 / 参数量，且**全库唯一** |
+| ④ 人工裁定 | 3 条：`gemini40930→gemini-4-argon`、`musespark12contributor`、`dots3noteprev` |
+
+**故意放过**的「差一点」名字：`Claude Sonnet 5 → 5.5`、`MiMo-V2.5 → Pro`、`GPT-5.5 → low/none`（多档位歧义）、`GPT-4o → 某个日期版`（多快照）。这些一律标「未收录」——**宁可漏标，不可误标**。
+
+| 榜 | 命中 | 率 |
 |---|---|---|
-| 数据快照 | `viz/data/niche/zhizhi/2026-11/{logic,code_v3,vision}.csv` | 站点原始 CSV（含成本/耗时/Token/档位列），随仓库入库 |
-| 导入脚本 | `scripts/d58_zhizhi_import.py` | 解析 → 别名裁定 → 生成补丁 + 页面数据；`--apply` 才写补丁 |
-| 主库补丁 | `incoming/models/d58_zhizhi_202611.jsonl` | 38 条记录（仅 `benchmarks.independent`），`merge -f` 入库 |
-| 页面数据 | `viz/data/niche/zhizhi.json` | 三榜全字段 + model_id 匹配结果 + 缺口原因 |
-| 可视化 | `viz/viz_index.html` 新增「小众榜」页 | 三榜切换、成本×分数散点、收录覆盖、缺口清单；模型名可点开档案 |
-| 接口 | `scripts/viz_server.py` `GET /api/niche` | 读上面的 JSON |
-| 榜单分组 | `scripts/viz_transform.py` `bench_meta` | 新增两条 `group="小众榜"`，跑分排行下拉自动出现 |
+| galbands 综合 | 93/124 | 75.0% |
+| atmeplz 综合 | 18/31 | 58.1% |
+| arenaofbias | 42/59 | 71.2% |
 
 ---
 
-## 6. 复核命令
+## 6. 产物清单
+
+| 类型 | 路径 | 说明 |
+|---|---|---|
+| 致知快照 | `viz/data/niche/zhizhi/2026-11/{logic,code_v3,vision}.csv` | 站点原始 CSV（含成本/耗时/Token/档位列），随仓库入库 |
+| 致知导入脚本 | `scripts/d58_zhizhi_import.py` | 解析 → 别名裁定 → 生成主库补丁 + `zhizhi.json`；`--apply` 才写 |
+| 主库补丁 | `incoming/models/d58_zhizhi_202611.jsonl` | 38 条记录（仅 `benchmarks.independent`），`merge -f` 入库 |
+| 外部榜快照 | `viz/data/niche/{atmeplz/2026-09-11,galbands/2026-10-09,arenaofbias/2026-10-10}/` | 原样 JSON（temp 会被清理，故固化进仓库） |
+| 外部榜脚本 | `scripts/build_niche_boards.py` | 匹配 → `sources.json`（含缺口与覆盖面）；`--apply` 才写 |
+| 页面数据 | `viz/data/niche/sources.json` | 10 个外部榜 + 匹配结果 + 收录缺口 |
+| 榜单合并 | `scripts/viz_transform.py` `_load_niche_boards()` / `build_leaderboard()` | 合并进 `leaderboards`，`group=小众榜`；未收录行 `model_id=null` |
+| 页面 | `viz/viz_index.html` `renderLeaderboardPage()` | 下拉改 `<optgroup>` 分组；未收录行显示站点原名 + 「未收录」标记 |
+
+---
+
+## 7. 复核命令
 
 ```bash
 # 1) 重算匹配与页面数据（不写主库）
@@ -135,18 +167,24 @@ PYTHONUTF8=1 python scripts/model_data_tool.py merge --file model_data_v2.jsonl 
 # 3) 门禁（基线：1028 条 / ERROR 0 / WARN 0）
 PYTHONUTF8=1 python scripts/validate_model_data.py model_data_v2.jsonl
 
-# 4) 页面（127.0.0.1:8620 → 跑分深度 / 小众榜）
+# 4) 外部小众榜归一并写 sources.json（dry-run 先看匹配与缺口）
+PYTHONUTF8=1 python scripts/build_niche_boards.py
+PYTHONUTF8=1 python scripts/build_niche_boards.py --apply
+
+# 5) 页面（127.0.0.1:8620 → 跑分深度 / 跑分排行 → 下拉「小众榜」分组）
 PYTHONUTF8=1 python scripts/viz_server.py
 ```
 
 实测结果：合并前后记录数 **1028 → 1028**（不新增模型行），`independent` 条目 **2159 → 2197（+38）**，
-门禁 **ERROR 0 / WARN 0** 与基线一致。
+门禁 **ERROR 0 / WARN 0** 与基线一致；跑分排行下拉 **3 个 optgroup / 28 个榜**，其中小众榜 **12 个**。
 
 ---
 
-## 7. 后续建议
+## 8. 后续建议
 
 1. **月度刷新**：站点每月底归档，建议按「用户触发」节奏（不设定时）重跑 `d58_zhizhi_import.py`，改 `SNAP` 目录为该月 + `cfg["month"]`，`union_by_key` 主键已含 `config`（月份），**不会与上期撞键**。
 2. **3 个新模型进 S0**：`openPangu-2.0`（Pro/Flash）、`LongCat-2.0`、`Spark X2.6`——本榜是目前唯一见到它们的源，可作为「榜单反推漏采」的一条线索（与 D39/D52 的双轨口径一致）。
 3. **不要拿 vision 榜的 40% 覆盖率当质量指标**：它是 2025 年老榜，缺口 13 个全在口径外。
 4. 若用户希望把 **code_v3** 也纳入主库，需要先定「等级 → 分数」的换算口径并单独拍板（本报告 §2.2 已说明为何暂不自动做）。
+5. **atmeplz / galbands 的快照会过期**（分别是 2026-09-11 / 2026-10-09）：galbands 每日刷新，若要当常看榜需重抓并覆盖 `viz/data/niche/galbands/<新日期>/`；重抓方式见 `docs/跟踪源清单.md` C-4。
+6. **arenaofbias 仍只能出收录清单**：要出排行得让站方提供票矩阵，或自己按 `works` 的对比记录复算——现有快照做不到。
