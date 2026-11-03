@@ -1070,6 +1070,8 @@ body.nav-collapsed .filter-bar{margin-left:48px}
 
 <script>
 let ROWS=[], VIEW_ROWS=[], SCHEMA=null, AGG=null, EXT=null;
+// 深链页（?page=niche）：必须在 saveFiltersToHash() 抹掉 query 之前先读走
+const DEEP_PAGE=new URLSearchParams(location.search).get("page");
 const charts={};
 const $=s=>document.querySelector(s);
 const fmt=n=>n==null?'—':(typeof n==='number'?(Math.abs(n)>=1000?n.toLocaleString():n):n);
@@ -1209,6 +1211,10 @@ function refreshAll(){
   _safeRender('niche',renderNichePage);
   _safeRender('scaling',renderScalingPage);
   _safeRender('trust',renderTrustPage);
+
+  // 深链：?page=niche 直达对应页（hash 已被筛选器状态占用，故走 query；DEEP_PAGE 在脚本开头已取）
+  const _btn=DEEP_PAGE&&document.querySelector(`.side-nav .nav-item[data-page="${DEEP_PAGE}"]`);
+  if(_btn)switchPage(DEEP_PAGE,_btn.dataset.group,_btn.dataset.label);
 }
 
 // ============ 模型档案抽屉 ============
