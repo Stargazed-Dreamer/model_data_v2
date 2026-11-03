@@ -16,6 +16,25 @@
 - **D52 遗留待拍板（D53 未涉及，2 项仍开放）**：~~库内 32 条 `pricing.confidence=T0` 却挂非官方源的系统性归因缺陷~~ → **仍开放**（D52 已在 notes 留痕，建议专项）；~~backlog 948 条存量长尾补全~~ → **仍开放**（D52 C4 未选）。
 - **D56 遗留待拍板（8 项开放，`docs/D56_REPORT.md` §4）**：`gemini-4-argon` 型号名待 Google 一手页确认（ai.google.dev 本环境不可达）；`qwen-3.5-plus` 的 rd 2026-02-15 为快照推导值；`alibaba:qwen-3.5-flash:base` 的 Epoch AI 三条跑分原始 Model version 实为 qwen3.5-plus（疑似历史错配，建议另案核查）；`cognition:swe-2` 的 ctx / max_output 官方未列；`stepfun:step-5-preview` 承诺 2026-10-15 放权重（兑现后需重采 access/license）；`sensetime:sensenova-6.8-flash-lite` 定价待官方付费档上线；`bytedance` 4 条因文档页 JS 渲染只能定 T1；**arenaofbias / galbands 与库内 LMArena Elo 的能力偏差分析未做**（可另起一轮）。
 
+## [D58] - 2026-11-04
+
+接入**「致知」个人长期追踪榜**（`llm2014.github.io/llm_benchmark`）作为**小众榜**：新增 benchmark `致知·逻辑榜` / `致知·视觉榜`，**38 个模型各 +1 条 independent 跑分（2159 → 2197）**；主库记录数不变 **1028**；门禁 **ERROR 0 / WARN 0** 与基线一致。新增可视化页「小众榜」。详见 `docs/D58_REPORT.md`。
+
+### Added
+
+- **跑分源 ×2（新分组「小众榜」）**：`致知·逻辑榜`（logic 2026-11，31 条）/ `致知·视觉榜`（vision 2025-11，7 条），score = 站点「中位分数 ÷ 100」，`config` = `<榜期> 月榜 · <站点档位>`，`source_type=独立第三方评测（其它）`、**confidence=T3**（私有题库 28 题、不公开、不可复核；极限分/实测成本/耗时/Token 写进 notes）。合并批次 `d58_zhizhi_202611`，`union_by_key`（主键 benchmark,config,date）不覆盖既有条目。
+- **可视化「跑分深度 / 小众榜」页**：三榜切换（逻辑 / 代码 v3 / 视觉）、成本×分数对数散点（气泡=Token）、库内收录覆盖、缺口清单；模型名直连档案抽屉。`GET /api/niche` 提供数据，跑分排行下拉新增 `[小众榜]` 分组。
+- **数据快照**：`viz/data/niche/zhizhi/2026-11/{logic,code_v3,vision}.csv`（含成本/耗时/Token/档位列）随仓库入库；导入脚本 `scripts/d58_zhizhi_import.py`（显式别名裁定 57 条 + 模糊阈值 0.86）。
+- **跟踪源清单 C-5**：新增抓取要点与覆盖基线（logic 35/39=89.7%、code_v3 19/19=100%、vision 8/20=40%）。
+
+### Notes
+
+- **`code_v3` 有意不入主库**：站点只发任务级评级（Pass / `4/A+(341.72)` / Failed / Skip），**自身不出合成分**（`benchmark-domain.js` 仅排序用等级序）。自造「等级指数」= 引入无出处数值分且与百分比口径混层，故只在页面呈现评级；若站点日后发总分再补录。
+- **身份粒度**：一律落该型号 base 记录、档位进 `config`（第三方档位不构成新立行依据）；唯一例外 `GPT-5.6 Luna (max)` → `openai:gpt-5.6-luna-max:base`（该家族无 base 记录）。
+- **同型号多行取中位分最高者**（如 Opus 5.5 `xhigh` 与 `xhigh w/ refuse`）——被丢弃行仍在站点 CSV 快照里可查。
+- **缺口 16 行**：`openPangu-2.0-Pro/-Flash`、`LongCat-2.0`、`Spark X2.6`（2026 新模型，**建议进 S0**）+ 13 个 2025 年老视觉/非主线型号（`Seed-1.6` 系、`GLM-4.5V`、`Step-3`、`qwen-vl-max`、`hunyuan-*-vision 0619`、`SenseNova-V6`、`ERNIE 4.5 Turbo VL`），后者不在采集口径内，不为对齐榜单补采。
+- **模糊匹配踩坑留痕**：`Gemini 3.7 Flash` 被 0.94 相似度误配到 `gemini-3.8-flash`，已改显式裁定 → 再次印证「高分≠正确，别名表必须逐条过目」（D53 同款教训）。
+
 ## [D57] - 2026-10-31
 
 D56（10-11）以来 19 天窗口的**新主线模型全量补采** + Qwen3-VL 存量缺口首批。记录数 **1015 → 1028（+13）**；另 3 条变体挂现有记录 notes（不立行）。**门禁 ERROR 0 / WARN 0**（源文件 13/13 同样 0/0）；qa_outliers **硬错零增长**（o1=9 / c4=2 不变，其余硬错 0）、**r1=0 / r2=0**（修 9 处基准名异写）。详见 `docs/D57_REPORT.md`。

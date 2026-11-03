@@ -1464,6 +1464,10 @@ def build_leaderboard(rows: list[dict[str, Any]], raw_records: list[dict[str, An
         "arena_webdev": {"label": "Arena Elo (WebDev)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
         "arena_vision": {"label": "Arena Elo (Vision)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
         "arena_agent": {"label": "Arena Elo (Agent)", "group": "Arena 子榜", "unit": "Elo", "scale": 1},
+        # 小众榜（D58 接入「致知」个人长期追踪榜；口径见 docs/D58_REPORT.md）
+        # key 必须与 _norm_bench_name() 的输出一致（该函数只做小写化，中文名原样返回）
+        "致知·逻辑榜": {"label": "致知·逻辑榜", "group": "小众榜", "unit": "分", "scale": 100},
+        "致知·视觉榜": {"label": "致知·视觉榜", "group": "小众榜", "unit": "分", "scale": 100},
     }
 
     # 合并所有可用 benchmark key + 数量 + 是否有数据

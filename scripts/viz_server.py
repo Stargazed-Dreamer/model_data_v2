@@ -70,6 +70,15 @@ def api_extended():
     return JSONResponse(_data()["extended"])
 
 
+@app.get("/api/niche")
+def api_niche():
+    """小众榜（D58 接入「致知」榜）：直接读脚本生成好的快照，避免每个请求都重算匹配。"""
+    path = VIZ_DIR / "data" / "niche" / "zhizhi.json"
+    if not path.exists():
+        return JSONResponse({"meta": {}, "boards": []})
+    return JSONResponse(json.loads(path.read_text(encoding="utf-8")))
+
+
 @app.get("/", response_class=HTMLResponse)
 def index():
     html_path = VIZ_DIR / "viz_index.html"

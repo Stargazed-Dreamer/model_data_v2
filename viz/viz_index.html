@@ -576,6 +576,9 @@ body.nav-collapsed .filter-bar{margin-left:48px}
     <button class="nav-item" data-page="leaderboard" data-group="跑分" data-label="跑分排行">
       <span class="nav-icon">#</span><span class="nav-label">跑分排行</span>
     </button>
+    <button class="nav-item" data-page="niche" data-group="跑分" data-label="小众榜">
+      <span class="nav-icon">✦</span><span class="nav-label">小众榜</span>
+    </button>
     <button class="nav-item" data-page="scaling" data-group="跑分" data-label="Scaling Law">
       <span class="nav-icon">∿</span><span class="nav-label">Scaling Law</span>
     </button>
@@ -892,6 +895,50 @@ body.nav-collapsed .filter-bar{margin-left:48px}
   </div>
 </section>
 
+<!-- ============ 6f. 小众榜（D58 接入「致知」个人长期追踪榜） ============ -->
+<section class="page" id="page-niche">
+  <div class="card" style="margin-bottom:14px">
+    <div class="controls">
+      <div class="ctrl"><label>榜单</label><select id="ncBoard"></select></div>
+      <div class="ctrl"><label>显示数</label>
+        <select id="ncTopN">
+          <option value="10">Top 10</option>
+          <option value="20">Top 20</option>
+          <option value="40" selected>全部</option>
+        </select>
+      </div>
+      <div class="ctrl"><label>排序</label>
+        <select id="ncAxis">
+          <option value="score">按分数（高→低）</option>
+          <option value="cost">按测试成本（低→高）</option>
+          <option value="time">按平均耗时（低→高）</option>
+          <option value="tokens">按 Token 消耗（低→高）</option>
+        </select>
+      </div>
+      <span id="ncMeta" style="margin-left:14px;font-size:13px;color:var(--text-muted)"></span>
+    </div>
+    <div class="hint" id="ncHint"></div>
+  </div>
+  <div class="grid cols2">
+    <div class="card" style="min-width:62%">
+      <h3>榜单明细 <small id="ncCount">0 条</small></h3>
+      <div style="overflow:auto;max-height:calc(100vh - 300px)">
+        <table id="ncTable"><thead id="ncHead"></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <h3>成本 × 分数 <small>对数横轴，气泡＝Token</small></h3>
+      <div class="chart tall" id="chNicheScatter" style="height:340px"></div>
+      <h3 style="margin-top:14px">库内收录覆盖 <small>站点行 vs 已匹配 model_id</small></h3>
+      <div class="chart" id="chNicheCover" style="height:220px"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>站点有 / 库内无 <small>缺口清单：不外推、不并入同族</small></h3>
+    <div id="ncGaps" style="padding:4px 0"></div>
+  </div>
+</section>
+
 <!-- ============ 6e. Scaling Law 散点（B2） ============ -->
 <section class="page" id="page-scaling">
   <div class="card" style="margin-bottom:14px">
@@ -1159,6 +1206,7 @@ function refreshAll(){
   _safeRender('custom',initCustomControls);
   _safeRender('detail',renderDetailInit);
   _safeRender('leaderboard',renderLeaderboardPage);
+  _safeRender('niche',renderNichePage);
   _safeRender('scaling',renderScalingPage);
   _safeRender('trust',renderTrustPage);
 }
@@ -2608,6 +2656,153 @@ function drawLeaderboard(){
       itemStyle:{color:'#2563eb'}
     }]
   });
+}
+
+// ============ 5c. 小众榜（D58「致知」个人长期追踪榜） ============
+let NICHE=null;
+function ncEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function ncNum(v){const n=parseFloat(String(v==null?'':v).replace(/[¥￥,%\s]/g,''));return isNaN(n)?null:n;}
+function ncVendor(mid){const r=ROWS.find(x=>x.model_id===mid);return r?(r.vendor||'未知'):'';}
+function ncModelCell(r){
+  if(r.model_id){
+    const nm=r.site_name;
+    return `<td class="pd-link" onclick="openProfile('${r.model_id}')">${ncEsc(nm)}</td>`;
+  }
+  return `<td>${ncEsc(r.site_name)} <span class="tag warn">未收录</span></td>`;
+}
+function ncGrade(v){
+  const s=String(v||'').trim();
+  if(!s)return '<span style="color:var(--text-disabled)">—</span>';
+  if(/^pass$/i.test(s))return '<span class="tag ok">Pass</span>';
+  if(/^failed/i.test(s))return '<span class="tag danger">Fail</span>';
+  if(/^skip$/i.test(s))return '<span style="color:var(--text-disabled)">Skip</span>';
+  const m=s.match(/^(.+?)\/([ABCD])([+-]?)(?:\(([\d.]+)\))?$/i);
+  if(!m)return ncEsc(s);
+  const g=(m[2]+(m[3]||'')).toUpperCase();
+  const color=g[0]==='A'?'var(--success)':g[0]==='B'?'#84cc16':g[0]==='C'?'var(--warning)':'var(--danger)';
+  return `<b style="color:${color}">${g}</b><small style="color:var(--text-disabled)"> ${m[1]}</small>`;
+}
+function renderNichePage(){
+  if(NICHE){initNichePage();return;}
+  fetch('/api/niche').then(r=>r.json()).then(d=>{NICHE=d;initNichePage();})
+    .catch(()=>{NICHE={meta:{},boards:[]};initNichePage();});
+}
+function initNichePage(){
+  const sel=$('#ncBoard');
+  if(!sel.options.length){
+    (NICHE.boards||[]).forEach(b=>{
+      const o=document.createElement('option');
+      o.value=b.key;o.textContent=b.label;
+      sel.appendChild(o);
+    });
+    sel.onchange=drawNiche;
+    $('#ncTopN').onchange=drawNiche;
+    $('#ncAxis').onchange=drawNiche;
+  }
+  const m=NICHE.meta||{};
+  $('#ncHint').innerHTML=
+    `「${ncEsc(m.site||'')}」`+
+    (m.url?` <a href="${m.url}" target="_blank" style="color:var(--accent)">原站</a>`:'')+
+    (m.repo?` · <a href="${m.repo}" target="_blank" style="color:var(--accent)">仓库</a>`:'')+
+    ` · 采集 ${ncEsc(m.fetched_at||'—')} · ${ncEsc(m.note||'')}`;
+  drawNiche();
+}
+function drawNiche(){
+  const boards=NICHE.boards||[];
+  const b=boards.find(x=>x.key===$('#ncBoard').value)||boards[0];
+  if(!b)return;
+  const isCode=b.key==='code_v3';
+  $('#ncAxis').disabled=isCode;
+  const topN=parseInt($('#ncTopN').value);
+  const axis=$('#ncAxis').value;
+  const all=b.rows||[];
+  let rows=all.slice();
+  if(!isCode){
+    if(axis==='score')rows.sort((x,y)=>(y.median==null?-1:y.median)-(x.median==null?-1:x.median));
+    else rows.sort((x,y)=>{const a=ncNum(x[axis]),c=ncNum(y[axis]);if(a==null)return 1;if(c==null)return -1;return a-c;});
+  }
+  rows=rows.slice(0,topN);
+  $('#ncCount').textContent=`${rows.length} / ${all.length} 条`;
+  $('#ncMeta').textContent=`${b.label}（${b.month||''}） · ${b.benchmark?'已入库：'+b.benchmark:'不入库：站点无合成分'}`;
+
+  const body=$('#ncTable tbody');
+  if(isCode){
+    const tasks=Object.keys((all[0]||{}).tasks||{});
+    $('#ncHead').innerHTML=`<tr><th>#</th><th>模型（站点名）</th><th>厂商</th>`+
+      tasks.map(t=>`<th style="font-size:10px">${ncEsc(t)}</th>`).join('')+
+      `<th>脚手架</th><th>档案</th></tr>`;
+    body.innerHTML=rows.map((r,i)=>{
+      const cells=tasks.map(t=>`<td>${ncGrade((r.tasks||{})[t])}</td>`).join('');
+      return `<tr><td>${i+1}</td>${ncModelCell(r)}<td>${ncEsc(ncVendor(r.model_id)||'—')}</td>${cells}`+
+             `<td>${ncEsc(r.scaffold||'—')}</td>`+
+             `<td>${r.model_id?`<span style="color:var(--text-muted);font-size:11px">${ncEsc(r.model_id)}</span>`:'—'}</td></tr>`;
+    }).join('');
+  }else{
+    $('#ncHead').innerHTML=`<tr><th>#</th><th>模型（站点名）</th><th>厂商</th><th>中位分</th><th>极限分</th>
+      <th>档位</th><th>测试成本</th><th>耗时</th><th>Token</th><th>档案</th></tr>`;
+    body.innerHTML=rows.map((r,i)=>`<tr>
+      <td>${i+1}</td>
+      ${ncModelCell(r)}
+      <td>${ncEsc(ncVendor(r.model_id)||'—')}</td>
+      <td><b>${r.median==null?'—':r.median.toFixed(2)}</b></td>
+      <td>${r.max==null?'—':r.max.toFixed(2)}</td>
+      <td>${ncEsc(r.effort||'—')}</td>
+      <td>${ncEsc(r.cost_cny||'—')}</td>
+      <td>${ncEsc(r.time_s||'—')}</td>
+      <td>${ncEsc(r.tokens||'—')}</td>
+      <td>${r.model_id?`<span style="color:var(--text-muted);font-size:11px">${ncEsc(r.model_id)}</span>`:'—'}</td>
+    </tr>`).join('');
+  }
+
+  // 成本 × 分数散点
+  const sc=mkChart('chNicheScatter');
+  if(sc){
+    if(isCode){
+      sc.setOption({title:{text:'代码榜只发任务级评级，站点不出合成分 ⇒ 无成本-分数散点',
+        left:'center',top:'middle',textStyle:{color:'#94a3b8',fontSize:12,fontWeight:'normal'}}},true);
+    }else{
+      const pts=all.filter(r=>ncNum(r.cost_cny)!=null&&r.median!=null).map(r=>({
+        name:r.site_name,value:[ncNum(r.cost_cny),r.median],
+        tok:ncNum(r.tokens)||0,matched:!!r.model_id,effort:r.effort
+      }));
+      sc.setOption({
+        grid:{left:66,right:24,top:24,bottom:48},
+        tooltip:{formatter:p=>`${p.data.name}<br/>成本 ¥${p.data.value[0]} · 中位分 ${p.data.value[1]}<br/>Token ${p.data.tok} · 档位 ${p.data.effort||'—'}${p.data.matched?'':'<br/><span style="color:#f59e0b">库内未收录</span>'}`},
+        xAxis:{type:'log',name:'测试成本 ¥',nameTextStyle:{color:'#94a3b8'},
+          axisLabel:{color:'#94a3b8'},splitLine:{lineStyle:{color:'rgba(148,163,184,.15)'}}},
+        yAxis:{type:'value',name:'中位分',nameTextStyle:{color:'#94a3b8'},
+          axisLabel:{color:'#94a3b8'},splitLine:{lineStyle:{color:'rgba(148,163,184,.15)'}}},
+        series:[{type:'scatter',data:pts,
+          symbolSize:(val,params)=>Math.max(7,Math.min(26,Math.sqrt(Math.max((params.data&&params.data.tok)||1,1))/18)),
+          itemStyle:{color:p=>p.data.matched?'#22d3ee':'#94a3b8',opacity:.85,borderColor:'#0f172a',borderWidth:1}}]
+      },true);
+    }
+  }
+
+  // 覆盖
+  const matched=all.filter(r=>r.model_id).length;
+  const cov=mkChart('chNicheCover');
+  cov&&cov.setOption({
+    grid:{left:78,right:40,top:16,bottom:28},
+    tooltip:{trigger:'axis'},
+    xAxis:{type:'value',axisLabel:{color:'#94a3b8'},splitLine:{lineStyle:{color:'rgba(148,163,184,.15)'}}},
+    yAxis:{type:'category',data:['未收录','已匹配'],axisLabel:{color:'#94a3b8'}},
+    series:[{type:'bar',barWidth:18,
+      data:[{value:all.length-matched,itemStyle:{color:'#f59e0b'}},
+            {value:matched,itemStyle:{color:'#22c55e'}}],
+      label:{show:true,position:'right',color:'#cbd5e1',
+        formatter:p=>`${p.value}（${all.length?(p.value/all.length*100).toFixed(0):0}%）`}}]
+  },true);
+
+  // 缺口清单
+  const gaps=[];
+  boards.forEach(bb=>(bb.rows||[]).forEach(r=>{if(!r.model_id)gaps.push({board:bb.label,name:r.site_name,why:r.match});}));
+  $('#ncGaps').innerHTML=gaps.length?gaps.map(g=>
+    `<div style="font-size:12px;padding:5px 0;border-bottom:1px dashed var(--border-strong)">
+       <span class="tag">${ncEsc(g.board)}</span>
+       <b style="margin-left:6px">${ncEsc(g.name)}</b>
+       <span style="color:var(--text-muted)">— ${ncEsc(g.why)}</span>
+     </div>`).join(''):'<div class="empty">无缺口</div>';
 }
 
 // ============ B2 Scaling Law 散点 ============
