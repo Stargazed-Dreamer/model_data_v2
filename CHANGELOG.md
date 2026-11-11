@@ -16,6 +16,29 @@
 - **D52 遗留待拍板（D53 未涉及，2 项仍开放）**：~~库内 32 条 `pricing.confidence=T0` 却挂非官方源的系统性归因缺陷~~ → **仍开放**（D52 已在 notes 留痕，建议专项）；~~backlog 948 条存量长尾补全~~ → **仍开放**（D52 C4 未选）。
 - **D56 遗留待拍板（8 项开放，`docs/D56_REPORT.md` §4）**：`gemini-4-argon` 型号名待 Google 一手页确认（ai.google.dev 本环境不可达）；`qwen-3.5-plus` 的 rd 2026-02-15 为快照推导值；`alibaba:qwen-3.5-flash:base` 的 Epoch AI 三条跑分原始 Model version 实为 qwen3.5-plus（疑似历史错配，建议另案核查）；`cognition:swe-2` 的 ctx / max_output 官方未列；`stepfun:step-5-preview` 承诺 2026-10-15 放权重（兑现后需重采 access/license）；`sensetime:sensenova-6.8-flash-lite` 定价待官方付费档上线；`bytedance` 4 条因文档页 JS 渲染只能定 T1；**arenaofbias / galbands 与库内 LMArena Elo 的能力偏差分析未做**（可另起一轮）。
 
+## [D59] - 2026-11-11
+
+**增量更新：S0 双轨扫描 + S1 拍板 + S2 补采 15 条**（Qoder 会话 `29afb6cb` 06:32 报错 145 断在 S2 准备阶段，WorkBuddy 按 `qoder-takeover` 导包接手补跑 S2→S5）：主库 **1028 → 1043（+15）**；丙类 4 条字段更新已落库；门禁 **ERROR 0 / WARN 0**、`r1=r2=0`。详见 `docs/D59_REPORT.md`。
+
+### Added
+
+- **甲 7 条（本轮新发布）**：Claude Fable 5.2 / Mythos 5.2（11-09，官方新闻稿 $8/$40；Mythos 按库内 `mythos-5.1` 独立行先例立行）、Hy4 GA（11-04，**判定不同 checkpoint 立行**，GA 权重未放出故 `open_weights=false`，不照抄 preview 的 Apache-2.0）、Muse Ember（11-09，Meta 全域 000 走 T2/T3 降级）、Ripple-65B-Preview（**新厂商 Ricursive Intelligence 首条**，65B Dense / Apache-2.0）、ERNIE-5.5-Flash-Base（11-05，台账补漏，OR 只有 Preview）、LongCat-2.5 GA（**发布日三口径冲突留 null**）。
+- **乙 8 条（上轮漏采）**：Gemini 4 Carbon（Arena 文本榜 #1 / elo 1527，反推工具误配到 `gemini-4-argon` 判 naming_diff，人工复核提出）、LFM3-1.7B（只采文本版）、GLM-5.3-FlashX-Legal、Spark X2.6（云端版）、openPangu-2.0 Pro / Flash（分立两行）、LongCat-2.0（D38 查证却漏采至今）、Moondream 3.1（**新厂商首条**，日期修正为 07-07）。
+- **新厂商前缀 ×2**：`ricursive`（Ricursive Intelligence，官方域 ricursive.com，⛔ 与 Recursive Flint 是两家）、`moondream`。
+- **文档修订**：`docs/跟踪源清单.md` 补「D59 复测结果」段（腾讯混元 200 只回 6,893 B SPA 壳 ⇒ 不能定 T0；新增 `www.minimax.cn/news` 与 `docs.bigmodel.cn/sitemap.xml` 两条可用入口；Anthropic news 200 正文完整）；`docs/增量更新工作流.md` 第 182 行「Claude Mythos 5.1 未入库」过时句保留历史并加更正注。
+
+### Changed
+
+- 丙类 4 条字段更新（Qoder 落库）：`kimi-k3.1-pro` / `step-5-preview` 权重兑现（后者许可文件实为 `LICENSE.txt` 而非 `LICENSE`，且 `release_date` 继续留 null），`gpt-6.1-terra` / `glm-5.3-flash` 补服务档防重（FlashX 依据升级为 T0 官方 Model Code）。
+- 批次 `b353w1` 已登记（`docs/batch_claim_ledger.jsonl` 355 → 356），`submitted_files` 15 个。
+
+### 口径与验收
+
+- ⛔ **9 条定价六键 + `currency` 全 null**：OpenRouter 转售价不冒充官方刊例价，数值只进 `pricing.notes` 留痕；仅 Fable 5.2 / LongCat-2.0 有官方一手价填 T0，Muse Ember / Mythos 5.2 / Gemini 4 Carbon 按转述或交叉印证填 T3/T1。
+- 验收：15/15 单文件门禁 ERROR 0/WARN 0；全库 **1043 / 0 / 0**；与 `HEAD` 逐条比对，**既有 1024 行逐字节未动**（变化的 4 条恰为丙类字段更新）、`benchmarks` 数组零缩水；`qa_outliers` `r1=0 / r2=0`，硬错 `11→12`（+1 仅 `meituan:longcat-2.5:base` 发布日留 null，属知情保留）。
+- `candidate_diff` 复跑 18 条甲乙候选：NEW 3（恰为用户剔除的 Particle-1 / Recursive Flint / Elorian Glimpse）、EXISTS 14、CHECK_VARIANT 1（Hy4 GA 按名误配 preview，实已立行 `tencent:hunyuan-hy4:base`）。
+- ★ **复验驳回一条**：S0 结论「`docs.anthropic.com/en/release-notes/api` 从 200 退化为地区封锁跳转」在 `temp/d59/` 无对应快照、无法复验（`anthropic_news.html` 里 28 处 `region` 均为 HTML `role="region"` 属性）⇒ 未写回常驻文档，下轮 S0 前单独复测。
+
 ## [D58] - 2026-11-04
 
 把**我们跟踪的非官方榜统一收成「小众榜」**（用户口径：小众榜 = 一类非官方榜，**是跑分排行下拉里的一个分组，不是独立页面**）：
